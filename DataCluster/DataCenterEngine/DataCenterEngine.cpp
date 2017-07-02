@@ -13,7 +13,7 @@ DataIOEngine::DataIOEngine()
 {
 }
 
-int DataIOEngine::Initialize( const std::string& sDataCollectorPluginPath, const std::string& sMemPluginPath )
+int DataIOEngine::Initialize( const std::string& sMemPluginPath )
 {
 	int			nErrorCode = 0;
 
@@ -210,8 +210,7 @@ int DataCenterEngine::Activate()
 		}
 
 		///< ........................ 开始启动本节点引擎 .............................
-		if( 0 != (nErrorCode = DataIOEngine::Initialize( Configuration::GetConfigObj().GetDataCollectorPluginPath()
-													, Configuration::GetConfigObj().GetMemPluginPath() )) )
+		if( 0 != (nErrorCode = DataIOEngine::Initialize( Configuration::GetConfigObj().GetMemPluginPath() )) )
 		{
 			DataCenterEngine::GetSerivceObj().WriteWarning( "DataCenterEngine::Activate() : failed 2 initialize service engine, errorcode=%d", nErrorCode );
 			return nErrorCode;

@@ -139,13 +139,6 @@ public:
 	 */
 	int								RecoverDatabase();
 
-	/**
-	 * @brief						将内存插件中的行情数据进行备份
-	 * @return						==0					成功
-									!=0					失败
-	 */
-	int								BackupDatabase();
-
 protected:
 	CriticalObject					m_oLock;						///< 锁
 	TMAP_DATAID2WIDTH				m_mapTableID;					///< 数据表ID集合表

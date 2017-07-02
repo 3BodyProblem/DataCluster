@@ -229,32 +229,8 @@ int DatabaseIO::RecoverDatabase()
 				return -1;
 			}
 
-			if( 0 < (nDBLoadDate=m_pIDatabase->LoadFromDisk( Configuration::GetConfigObj().GetRecoveryFolderPath().c_str() )) )
-			{
-				unsigned int	nDataID, nRecordLen, nKeyLen;
-				unsigned int	nTableCount = m_pIDatabase->GetTableCount();
-
-				///< 统计从落盘文件加载的数据的数据类型+数据结构长度
-				for( unsigned int n = 0; n < nTableCount; n++ )
-				{
-					if( false == m_pIDatabase->GetTableMetaByPos( n, nDataID, nRecordLen, nKeyLen ) )	{
-						DataCenterEngine::GetSerivceObj().WriteWarning( "DatabaseIO::RecoverDatabase() : cannot fetch table with index (%u)", n );
-						return -1000 - n;
-					}
-
-					m_mapTableID.insert( std::make_pair(nDataID, nRecordLen) );		///< 数据表ID集合，添加
-				}
-
-				m_bBuilded = true;
-				DataCenterEngine::GetSerivceObj().WriteInfo( "DatabaseIO::RecoverDatabase() : recovered [FileDate=%d], table count=%d ......", nDBLoadDate, nTableCount );
-				return 0;
-			}
-			else
-			{
-				DataCenterEngine::GetSerivceObj().WriteWarning( "DatabaseIO::RecoverDatabase() : failed 2 recover quotation data, %s"
-																, Configuration::GetConfigObj().GetRecoveryFolderPath().c_str() );
-				return -2;
-			}
+//			m_bBuilded = true;
+			return 0;
 		}
 
 		DataCenterEngine::GetSerivceObj().WriteWarning( "DatabaseIO::RecoverDatabase() : invalid database pointer(NULL)" );
@@ -263,46 +239,14 @@ int DatabaseIO::RecoverDatabase()
 	}
 	catch( std::exception& err )
 	{
-		DataCenterEngine::GetSerivceObj().WriteWarning( "DatabaseIO::BackupDatabase() : exception : %s", err.what() );
+		DataCenterEngine::GetSerivceObj().WriteWarning( "DatabaseIO::RecoverDatabase() : exception : %s", err.what() );
 	}
 	catch( ... )
 	{
-		DataCenterEngine::GetSerivceObj().WriteWarning( "DatabaseIO::BackupDatabase() : unknow exception" );
+		DataCenterEngine::GetSerivceObj().WriteWarning( "DatabaseIO::RecoverDatabase() : unknow exception" );
 	}
 
 	return -3;
-}
-
-int DatabaseIO::BackupDatabase()
-{
-	try
-	{
-		if( m_pIDatabase )
-		{
-			DataCenterEngine::GetSerivceObj().WriteInfo( "DatabaseIO::BackupDatabase() : making backup ......" );
-
-			if( true == m_pIDatabase->SaveToDisk( Configuration::GetConfigObj().GetRecoveryFolderPath().c_str() ) )
-			{
-				DataCenterEngine::GetSerivceObj().WriteInfo( "DatabaseIO::BackupDatabase() : backup completed ......" );
-				return 0;
-			}
-			else
-			{
-				DataCenterEngine::GetSerivceObj().WriteWarning( "DatabaseIO::BackupDatabase() : miss backup ......" );
-				return -2;
-			}
-		}
-	}
-	catch( std::exception& err )
-	{
-		DataCenterEngine::GetSerivceObj().WriteWarning( "DatabaseIO::BackupDatabase() : exception : %s", err.what() );
-	}
-	catch( ... )
-	{
-		DataCenterEngine::GetSerivceObj().WriteWarning( "DatabaseIO::BackupDatabase() : unknow exception" );
-	}
-
-	return -1;
 }
 
 void DatabaseIO::UnitTest()
@@ -359,7 +303,6 @@ void DatabaseIO::Release()
 		DataCenterEngine::GetSerivceObj().WriteInfo( "DatabaseIO::Release() : releasing memory database plugin ......" );
 
 		m_mapTableID.clear();				///< 清空数据表ID集合
-		BackupDatabase();					///< 备份行情数据到磁盘
 		m_pIDatabase->DeleteTables();		///< 清理内存插件中的数据表
 		m_pIDatabase = NULL;				///< 重置内存插件数据库指针
 

@@ -30,12 +30,11 @@ public:///< 引擎构造和初始化相关功能
 	/**
  	 * @brief				初始化行情各参数，准备工作
 	 * @note				流程中，先从本地文件加载内存插件的行情数据，再初始化行情解析插件
-	 * @param[in]			sDataCollectorPluginPath	行情解析插件路径
 	 * @param[in]			sMemPluginPath				行情数据内存插件路径
 	 * @return				==0							成功
 							!=0							失败
 	 */
-	int						Initialize( const std::string& sDataCollectorPluginPath, const std::string& sMemPluginPath );
+	int						Initialize( const std::string& sMemPluginPath );
 
 	/**
 	 * @brief				释放行情模块各资源

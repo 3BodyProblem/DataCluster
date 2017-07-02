@@ -60,6 +60,36 @@ std::string GetModulePath( void* hModule )
 }
 
 
+void DllPathTable::AddPath( std::string sDllPath )
+{
+	CriticalLock			lock( m_oLock );
+
+	DataCenterEngine::GetSerivceObj().WriteInfo( "DllPathTable::AddPath() : dll path: %s", sDllPath.c_str() );
+	std::vector<std::string>::push_back( sDllPath );
+}
+
+unsigned int DllPathTable::GetCount()
+{
+	CriticalLock			lock( m_oLock );
+
+	return std::vector<std::string>::size();
+}
+
+std::string DllPathTable::GetPathByPos( unsigned int nPos )
+{
+	CriticalLock			lock( m_oLock );
+	unsigned int			nSize = std::vector<std::string>::size();
+
+	if( nPos >= nSize )
+	{
+		DataCenterEngine::GetSerivceObj().WriteWarning( "DllPathTable::GetPathByPos() : invalid dll path table index ( %u >= %u )", nPos, nSize );
+		return "";
+	}
+
+	return this->operator []( nPos );
+}
+
+
 Configuration::Configuration()
 {
 }
@@ -90,12 +120,6 @@ int Configuration::Load()
 		return -3;
 	}
 
-	///< [service framework configuration]
-	m_sRecoveryFolder = oIniFile.getStringValue( std::string("ServerIO"), std::string("dumpfolder"), nErrCode );
-	if( false == m_sRecoveryFolder.empty() )	{
-		::printf( "Configuration::Load() : dump folder = %s\n", m_sRecoveryFolder.c_str() );
-	}
-
 	return 0;
 }
 
@@ -104,11 +128,6 @@ Configuration& Configuration::GetConfigObj()
 	static Configuration		obj;
 
 	return obj;
-}
-
-const std::string& Configuration::GetRecoveryFolderPath() const
-{
-	return m_sRecoveryFolder;
 }
 
 const std::string& Configuration::GetMemPluginPath() const
