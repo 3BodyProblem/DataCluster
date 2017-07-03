@@ -50,14 +50,14 @@ int DataCollector::Initialize( I_DataHandle* pIDataCallBack, std::string sDllPat
 {
 	Release();
 
-	DataCenterEngine::GetSerivceObj().WriteInfo( "DataCollector::Initialize() : initializing data collector plugin ......" );
+	DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Initialize() : initializing data collector plugin ......" );
 
 	std::string		sModulePath = GetModulePath(NULL) + sDllPath;
 	int				nErrorCode = m_oDllPlugin.LoadDll( sModulePath );
 
 	if( 0 != nErrorCode )
 	{
-		DataCenterEngine::GetSerivceObj().WriteError( "DataCollector::Initialize() : failed 2 load data collector module, errorcode=%d", nErrorCode );
+		DataIOEngine::GetEngineObj().WriteError( "DataCollector::Initialize() : failed 2 load data collector module, errorcode=%d", nErrorCode );
 		return nErrorCode;
 	}
 
@@ -71,20 +71,20 @@ int DataCollector::Initialize( I_DataHandle* pIDataCallBack, std::string sDllPat
 
 	if( NULL == m_pFuncInitialize || NULL == m_pFuncRelease || NULL == m_pFuncRecoverQuotation || NULL == m_pFuncGetStatus || NULL == m_pFuncGetMarketID || NULL == m_pFuncHaltQuotation || NULL == m_pFuncIsProxy )
 	{
-		DataCenterEngine::GetSerivceObj().WriteError( "DataCollector::Initialize() : invalid fuction pointer(NULL)" );
+		DataIOEngine::GetEngineObj().WriteError( "DataCollector::Initialize() : invalid fuction pointer(NULL)" );
 		return -10;
 	}
 
 	if( 0 != (nErrorCode = m_pFuncInitialize( pIDataCallBack )) )
 	{
-		DataCenterEngine::GetSerivceObj().WriteError( "DataCollector::Initialize() : failed 2 initialize data collector module, errorcode=%d", nErrorCode );
+		DataIOEngine::GetEngineObj().WriteError( "DataCollector::Initialize() : failed 2 initialize data collector module, errorcode=%d", nErrorCode );
 		return nErrorCode;
 	}
 
 	m_nMarketID = m_pFuncGetMarketID();
 	m_bIsProxyPlugin = m_pFuncIsProxy();
 
-	DataCenterEngine::GetSerivceObj().WriteInfo( "DataCollector::Initialize() : data collector plugin is initialized ......" );
+	DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Initialize() : data collector plugin is initialized ......" );
 
 	return 0;
 }
@@ -93,13 +93,13 @@ void DataCollector::Release()
 {
 	if( NULL != m_pFuncRelease )
 	{
-		DataCenterEngine::GetSerivceObj().WriteInfo( "DataCollector::Release() : releasing memory database plugin ......" );
+		DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Release() : releasing memory database plugin ......" );
 		m_pFuncHaltQuotation();
 		m_pFuncHaltQuotation = NULL;
 		m_pFuncRelease();
 		m_pFuncRelease = NULL;
 		m_bActivated = false;
-		DataCenterEngine::GetSerivceObj().WriteInfo( "DataCollector::Release() : memory database plugin is released ......" );
+		DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Release() : memory database plugin is released ......" );
 	}
 
 	m_pFuncGetStatus = NULL;
@@ -117,22 +117,22 @@ void DataCollector::HaltDataCollector()
 {
 	if( NULL != m_pFuncRelease && true == m_bActivated )
 	{
-		DataCenterEngine::GetSerivceObj().WriteInfo( "DataCollector::HaltDataCollector() : [NOTICE] data collector is Halting ......" );
+		DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::HaltDataCollector() : [NOTICE] data collector is Halting ......" );
 
 		m_pFuncHaltQuotation();
 		m_bActivated = false;
 
-		DataCenterEngine::GetSerivceObj().WriteInfo( "DataCollector::HaltDataCollector() : [NOTICE] data collector Halted ......" );
+		DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::HaltDataCollector() : [NOTICE] data collector Halted ......" );
 	}
 }
 
 int DataCollector::RecoverDataCollector()
 {
-	DataCenterEngine::GetSerivceObj().WriteInfo( "DataCollector::RecoverDataCollector() : recovering data collector ......" );
+	DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::RecoverDataCollector() : recovering data collector ......" );
 
 	if( NULL == m_pFuncRecoverQuotation )
 	{
-		DataCenterEngine::GetSerivceObj().WriteError( "DataCollector::RecoverDataCollector() : invalid fuction pointer(NULL)" );
+		DataIOEngine::GetEngineObj().WriteError( "DataCollector::RecoverDataCollector() : invalid fuction pointer(NULL)" );
 		return -1;
 	}
 
@@ -140,13 +140,13 @@ int DataCollector::RecoverDataCollector()
 
 	if( 0 != nErrorCode )
 	{
-		DataCenterEngine::GetSerivceObj().WriteError( "DataCollector::RecoverDataCollector() : failed 2 recover quotation" );
+		DataIOEngine::GetEngineObj().WriteError( "DataCollector::RecoverDataCollector() : failed 2 recover quotation" );
 		return nErrorCode;
 	}
 
 	m_bActivated = true;
 	m_nMarketID = m_pFuncGetMarketID();
-	DataCenterEngine::GetSerivceObj().WriteInfo( "DataCollector::RecoverDataCollector() : data collector recovered ......" );
+	DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::RecoverDataCollector() : data collector recovered ......" );
 
 	return nErrorCode;
 }
@@ -191,17 +191,17 @@ int DataCollectorPool::Initialize( I_DataHandle* pIDataCallBack )
 	DllPathTable&			refDcDllTable = refCnf.GetDCPathTable();
 	unsigned int			nDllCount = refDcDllTable.GetCount();
 
-	DataCenterEngine::GetSerivceObj().WriteInfo( "DataCollectorPool::Initialize() : initializing ... " );
+	DataIOEngine::GetEngineObj().WriteInfo( "DataCollectorPool::Initialize() : initializing ... " );
 
 	if( nDllCount <= 0 )
 	{
-		DataCenterEngine::GetSerivceObj().WriteError( "DataCollectorPool::Initialize() : data collector table is empty" );
+		DataIOEngine::GetEngineObj().WriteError( "DataCollectorPool::Initialize() : data collector table is empty" );
 		return -1;
 	}
 
 	if( nDllCount >= 64 )
 	{
-		DataCenterEngine::GetSerivceObj().WriteError( "DataCollectorPool::Initialize() : 2 many data collector configuration, dll count = %d (>=64)", nDllCount );
+		DataIOEngine::GetEngineObj().WriteError( "DataCollectorPool::Initialize() : 2 many data collector configuration, dll count = %d (>=64)", nDllCount );
 		return -2;
 	}
 
@@ -217,13 +217,13 @@ int DataCollectorPool::Initialize( I_DataHandle* pIDataCallBack )
 		std::vector<DataCollector>::push_back( DataCollector() );
 		if( this->operator []( n ).Initialize( pIDataCallBack, sDcDllPath ) < 0 )
 		{
-			DataCenterEngine::GetSerivceObj().WriteError( "DataCollectorPool::Initialize() : failed 2 initialize data collector, %s", sDcDllPath.c_str() );
+			DataIOEngine::GetEngineObj().WriteError( "DataCollectorPool::Initialize() : failed 2 initialize data collector, %s", sDcDllPath.c_str() );
 			std::vector<DataCollector>::clear();	///< 清空已经初始化成功的插件
 			return -1000 - n;
 		}
 	}
 
-	DataCenterEngine::GetSerivceObj().WriteInfo( "DataCollectorPool::Initialize() : initialized ... (num=%d)", GetCount() );
+	DataIOEngine::GetEngineObj().WriteInfo( "DataCollectorPool::Initialize() : initialized ... (num=%d)", GetCount() );
 
 	return GetCount();
 }
@@ -241,7 +241,7 @@ int DataCollectorPool::PreserveAllConnection()
 
 		if( ET_SS_DISCONNECTED == eStatus )			///< 在传输断开的时，需要重新连接
 		{
-			DataCenterEngine::GetSerivceObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : [Plugin] connection disconnected, %s", s_pszTmp );
+			DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : [Plugin] connection disconnected, %s", s_pszTmp );
 
 			refDataCollector.HaltDataCollector();	///< 停止插件
 			int		nErrorCode = refDataCollector.RecoverDataCollector();
@@ -251,7 +251,7 @@ int DataCollectorPool::PreserveAllConnection()
 			}
 			else
 			{
-				DataCenterEngine::GetSerivceObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : failed 2 recover data collector module, errorcode=%d", nErrorCode );
+				DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : failed 2 recover data collector module, errorcode=%d", nErrorCode );
 			}
 		}
 	}

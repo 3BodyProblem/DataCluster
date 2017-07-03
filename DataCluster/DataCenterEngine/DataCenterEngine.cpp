@@ -8,37 +8,56 @@
 
 
 DataIOEngine::DataIOEngine()
- : SimpleTask( "DataIOEngine::Thread" )
+ : SimpleTask( "DataIOEngine::Thread" ), m_pQuotationCallBack( NULL )
 {
 }
 
-int DataIOEngine::Initialize()
+DataIOEngine::~DataIOEngine()
+{
+	Release();
+}
+
+DataIOEngine& DataIOEngine::GetEngineObj()
+{
+	static DataIOEngine	obj;
+
+	return obj;
+}
+
+int DataIOEngine::Initialize( I_QuotationCallBack* pIQuotation )
 {
 	int			nErrorCode = 0;
 
 	Release();
-	DataCenterEngine::GetSerivceObj().WriteInfo( "DataIOEngine::Initialize() : DataNode Engine is initializing ......" );
+
+	if( 0 != (nErrorCode = Configuration::GetConfigObj().Load()) )	{
+		DataIOEngine::GetEngineObj().WriteWarning( "DataIOEngine::Initialize() : invalid configuration file, errorcode=%d", nErrorCode );
+		return nErrorCode;
+	}
+
+	m_pQuotationCallBack = pIQuotation;
+	DataIOEngine::GetEngineObj().WriteInfo( "DataIOEngine::Initialize() : DataNode Engine is initializing ......" );
 
 	if( 0 != (nErrorCode = m_oDatabaseIO.Initialize()) )
 	{
-		DataCenterEngine::GetSerivceObj().WriteError( "DataIOEngine::Initialize() : failed 2 initialize memory database plugin, errorcode=%d", nErrorCode );
+		DataIOEngine::GetEngineObj().WriteError( "DataIOEngine::Initialize() : failed 2 initialize memory database plugin, errorcode=%d", nErrorCode );
 		return nErrorCode;
 	}
 
 	m_oDatabaseIO.RecoverDatabase();
 	if( 0 != (nErrorCode = m_oDataCollectorPool.Initialize( this )) )
 	{
-		DataCenterEngine::GetSerivceObj().WriteError( "DataIOEngine::Initialize() : failed 2 initialize data collector plugin, errorcode=%d", nErrorCode );
+		DataIOEngine::GetEngineObj().WriteError( "DataIOEngine::Initialize() : failed 2 initialize data collector plugin, errorcode=%d", nErrorCode );
 		return nErrorCode;
 	}
 
 	if( 0 != (nErrorCode = SimpleTask::Activate()) )
 	{
-		DataCenterEngine::GetSerivceObj().WriteError( "DataIOEngine::Initialize() : failed 2 initialize task thread, errorcode=%d", nErrorCode );
+		DataIOEngine::GetEngineObj().WriteError( "DataIOEngine::Initialize() : failed 2 initialize task thread, errorcode=%d", nErrorCode );
 		return nErrorCode;
 	}
 
-	DataCenterEngine::GetSerivceObj().WriteInfo( "DataIOEngine::Initialize() : DataNode Engine is initialized ......" );
+	DataIOEngine::GetEngineObj().WriteInfo( "DataIOEngine::Initialize() : DataNode Engine is initialized ......" );
 
 	return nErrorCode;
 }
@@ -50,28 +69,9 @@ void DataIOEngine::Release()
 	SimpleTask::StopThread();
 }
 
-bool DataIOEngine::PrepareQuotation()
-{
-	int			nErrorCode = 0;
-
-	DataCenterEngine::GetSerivceObj().WriteInfo( "DataIOEngine::PrepareQuotation() : reloading quotation........" );
-
-//	m_oDataCollectorPool.HaltDataCollector();											///< 1) 先事先停止数据采集模块
-
-//	if( 0 != (nErrorCode=m_oDataCollectorPool.RecoverDataCollector()) )					///< 3) 重新初始化行情采集模块
-	{
-		DataCenterEngine::GetSerivceObj().WriteWarning( "DataIOEngine::PrepareQuotation() : failed 2 initialize data collector module, errorcode=%d", nErrorCode );
-		return false;;
-	}
-
-	DataCenterEngine::GetSerivceObj().WriteInfo( "DataIOEngine::PrepareQuotation() : quotation reloaded ........" );
-
-	return true;
-}
-
 int DataIOEngine::Execute()
 {
-	DataCenterEngine::GetSerivceObj().WriteInfo( "DataIOEngine::Execute() : enter into thread func ..." );
+	DataIOEngine::GetEngineObj().WriteInfo( "DataIOEngine::Execute() : enter into thread func ..." );
 
 	while( true == IsAlive() )
 	{
@@ -83,15 +83,15 @@ int DataIOEngine::Execute()
 		}
 		catch( std::exception& err )
 		{
-			DataCenterEngine::GetSerivceObj().WriteWarning( "DataIOEngine::Execute() : exception : %s", err.what() );
+			DataIOEngine::GetEngineObj().WriteWarning( "DataIOEngine::Execute() : exception : %s", err.what() );
 		}
 		catch( ... )
 		{
-			DataCenterEngine::GetSerivceObj().WriteWarning( "DataIOEngine::Execute() : unknow exception" );
+			DataIOEngine::GetEngineObj().WriteWarning( "DataIOEngine::Execute() : unknow exception" );
 		}
 	}
 
-	DataCenterEngine::GetSerivceObj().WriteInfo( "DataIOEngine::Execute() : exit thread func ..." );
+	DataIOEngine::GetEngineObj().WriteInfo( "DataIOEngine::Execute() : exit thread func ..." );
 
 	return 0;
 }
@@ -131,6 +131,12 @@ int DataIOEngine::OnData( unsigned int nDataID, char* pData, unsigned int nDataL
 	return nErrorCode;
 }
 
+int DataIOEngine::QueryData( unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen )
+{
+
+	return 0;
+}
+
 void DataIOEngine::OnLog( unsigned char nLogLevel, const char* pszFormat, ... )
 {
     va_list		valist;
@@ -143,16 +149,16 @@ void DataIOEngine::OnLog( unsigned char nLogLevel, const char* pszFormat, ... )
 	switch( nLogLevel )	///< 日志类型[0=信息、1=警告日志、2=错误日志、3=详细日志]
 	{
 	case 0:
-//		MServicePlug::WriteInfo( "[Plugin] %s", pszLogBuf );
+		DataIOEngine::WriteInfo( "[Plugin] %s", pszLogBuf );
 		break;
 	case 1:
-//		MServicePlug::WriteWarning( "[Plugin] %s", pszLogBuf );
+		DataIOEngine::WriteWarning( "[Plugin] %s", pszLogBuf );
 		break;
 	case 2:
-//		MServicePlug::WriteError( "[Plugin] %s", pszLogBuf );
+		DataIOEngine::WriteError( "[Plugin] %s", pszLogBuf );
 		break;
 	case 3:
-//		MServicePlug::WriteDetail( "[Plugin] %s", pszLogBuf );
+		DataIOEngine::WriteDetail( "[Plugin] %s", pszLogBuf );
 		break;
 	default:
 		::printf( "[Plugin] unknow log level [%d] \n", nLogLevel );
@@ -160,94 +166,7 @@ void DataIOEngine::OnLog( unsigned char nLogLevel, const char* pszFormat, ... )
 	}
 }
 
-
-///< ----------------------------------------------------------------------------
-
-
-DataCenterEngine::DataCenterEngine()
- : m_bActivated( false )
-{
-}
-
-DataCenterEngine::~DataCenterEngine()
-{
-	Destroy();
-}
-
-DataCenterEngine& DataCenterEngine::GetSerivceObj()
-{
-	static DataCenterEngine	obj;
-
-	return obj;
-}
-
-int DataCenterEngine::Activate()
-{
-	try
-	{
-		m_bActivated = true;
-		DataCenterEngine::GetSerivceObj().WriteInfo( "DataCenterEngine::Activate() : activating service.............." );
-
-		static	char						pszErrorDesc[8192] = { 0 };
-		int									nErrorCode = Configuration::GetConfigObj().Load();	///< 加载配置信息
-
-		if( 0 != nErrorCode )	{
-			DataCenterEngine::GetSerivceObj().WriteWarning( "DataCenterEngine::Activate() : invalid configuration file, errorcode=%d", nErrorCode );
-			return nErrorCode;
-		}
-
-		///< ........................ 开始启动本节点引擎 .............................
-		if( 0 != (nErrorCode = DataIOEngine::Initialize()) )
-		{
-			DataCenterEngine::GetSerivceObj().WriteWarning( "DataCenterEngine::Activate() : failed 2 initialize service engine, errorcode=%d", nErrorCode );
-			return nErrorCode;
-		}
-
-		DataCenterEngine::GetSerivceObj().WriteInfo( "DataCenterEngine::Activate() : service activated.............." );
-
-		return 0;
-	}
-	catch( std::exception& err )
-	{
-		DataCenterEngine::GetSerivceObj().WriteWarning( "DataCenterEngine::Activate() : exception : %s\n", err.what() );
-	}
-	catch( ... )
-	{
-		DataCenterEngine::GetSerivceObj().WriteWarning( "DataCenterEngine::Activate() : unknow exception" );
-	}
-
-	return -100;
-}
-
-void DataCenterEngine::Destroy()
-{
-	try
-	{
-		DataIOEngine::Release();
-	}
-	catch( std::exception& err )
-	{
-		DataCenterEngine::GetSerivceObj().WriteWarning( "DataCenterEngine::Destroy() : exception : %s", err.what() );
-	}
-	catch( ... )
-	{
-		DataCenterEngine::GetSerivceObj().WriteWarning( "DataCenterEngine::Destroy() : unknow exception" );
-	}
-}
-
-bool DataCenterEngine::IsServiceAlive()
-{
-	if( true == SimpleThread::IsAlive() )
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
-}
-
-void DataCenterEngine::WriteInfo( const char * szFormat,... )
+void DataIOEngine::WriteInfo( const char * szFormat,... )
 {
 	char						tempbuf[8192];
 	va_list						stmarker;
@@ -256,14 +175,14 @@ void DataCenterEngine::WriteInfo( const char * szFormat,... )
 	vsnprintf(tempbuf,sizeof(tempbuf),szFormat,stmarker);
 	va_end(stmarker);
 
-	if( true == m_bActivated ) {
-//		MServicePlug::WriteInfo( "%s", tempbuf );
+	if( NULL != m_pQuotationCallBack ) {
+		m_pQuotationCallBack->OnLog( 0, tempbuf );
 	} else {
 		::printf( "%s\n", tempbuf );
 	}
 }
 
-void DataCenterEngine::WriteWarning( const char * szFormat,... )
+void DataIOEngine::WriteWarning( const char * szFormat,... )
 {
 	char						tempbuf[8192];
 	va_list						stmarker;
@@ -272,14 +191,14 @@ void DataCenterEngine::WriteWarning( const char * szFormat,... )
 	vsnprintf(tempbuf,sizeof(tempbuf),szFormat,stmarker);
 	va_end(stmarker);
 
-	if( true == m_bActivated ) {
-//		MServicePlug::WriteWarning( "%s", tempbuf );
+	if( NULL != m_pQuotationCallBack ) {
+		m_pQuotationCallBack->OnLog( 1, tempbuf );
 	} else {
 		::printf( "%s\n", tempbuf );
 	}
 }
 
-void DataCenterEngine::WriteError( const char * szFormat,... )
+void DataIOEngine::WriteError( const char * szFormat,... )
 {
 	char						tempbuf[8192];
 	va_list						stmarker;
@@ -288,14 +207,14 @@ void DataCenterEngine::WriteError( const char * szFormat,... )
 	vsnprintf(tempbuf,sizeof(tempbuf),szFormat,stmarker);
 	va_end(stmarker);
 
-	if( true == m_bActivated ) {
-//		MServicePlug::WriteError( "%s", tempbuf );
+	if( NULL != m_pQuotationCallBack ) {
+		m_pQuotationCallBack->OnLog( 2, tempbuf );
 	} else {
 		::printf( "%s\n", tempbuf );
 	}
 }
 
-void DataCenterEngine::WriteDetail( const char * szFormat,... )
+void DataIOEngine::WriteDetail( const char * szFormat,... )
 {
 	char						tempbuf[8192];
 	va_list						stmarker;
@@ -304,8 +223,8 @@ void DataCenterEngine::WriteDetail( const char * szFormat,... )
 	vsnprintf(tempbuf,sizeof(tempbuf),szFormat,stmarker);
 	va_end(stmarker);
 
-	if( true == m_bActivated ) {
-//		MServicePlug::WriteDetail( "%s", tempbuf );
+	if( NULL != m_pQuotationCallBack ) {
+		m_pQuotationCallBack->OnLog( 3, tempbuf );
 	} else {
 		::printf( "%s\n", tempbuf );
 	}

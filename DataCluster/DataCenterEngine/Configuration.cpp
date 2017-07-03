@@ -2,8 +2,8 @@
 #include <exception>
 #include <algorithm>
 #include <functional>
-#include "DataCenterEngine.h"
 #include "Configuration.h"
+#include "DataCenterEngine.h"
 #include "../Infrastructure/IniFile.h"
 #include "../Infrastructure/DateTime.h"
 
@@ -64,7 +64,7 @@ void DllPathTable::AddPath( std::string sDllPath )
 {
 	CriticalLock			lock( m_oLock );
 
-	DataCenterEngine::GetSerivceObj().WriteInfo( "DllPathTable::AddPath() : dll path: %s", sDllPath.c_str() );
+	DataIOEngine::GetEngineObj().WriteInfo( "DllPathTable::AddPath() : dll path: %s", sDllPath.c_str() );
 	std::vector<std::string>::push_back( sDllPath );
 }
 
@@ -82,7 +82,7 @@ std::string DllPathTable::GetPathByPos( unsigned int nPos )
 
 	if( nPos >= nSize )
 	{
-		DataCenterEngine::GetSerivceObj().WriteWarning( "DllPathTable::GetPathByPos() : invalid dll path table index ( %u >= %u )", nPos, nSize );
+		DataIOEngine::GetEngineObj().WriteWarning( "DllPathTable::GetPathByPos() : invalid dll path table index ( %u >= %u )", nPos, nSize );
 		return "";
 	}
 

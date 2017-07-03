@@ -11,17 +11,17 @@ extern "C"
 {
 	__declspec(dllexport) int __stdcall	Activate( I_QuotationCallBack* pIDataHandle )
 	{
-		return 0;//QuoCollector::GetCollector().Initialize( pIDataHandle );
+		return DataIOEngine::GetEngineObj().Initialize( pIDataHandle );
 	}
 
 	__declspec(dllexport) void __stdcall Destroy()
 	{
-		//QuoCollector::GetCollector().Release();
+		DataIOEngine::GetEngineObj().Release();
 	}
 
-	__declspec(dllexport) int __stdcall	GetStatus( char* pszStatusDesc, unsigned int& nStrLen )
+	__declspec(dllexport) int __stdcall	Query( unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen )
 	{
-		return 0;//QuoCollector::GetCollector().GetCollectorStatus( pszStatusDesc, nStrLen );
+		return DataIOEngine::GetEngineObj().QueryData( nMessageID, pDataPtr, nDataLen );
 	}
 
 	__declspec(dllexport) void __stdcall	ExecuteUnitTest()

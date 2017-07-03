@@ -70,14 +70,14 @@ int DatabaseIO::FetchRecordsByID( unsigned int nDataID, char* pBuffer, unsigned 
 	if( NULL == pBuffer )
 	{
 		nSerialNo = 0;
-		DataCenterEngine::GetSerivceObj().WriteError( "DatabaseIO::FetchRecordsByID() : invalid buffer pointer(NULL)" );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::FetchRecordsByID() : invalid buffer pointer(NULL)" );
 		return -1;
 	}
 
 	if( NULL == ((pTable = m_pIDatabase->QueryTable( nDataID ))) )
 	{
 		nSerialNo = 0;
-		DataCenterEngine::GetSerivceObj().WriteError( "DatabaseIO::FetchRecordsByID() : failed 2 locate data table 4 message, message id=%d", nDataID );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::FetchRecordsByID() : failed 2 locate data table 4 message, message id=%d", nDataID );
 		return -2;
 	}
 
@@ -86,7 +86,7 @@ int DatabaseIO::FetchRecordsByID( unsigned int nDataID, char* pBuffer, unsigned 
 	if( nAffectNum < 0 )
 	{
 		nSerialNo = 0;
-		DataCenterEngine::GetSerivceObj().WriteError( "DatabaseIO::FetchRecordsByID() : failed 2 copy data from table, errorcode = %d", nAffectNum );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::FetchRecordsByID() : failed 2 copy data from table, errorcode = %d", nAffectNum );
 		return -3;
 	}
 
@@ -104,19 +104,19 @@ int DatabaseIO::BuildMessageTable( unsigned int nDataID, char* pData, unsigned i
 	m_bBuilded = bLastFlag;
 	if( false == m_pIDatabase->CreateTable( nDataID, nDataLen, MAX_CODE_LENGTH ) )
 	{
-		DataCenterEngine::GetSerivceObj().WriteError( "DatabaseIO::BuildMessageTable() : failed 2 create data table 4 message, message id=%d", nDataID );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::BuildMessageTable() : failed 2 create data table 4 message, message id=%d", nDataID );
 		return -1;
 	}
 
 	if( NULL == ((pTable = m_pIDatabase->QueryTable( nDataID ))) )
 	{
-		DataCenterEngine::GetSerivceObj().WriteError( "DatabaseIO::BuildMessageTable() : failed 2 locate data table 4 message, message id=%d", nDataID );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::BuildMessageTable() : failed 2 locate data table 4 message, message id=%d", nDataID );
 		return -2;
 	}
 
 	if( 0 > (nAffectNum = pTable->InsertRecord( pData, nDataLen, nDbSerialNo )) )
 	{
-		DataCenterEngine::GetSerivceObj().WriteError( "DatabaseIO::BuildMessageTable() : failed 2 insert into data table 4 message, message id=%d, affectnum=%d", nDataID, nAffectNum );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::BuildMessageTable() : failed 2 insert into data table 4 message, message id=%d, affectnum=%d", nDataID, nAffectNum );
 		return -3;
 	}
 
@@ -133,19 +133,19 @@ int DatabaseIO::DeleteRecord( unsigned int nDataID, char* pData, unsigned int nD
 
 	if( false == m_bBuilded )
 	{
-		DataCenterEngine::GetSerivceObj().WriteError( "DatabaseIO::DeleteRecord() : failed 2 delete record before initialization, message id=%d" );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::DeleteRecord() : failed 2 delete record before initialization, message id=%d" );
 		return -1;
 	}
 
 	if( NULL == ((pTable = m_pIDatabase->QueryTable( nDataID ))) )
 	{
-		DataCenterEngine::GetSerivceObj().WriteError( "DatabaseIO::DeleteRecord() : failed 2 locate data table 4 message, message id=%d", nDataID );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::DeleteRecord() : failed 2 locate data table 4 message, message id=%d", nDataID );
 		return -2;
 	}
 
 	if( 0 > (nAffectNum = pTable->DeleteRecord( pData, nDataLen, nDbSerialNo )) )
 	{
-		DataCenterEngine::GetSerivceObj().WriteError( "DatabaseIO::DeleteRecord() : failed 2 delete record from table, message id=%d, affectnum=%d", nDataID, nAffectNum );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::DeleteRecord() : failed 2 delete record from table, message id=%d, affectnum=%d", nDataID, nAffectNum );
 		return -3;
 	}
 
@@ -160,19 +160,19 @@ int DatabaseIO::UpdateQuotation( unsigned int nDataID, char* pData, unsigned int
 	nDbSerialNo = 0;
 	if( false == m_bBuilded )
 	{
-		DataCenterEngine::GetSerivceObj().WriteError( "DatabaseIO::UpdateQuotation() : failed 2 update quotation before initialization, message id=%d" );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::UpdateQuotation() : failed 2 update quotation before initialization, message id=%d" );
 		return -1;
 	}
 
 	if( NULL == ((pTable = m_pIDatabase->QueryTable( nDataID ))) )
 	{
-		DataCenterEngine::GetSerivceObj().WriteError( "DatabaseIO::UpdateQuotation() : failed 2 locate data table 4 message, message id=%d", nDataID );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::UpdateQuotation() : failed 2 locate data table 4 message, message id=%d", nDataID );
 		return -2;
 	}
 
 	if( 0 > (nAffectNum = pTable->UpdateRecord( pData, nDataLen, nDbSerialNo )) )
 	{
-		DataCenterEngine::GetSerivceObj().WriteError( "DatabaseIO::UpdateQuotation() : failed 2 insert into data table 4 message, message id=%d, affectnum=%d", nDataID, nAffectNum );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::UpdateQuotation() : failed 2 insert into data table 4 message, message id=%d, affectnum=%d", nDataID, nAffectNum );
 		return -3;
 	}
 
@@ -189,13 +189,13 @@ int DatabaseIO::QueryQuotation( unsigned int nDataID, char* pData, unsigned int 
 	nDbSerialNo = 0;
 	if( false == m_bBuilded )
 	{
-		DataCenterEngine::GetSerivceObj().WriteError( "DatabaseIO::QueryQuotation() : failed 2 update quotation before initialization, message id=%d" );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::QueryQuotation() : failed 2 update quotation before initialization, message id=%d" );
 		return -1;
 	}
 
 	if( NULL == ((pTable = m_pIDatabase->QueryTable( nDataID ))) )
 	{
-		DataCenterEngine::GetSerivceObj().WriteError( "DatabaseIO::QueryQuotation() : failed 2 locate data table 4 message, message id=%d", nDataID );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::QueryQuotation() : failed 2 locate data table 4 message, message id=%d", nDataID );
 		return -2;
 	}
 
@@ -218,14 +218,14 @@ int DatabaseIO::RecoverDatabase()
 		{
 			int				nDBLoadDate = 0;		///< 行情落盘文件日期
 
-			DataCenterEngine::GetSerivceObj().WriteInfo( "DatabaseIO::RecoverDatabase() : recovering ......" );
+			DataIOEngine::GetEngineObj().WriteInfo( "DatabaseIO::RecoverDatabase() : recovering ......" );
 			m_mapTableID.clear();
 			m_nUpdateTimeT = ::time( NULL );
 
 			m_bBuilded = false;
 			if( 0 != m_pIDatabase->DeleteTables() )
 			{
-				DataCenterEngine::GetSerivceObj().WriteWarning( "DatabaseIO::RecoverDatabase() : failed 2 clean mem-database" );
+				DataIOEngine::GetEngineObj().WriteWarning( "DatabaseIO::RecoverDatabase() : failed 2 clean mem-database" );
 				return -1;
 			}
 
@@ -233,17 +233,17 @@ int DatabaseIO::RecoverDatabase()
 			return 0;
 		}
 
-		DataCenterEngine::GetSerivceObj().WriteWarning( "DatabaseIO::RecoverDatabase() : invalid database pointer(NULL)" );
+		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseIO::RecoverDatabase() : invalid database pointer(NULL)" );
 
 		return -3;
 	}
 	catch( std::exception& err )
 	{
-		DataCenterEngine::GetSerivceObj().WriteWarning( "DatabaseIO::RecoverDatabase() : exception : %s", err.what() );
+		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseIO::RecoverDatabase() : exception : %s", err.what() );
 	}
 	catch( ... )
 	{
-		DataCenterEngine::GetSerivceObj().WriteWarning( "DatabaseIO::RecoverDatabase() : unknow exception" );
+		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseIO::RecoverDatabase() : unknow exception" );
 	}
 
 	return -3;
@@ -270,14 +270,14 @@ int DatabaseIO::Initialize()
 {
 	Release();
 
-	DataCenterEngine::GetSerivceObj().WriteInfo( "DatabaseIO::Initialize() : initializing memory database plugin ......" );
+	DataIOEngine::GetEngineObj().WriteInfo( "DatabaseIO::Initialize() : initializing memory database plugin ......" );
 
 	TFunc_GetFactoryObject*	m_funcFactory = NULL;
 	int						nErrorCode = m_oDllPlugin.LoadDll( Configuration::GetConfigObj().GetMemPluginPath() );
 
 	if( 0 != nErrorCode )
 	{
-		DataCenterEngine::GetSerivceObj().WriteError( "DatabaseIO::Initialize() : failed 2 load memoryplugin module, errorcode=%d", nErrorCode );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::Initialize() : failed 2 load memoryplugin module, errorcode=%d", nErrorCode );
 		return nErrorCode;
 	}
 
@@ -286,12 +286,12 @@ int DatabaseIO::Initialize()
 	m_pIDatabase = m_pIDBFactoryPtr->GrapDatabaseInterface();
 	if( NULL == m_pIDatabase )
 	{
-		DataCenterEngine::GetSerivceObj().WriteError( "DatabaseIO::Initialize() : invalid database interface pointer(NULL)" );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::Initialize() : invalid database interface pointer(NULL)" );
 		Release();
 		return -100;
 	}
 
-	DataCenterEngine::GetSerivceObj().WriteInfo( "DatabaseIO::Initialize() : memory database plugin is initialized ......" );
+	DataIOEngine::GetEngineObj().WriteInfo( "DatabaseIO::Initialize() : memory database plugin is initialized ......" );
 
 	return 0;
 }
@@ -300,7 +300,7 @@ void DatabaseIO::Release()
 {
 	if( NULL != m_pIDatabase || NULL != m_pIDBFactoryPtr )
 	{
-		DataCenterEngine::GetSerivceObj().WriteInfo( "DatabaseIO::Release() : releasing memory database plugin ......" );
+		DataIOEngine::GetEngineObj().WriteInfo( "DatabaseIO::Release() : releasing memory database plugin ......" );
 
 		m_mapTableID.clear();				///< 清空数据表ID集合
 		m_pIDatabase->DeleteTables();		///< 清理内存插件中的数据表
@@ -314,7 +314,7 @@ void DatabaseIO::Release()
 
 		m_oDllPlugin.CloseDll();			///< 卸载内存库插件的DLL
 
-		DataCenterEngine::GetSerivceObj().WriteInfo( "DatabaseIO::Release() : memory database plugin is released ......" );
+		DataIOEngine::GetEngineObj().WriteInfo( "DatabaseIO::Release() : memory database plugin is released ......" );
 	}
 }
 

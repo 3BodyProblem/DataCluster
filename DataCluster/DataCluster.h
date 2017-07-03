@@ -28,11 +28,13 @@ extern "C"
 
 	/**
 	 * @brief								获取模块的当前状态
-	 * @param[out]							pszStatusDesc				返回出状态描述串
-	 * @param[in,out]						nStrLen						输入描述串缓存长度，输出描述串有效内容长度
-	 * @return								返回模块当前状态值
+	 * @param[out]							nMessageID					消息ID
+	 * @param[in]							pDataPtr					数据地址
+	 * @param[in]							nDataLen					数据长度
+	 * @return								>=0							返回查询出来的message个数
+											<0							出错
 	 */
-	__declspec(dllexport) int __stdcall		GetStatus( char* pszStatusDesc, unsigned int& nStrLen );
+	__declspec(dllexport) int __stdcall		Query( unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen );
 
 	/**
 	 * @brief								单元测试导出函数
