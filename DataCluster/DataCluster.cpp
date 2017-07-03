@@ -9,12 +9,12 @@
 
 extern "C"
 {
-	__declspec(dllexport) int __stdcall	Initialize( I_QuotationCallBack* pIDataHandle )
+	__declspec(dllexport) int __stdcall	Activate( I_QuotationCallBack* pIDataHandle )
 	{
 		return 0;//QuoCollector::GetCollector().Initialize( pIDataHandle );
 	}
 
-	__declspec(dllexport) void __stdcall Release()
+	__declspec(dllexport) void __stdcall Destroy()
 	{
 		//QuoCollector::GetCollector().Release();
 	}

@@ -1,6 +1,6 @@
 EXPORTS
-	Initialize
-	Release
+	Activate
+	Destroy
 	GetStatus
 	ExecuteUnitTest
 

@@ -19,12 +19,12 @@ extern "C"
 	 * @return								==0							初始化成功
 											!=							出错
 	 */
-	__declspec(dllexport) int __stdcall		Initialize( I_QuotationCallBack* pIDataHandle );
+	__declspec(dllexport) int __stdcall		Activate( I_QuotationCallBack* pIDataHandle );
 
 	/**
 	 * @brief								释放数据采集模块
 	 */
-	__declspec(dllexport) void __stdcall	Release();
+	__declspec(dllexport) void __stdcall	Destroy();
 
 	/**
 	 * @brief								获取模块的当前状态
