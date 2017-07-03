@@ -123,6 +123,7 @@ int DataIOEngine::OnData( unsigned int nDataID, char* pData, unsigned int nDataL
 	unsigned __int64	nPushSerialNo = 0;				///< 实时行情更新流水
 	int					nErrorCode = m_oDatabaseIO.UpdateQuotation( nDataID, pData, nDataLen, nPushSerialNo );
 
+	m_pQuotationCallBack->OnQuotation( nDataID, pData, nDataLen );
 	if( 0 >= nErrorCode )
 	{
 		return nErrorCode;
@@ -133,6 +134,26 @@ int DataIOEngine::OnData( unsigned int nDataID, char* pData, unsigned int nDataL
 
 int DataIOEngine::QueryData( unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen )
 {
+/*
+		unsigned int			lstTableID[64] = { 0 };
+		unsigned int			lstTableWidth[64] = { 0 };
+		unsigned int			nTableCount = m_pDatabase->GetTablesID( lstTableID, 64, lstTableWidth, 64 );
+		unsigned int			nReqLinkCount = m_setNewReqLinkID.size();
+
+		for( unsigned int n = 0; n < nTableCount && m_setNewReqLinkID.size() > 0; n++ )
+		{
+			unsigned int		nTableID = lstTableID[n];
+			unsigned int		nTableWidth = lstTableWidth[n];
+			int					nFunctionID = ((n+1)==nTableCount) ? 100 : 0;	///< 最后一个数据包的标识
+			unsigned __int64	nSerialNoOfAnchor = nSerialNo;
+			int					nDataLen = m_pDatabase->FetchRecordsByID( nTableID, m_pSendBuffer, MAX_IMAGE_BUFFER_SIZE, nSerialNoOfAnchor );
+
+			if( nDataLen < 0 )
+			{
+				DataNodeService::GetSerivceObj().WriteWarning( "SessionCollection::FlushImageData2NewSessions() : failed 2 fetch image of table, errorcode=%d", nDataLen );
+				return -1 * (n*100);
+			}
+*/
 
 	return 0;
 }

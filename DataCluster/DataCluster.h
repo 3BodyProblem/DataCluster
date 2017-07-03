@@ -29,7 +29,7 @@ extern "C"
 	/**
 	 * @brief								获取模块的当前状态
 	 * @param[out]							nMessageID					消息ID
-	 * @param[in]							pDataPtr					数据地址
+	 * @param[in,out]						pDataPtr					数据地址,如果传入的数据缓存首部带有商品代码，则为主键查询操作
 	 * @param[in]							nDataLen					数据长度
 	 * @return								>=0							返回查询出来的message个数
 											<0							出错

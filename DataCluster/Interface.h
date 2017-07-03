@@ -21,7 +21,7 @@ public:
 	 * @return				==0					成功
 							!=0					错误
 	 */
-	virtual void			OnQuotation( unsigned int nMarketID, unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen ) = 0;
+	virtual void			OnQuotation( unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen ) = 0;
 
 	/**
 	 * @brief				内存数据查询接口
