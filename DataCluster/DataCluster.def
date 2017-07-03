@@ -1,11 +1,7 @@
 EXPORTS
 	Initialize
 	Release
-	RecoverQuotation
-	HaltQuotation
 	GetStatus
-	GetMarketID
-	IsProxy
 	ExecuteUnitTest
 
 

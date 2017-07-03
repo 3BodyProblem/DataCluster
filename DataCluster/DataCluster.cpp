@@ -9,7 +9,7 @@
 
 extern "C"
 {
-	__declspec(dllexport) int __stdcall	Initialize( I_DataHandle* pIDataHandle )
+	__declspec(dllexport) int __stdcall	Initialize( I_QuotationCallBack* pIDataHandle )
 	{
 		return 0;//QuoCollector::GetCollector().Initialize( pIDataHandle );
 	}
@@ -19,29 +19,9 @@ extern "C"
 		//QuoCollector::GetCollector().Release();
 	}
 
-	__declspec(dllexport) int __stdcall	RecoverQuotation()
-	{
-		return 0;//QuoCollector::GetCollector().RecoverQuotation();
-	}
-
-	__declspec(dllexport) void __stdcall HaltQuotation()
-	{
-		//QuoCollector::GetCollector().Halt();
-	}
-
-	__declspec(dllexport) bool __stdcall IsProxy()
-	{
-		return true;
-	}
-
 	__declspec(dllexport) int __stdcall	GetStatus( char* pszStatusDesc, unsigned int& nStrLen )
 	{
 		return 0;//QuoCollector::GetCollector().GetCollectorStatus( pszStatusDesc, nStrLen );
-	}
-
-	__declspec(dllexport) int __stdcall	GetMarketID()
-	{
-		return 0;//QuoCollector::GetCollector().GetMarketID();
 	}
 
 	__declspec(dllexport) void __stdcall	ExecuteUnitTest()

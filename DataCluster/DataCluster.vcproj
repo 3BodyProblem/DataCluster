@@ -330,6 +330,10 @@
 			</FileConfiguration>
 		</File>
 		<File
+			RelativePath=".\Interface.h"
+			>
+		</File>
+		<File
 			RelativePath=".\ReadMe.txt"
 			>
 		</File>
