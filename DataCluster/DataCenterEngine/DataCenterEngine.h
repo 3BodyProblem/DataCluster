@@ -29,12 +29,10 @@ public:///< 引擎构造和初始化相关功能
 
 	/**
  	 * @brief				初始化行情各参数，准备工作
-	 * @note				流程中，先从本地文件加载内存插件的行情数据，再初始化行情解析插件
-	 * @param[in]			sMemPluginPath				行情数据内存插件路径
 	 * @return				==0							成功
 							!=0							失败
 	 */
-	int						Initialize( const std::string& sMemPluginPath );
+	int						Initialize();
 
 	/**
 	 * @brief				释放行情模块各资源
@@ -94,13 +92,6 @@ protected:///< 线程任务相关函数
 	virtual int				Execute();
 
 	/**
-	 * @brief				空闲状态任务: 内存数据落盘/行情超时等...
-	 * @note				所以，关于内存数据落盘文件的存取，需要内存数据插件的标识接口支持
-	 */
-	virtual int				OnIdle() = 0;
-
-protected:///< 私有功能函数
-	/**
 	 * @brief				重新加载/初始化行情(内存插件、数据采集器)
 	 * @detail				初始化部分的所有业务流程都在这个函数里了
 	 * @return				true						初始化成功
@@ -109,9 +100,8 @@ protected:///< 私有功能函数
 	bool					PrepareQuotation();
 
 protected:
-	unsigned __int64		m_nPushSerialNo;				///< 实时行情更新流水
 	DatabaseIO				m_oDatabaseIO;					///< 内存数据插件管理
-	DataCollector			m_oDataCollector;				///< 行情采集模块接口
+	DataCollectorPool		m_oDataCollectorPool;			///< 行情采集模块资源池
 };
 
 
@@ -157,21 +147,6 @@ public:
 	 * @brief				销毁行情服务
 	 */
 	void					Destroy();
-
-public:
-	/**
-	 * @brief				空闲状态任务: 内存数据落盘/行情超时等...
-	 * @note				所以，关于内存数据落盘文件的存取，需要内存数据插件的标识接口支持
-	 */
-	virtual int				OnIdle();
-
-	/**
-	 * @brief				询问数据采集模块的状态
-	 * @param[out]			pszStatusDesc			返回出状态描述串
-	 * @param[in,out]		nStrLen					输入描述串缓存长度，输出描述串有效内容长度
-	 * @return				true					可服务
-	 */
-	bool					OnInquireStatus( char* pszStatusDesc, unsigned int& nStrLen );
 
 public:
 	virtual void			WriteInfo( const char * szFormat,... );

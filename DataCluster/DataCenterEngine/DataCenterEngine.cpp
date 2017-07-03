@@ -9,11 +9,10 @@
 
 DataIOEngine::DataIOEngine()
  : SimpleTask( "DataIOEngine::Thread" )
- , m_nPushSerialNo( 0 )
 {
 }
 
-int DataIOEngine::Initialize( const std::string& sMemPluginPath )
+int DataIOEngine::Initialize()
 {
 	int			nErrorCode = 0;
 
@@ -27,7 +26,7 @@ int DataIOEngine::Initialize( const std::string& sMemPluginPath )
 	}
 
 	m_oDatabaseIO.RecoverDatabase();
-	if( 0 != (nErrorCode = m_oDataCollector.Initialize( this )) )
+	if( 0 != (nErrorCode = m_oDataCollectorPool.Initialize( this )) )
 	{
 		DataCenterEngine::GetSerivceObj().WriteError( "DataIOEngine::Initialize() : failed 2 initialize data collector plugin, errorcode=%d", nErrorCode );
 		return nErrorCode;
@@ -46,8 +45,7 @@ int DataIOEngine::Initialize( const std::string& sMemPluginPath )
 
 void DataIOEngine::Release()
 {
-	m_nPushSerialNo = 0;
-	m_oDataCollector.Release();
+	m_oDataCollectorPool.Release();
 	m_oDatabaseIO.Release();
 	SimpleTask::StopThread();
 }
@@ -58,9 +56,9 @@ bool DataIOEngine::PrepareQuotation()
 
 	DataCenterEngine::GetSerivceObj().WriteInfo( "DataIOEngine::PrepareQuotation() : reloading quotation........" );
 
-	m_oDataCollector.HaltDataCollector();												///< 1) 先事先停止数据采集模块
+//	m_oDataCollectorPool.HaltDataCollector();											///< 1) 先事先停止数据采集模块
 
-	if( 0 != (nErrorCode=m_oDataCollector.RecoverDataCollector()) )						///< 3) 重新初始化行情采集模块
+//	if( 0 != (nErrorCode=m_oDataCollectorPool.RecoverDataCollector()) )					///< 3) 重新初始化行情采集模块
 	{
 		DataCenterEngine::GetSerivceObj().WriteWarning( "DataIOEngine::PrepareQuotation() : failed 2 initialize data collector module, errorcode=%d", nErrorCode );
 		return false;;
@@ -79,21 +77,9 @@ int DataIOEngine::Execute()
 	{
 		try
 		{
-			{
-				SimpleTask::Sleep( 1000 );		///< 重新初始化间隔，默认为3秒
-				DataCenterEngine::GetSerivceObj().WriteInfo( "DataIOEngine::Execute() : [NOTICE] Enter Service Initializing Time ......" );
+			SimpleTask::Sleep( 1000*3 );	///< 一秒循环一次
 
-				if( false == PrepareQuotation() )		///< 重新加载行情数据
-				{
-					continue;
-				}
-
-				DataCenterEngine::GetSerivceObj().WriteInfo( "DataIOEngine::Execute() : ................. [NOTICE] Service is Available ....................." );
-				continue;
-			}
-
-			OnIdle();									///< 空闲处理函数
-			SimpleTask::Sleep( 1000 );					///< 一秒循环一次
+			m_oDataCollectorPool.PreserveAllConnection();
 		}
 		catch( std::exception& err )
 		{
@@ -127,19 +113,20 @@ int DataIOEngine::OnQuery( unsigned int nDataID, char* pData, unsigned int nData
 
 int DataIOEngine::OnImage( unsigned int nDataID, char* pData, unsigned int nDataLen, bool bLastFlag )
 {
-	return m_oDatabaseIO.BuildMessageTable( nDataID, pData, nDataLen, bLastFlag, m_nPushSerialNo );
+	unsigned __int64		nPushSerialNo = 0;				///< 实时行情更新流水
+
+	return m_oDatabaseIO.BuildMessageTable( nDataID, pData, nDataLen, bLastFlag, nPushSerialNo );
 }
 
 int DataIOEngine::OnData( unsigned int nDataID, char* pData, unsigned int nDataLen, bool bPushFlag )
 {
-	int					nErrorCode = m_oDatabaseIO.UpdateQuotation( nDataID, pData, nDataLen, m_nPushSerialNo );
+	unsigned __int64	nPushSerialNo = 0;				///< 实时行情更新流水
+	int					nErrorCode = m_oDatabaseIO.UpdateQuotation( nDataID, pData, nDataLen, nPushSerialNo );
 
 	if( 0 >= nErrorCode )
 	{
 		return nErrorCode;
 	}
-
-//	m_oLinkSessions.PushQuotation( nDataID, 0, pData, nDataLen, bPushFlag, m_nPushSerialNo );
 
 	return nErrorCode;
 }
@@ -210,7 +197,7 @@ int DataCenterEngine::Activate()
 		}
 
 		///< ........................ 开始启动本节点引擎 .............................
-		if( 0 != (nErrorCode = DataIOEngine::Initialize( Configuration::GetConfigObj().GetMemPluginPath() )) )
+		if( 0 != (nErrorCode = DataIOEngine::Initialize()) )
 		{
 			DataCenterEngine::GetSerivceObj().WriteWarning( "DataCenterEngine::Activate() : failed 2 initialize service engine, errorcode=%d", nErrorCode );
 			return nErrorCode;
@@ -251,34 +238,6 @@ void DataCenterEngine::Destroy()
 bool DataCenterEngine::IsServiceAlive()
 {
 	if( true == SimpleThread::IsAlive() )
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
-}
-
-int DataCenterEngine::OnIdle()
-{
-	///< 非交易时段，停止源驱动的数据采集模块的工作
-	if( false == m_oDataCollector.IsProxy() && true == m_oDataCollector.IsAlive() )
-	{
-		DataCenterEngine::GetSerivceObj().WriteInfo( "DataCenterEngine::OnIdle() : halting data collector ......" );
-		m_oDataCollector.HaltDataCollector();
-	}
-
-	return 0;
-}
-
-bool DataCenterEngine::OnInquireStatus( char* pszStatusDesc, unsigned int& nStrLen )
-{
-	bool				bDataBuilded = m_oDatabaseIO.IsBuilded();
-	enum E_SS_Status	eStatus = m_oDataCollector.InquireDataCollectorStatus( pszStatusDesc, nStrLen );
-
-	///< 交易时段的工作状态
-	if( ET_SS_WORKING == eStatus && true == bDataBuilded )
 	{
 		return true;
 	}

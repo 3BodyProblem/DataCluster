@@ -70,14 +70,13 @@ public:
 	const std::string&					GetMemPluginPath() const;
 
 	/**
-	 * @brief							数据采集插件路径
+	 * @brief							获取数据采集模块的加载路径列表
 	 */
-	const std::string&					GetDataCollectorPluginPath() const;
+	DllPathTable&						GetDCPathTable();
 
 protected:
 	DllPathTable						m_oDCPathTable;					///< 数据采集器加载地址表
 	std::string							m_sMemPluginPath;				///< 数据内存块插件所在路径
-	std::string							m_sDataCollectorPluginPath;		///< 数据采集插件所在路径
 };
 
 

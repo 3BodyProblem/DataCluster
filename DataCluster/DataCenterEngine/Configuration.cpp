@@ -114,12 +114,6 @@ int Configuration::Load()
 		return -2;
 	}
 
-	m_sDataCollectorPluginPath = oIniFile.getStringValue( std::string("Plugin"), std::string("datacollector"), nErrCode );
-	if( 0 != nErrCode )	{
-		::printf( "Configuration::Load() : invalid data collector plugin path\n" );
-		return -3;
-	}
-
 	return 0;
 }
 
@@ -135,10 +129,11 @@ const std::string& Configuration::GetMemPluginPath() const
 	return m_sMemPluginPath;
 }
 
-const std::string& Configuration::GetDataCollectorPluginPath() const
+DllPathTable& Configuration::GetDCPathTable()
 {
-	return m_sDataCollectorPluginPath;
+	return m_oDCPathTable;
 }
+
 
 
 

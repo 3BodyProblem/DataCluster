@@ -31,6 +31,11 @@ DataCollector::DataCollector()
 {
 }
 
+DataCollector::~DataCollector()
+{
+	Release();
+}
+
 unsigned int DataCollector::GetMarketID()
 {
 	return m_nMarketID;
@@ -41,13 +46,13 @@ bool DataCollector::IsProxy()
 	return m_bIsProxyPlugin;
 }
 
-int DataCollector::Initialize( I_DataHandle* pIDataCallBack )
+int DataCollector::Initialize( I_DataHandle* pIDataCallBack, std::string sDllPath )
 {
 	Release();
 
 	DataCenterEngine::GetSerivceObj().WriteInfo( "DataCollector::Initialize() : initializing data collector plugin ......" );
 
-	std::string		sModulePath = GetModulePath(NULL) + Configuration::GetConfigObj().GetDataCollectorPluginPath();
+	std::string		sModulePath = GetModulePath(NULL) + sDllPath;
 	int				nErrorCode = m_oDllPlugin.LoadDll( sModulePath );
 
 	if( 0 != nErrorCode )
@@ -159,9 +164,107 @@ enum E_SS_Status DataCollector::InquireDataCollectorStatus( char* pszStatusDesc,
 }
 
 
+///< ------------------------------------------------------------------------------------
 
 
+DataCollectorPool::DataCollectorPool()
+{
+	std::vector<DataCollector>::reserve( 64 );
+}
 
+DataCollectorPool::~DataCollectorPool()
+{
+	Release();
+}
+
+void DataCollectorPool::Release()
+{
+	for( unsigned int n = 0; n < GetCount(); n++ )
+	{
+		this->operator []( n ).Release();
+	}
+}
+
+int DataCollectorPool::Initialize( I_DataHandle* pIDataCallBack )
+{
+	Configuration&			refCnf = Configuration::GetConfigObj();
+	DllPathTable&			refDcDllTable = refCnf.GetDCPathTable();
+	unsigned int			nDllCount = refDcDllTable.GetCount();
+
+	DataCenterEngine::GetSerivceObj().WriteInfo( "DataCollectorPool::Initialize() : initializing ... " );
+
+	if( nDllCount <= 0 )
+	{
+		DataCenterEngine::GetSerivceObj().WriteError( "DataCollectorPool::Initialize() : data collector table is empty" );
+		return -1;
+	}
+
+	if( nDllCount >= 64 )
+	{
+		DataCenterEngine::GetSerivceObj().WriteError( "DataCollectorPool::Initialize() : 2 many data collector configuration, dll count = %d (>=64)", nDllCount );
+		return -2;
+	}
+
+	if( GetCount() > 0 )							///< 避免重复初始化
+	{
+		return GetCount();
+	}
+
+	for( unsigned int n = 0; n < nDllCount; n++ )
+	{
+		std::string		sDcDllPath = refDcDllTable.GetPathByPos( n );
+
+		std::vector<DataCollector>::push_back( DataCollector() );
+		if( this->operator []( n ).Initialize( pIDataCallBack, sDcDllPath ) < 0 )
+		{
+			DataCenterEngine::GetSerivceObj().WriteError( "DataCollectorPool::Initialize() : failed 2 initialize data collector, %s", sDcDllPath.c_str() );
+			std::vector<DataCollector>::clear();	///< 清空已经初始化成功的插件
+			return -1000 - n;
+		}
+	}
+
+	DataCenterEngine::GetSerivceObj().WriteInfo( "DataCollectorPool::Initialize() : initialized ... (num=%d)", GetCount() );
+
+	return GetCount();
+}
+
+int DataCollectorPool::PreserveAllConnection()
+{
+	int			nAffectNum = 0;
+
+	for( unsigned int n = 0; n < GetCount(); n++ )
+	{
+		static char			s_pszTmp[2048] = { 0 };
+		unsigned int		nBufLen = sizeof(s_pszTmp);
+		DataCollector&		refDataCollector = this->operator []( n );
+		enum E_SS_Status	eStatus = refDataCollector.InquireDataCollectorStatus( s_pszTmp, nBufLen );
+
+		if( ET_SS_DISCONNECTED == eStatus )			///< 在传输断开的时，需要重新连接
+		{
+			DataCenterEngine::GetSerivceObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : [Plugin] connection disconnected, %s", s_pszTmp );
+
+			refDataCollector.HaltDataCollector();	///< 停止插件
+			int		nErrorCode = refDataCollector.RecoverDataCollector();
+			if( 0 == nErrorCode )
+			{
+				nAffectNum++;
+			}
+			else
+			{
+				DataCenterEngine::GetSerivceObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : failed 2 recover data collector module, errorcode=%d", nErrorCode );
+			}
+		}
+	}
+
+	return nAffectNum;
+}
+
+unsigned int DataCollectorPool::GetCount()
+{
+	CriticalLock			lock( m_oLock );
+
+	return std::vector<DataCollector>::size();
+}
 
 
 

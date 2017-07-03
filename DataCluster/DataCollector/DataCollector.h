@@ -3,6 +3,7 @@
 
 
 #include <string>
+#include <vector>
 #include "Interface.h"
 #include "../Infrastructure/Dll.h"
 #include "../Infrastructure/Lock.h"
@@ -41,14 +42,16 @@ class DataCollector
 {
 public:
 	DataCollector();
+	~DataCollector();
 
 	/**
 	 * @brief				数据采集模块初始化
 	 * @param[in]			pIDataCallBack				行情回调接口
+	 * @param[in]			sDllPath					数据采集模块的加载路径
 	 * @return				==0							成功
 							!=0							错误
 	 */
-	int						Initialize( I_DataHandle* pIDataCallBack );
+	int						Initialize( I_DataHandle* pIDataCallBack, std::string sDllPath );
 
 	/**
 	 * @breif				数据采集模块释放退出
@@ -109,6 +112,46 @@ private:
 };
 
 
+/**
+ * @class					DataCollectorPool
+ * @brief					数据采集模块池
+ * @author					barry
+ */
+class DataCollectorPool : protected std::vector<DataCollector>
+{
+public:
+	DataCollectorPool();
+	~DataCollectorPool();
+
+	/**
+	 * @brief				根据配置文件中的数据采集器路径列表，依次初始化各插件
+	 * @param[in]			pIDataCallBack					行情回调接口
+	 * @return				>=0								初始化的数据采集插件数量
+							<0								出错
+	 */
+	int						Initialize( I_DataHandle* pIDataCallBack );
+
+	/**
+	 * @brief				释放资源
+	 */
+	void					Release();
+
+public:
+	/**
+	 * @brief				维持各加载数据采集器的连接(24hr)
+	 * @return				>=0								成功
+							<0								失败
+	 */
+	int						PreserveAllConnection();
+
+	/**
+	 * @brief				有效数据采集器的数量
+	 */
+	unsigned int			GetCount();
+
+protected:
+	CriticalObject			m_oLock;						///< 锁
+};
 
 
 
