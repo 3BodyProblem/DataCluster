@@ -134,28 +134,30 @@ int DataIOEngine::OnData( unsigned int nDataID, char* pData, unsigned int nDataL
 
 int DataIOEngine::QueryData( unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen )
 {
-/*
-		unsigned int			lstTableID[64] = { 0 };
-		unsigned int			lstTableWidth[64] = { 0 };
-		unsigned int			nTableCount = m_pDatabase->GetTablesID( lstTableID, 64, lstTableWidth, 64 );
-		unsigned int			nReqLinkCount = m_setNewReqLinkID.size();
+	int					nErrCode = 0;
+	char				pszEmptyCode[20] = { 0 };
+	unsigned __int64	nSerialNoOfAnchor = 0;						///< 实时行情更新流水
 
-		for( unsigned int n = 0; n < nTableCount && m_setNewReqLinkID.size() > 0; n++ )
+	if( 0 == ::memcmp( pDataPtr, pszEmptyCode, sizeof(pszEmptyCode) ) )		///< 查询全部数据表
+	{
+		nErrCode = m_oDatabaseIO.FetchRecordsByID( nMessageID, pDataPtr, nDataLen, nSerialNoOfAnchor );
+		if( nErrCode < 0 )
 		{
-			unsigned int		nTableID = lstTableID[n];
-			unsigned int		nTableWidth = lstTableWidth[n];
-			int					nFunctionID = ((n+1)==nTableCount) ? 100 : 0;	///< 最后一个数据包的标识
-			unsigned __int64	nSerialNoOfAnchor = nSerialNo;
-			int					nDataLen = m_pDatabase->FetchRecordsByID( nTableID, m_pSendBuffer, MAX_IMAGE_BUFFER_SIZE, nSerialNoOfAnchor );
+			DataIOEngine::GetEngineObj().WriteWarning( "DataIOEngine::QueryData() : failed 2 fetch table(msgid=%u), errorcode=%d", nMessageID, nErrCode );
+			return nErrCode;
+		}
+	}
+	else																	///< 主键查询
+	{
+		nErrCode = m_oDatabaseIO.QueryQuotation( nMessageID, pDataPtr, nDataLen, nSerialNoOfAnchor );
+		if( nErrCode < 0 )
+		{
+			DataIOEngine::GetEngineObj().WriteWarning( "DataIOEngine::QueryData() : failed 2 fetch record(msgid=%u,code=%s), errorcode=%d", nMessageID, pDataPtr, nErrCode );
+			return nErrCode;
+		}
+	}
 
-			if( nDataLen < 0 )
-			{
-				DataNodeService::GetSerivceObj().WriteWarning( "SessionCollection::FlushImageData2NewSessions() : failed 2 fetch image of table, errorcode=%d", nDataLen );
-				return -1 * (n*100);
-			}
-*/
-
-	return 0;
+	return nErrCode;
 }
 
 void DataIOEngine::OnLog( unsigned char nLogLevel, const char* pszFormat, ... )
