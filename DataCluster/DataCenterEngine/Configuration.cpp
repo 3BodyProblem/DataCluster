@@ -98,7 +98,7 @@ int Configuration::Load()
 {
 	inifile::IniFile	oIniFile;
 	int					nErrCode = 0;
-	std::string			sIniPath = GetModulePath(NULL) + "DataNode.ini";
+	std::string			sIniPath = GetModulePath(NULL) + "DataCluster.ini";
 
 	///< ---------- load .ini -------------------------
 	if( 0 != (nErrCode=oIniFile.load( sIniPath )) )
@@ -113,6 +113,9 @@ int Configuration::Load()
 		::printf( "Configuration::Load() : invalid memory plugin path\n" );
 		return -2;
 	}
+
+
+	//m_oDCPathTable
 
 	return 0;
 }

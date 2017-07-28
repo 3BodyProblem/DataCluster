@@ -62,7 +62,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="gtestd.lib"
-				OutputFile="D:\ServiceManager\srvunit\DataCluster\$(ProjectName).dll"
+				OutputFile="D:\ServiceManager\srvunit\DataNode\$(ProjectName).dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../libs/gtest/library_vc9/Debug/"
 				ModuleDefinitionFile="DataCluster.def"
@@ -139,7 +139,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="gtest.lib"
-				OutputFile="D:\ServiceManager\srvunit\DataCluster\$(ProjectName).dll"
+				OutputFile="D:\ServiceManager\srvunit\DataNode\$(ProjectName).dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../libs/gtest/library_vc9/Release/"
 				ModuleDefinitionFile="DataCluster.def"
