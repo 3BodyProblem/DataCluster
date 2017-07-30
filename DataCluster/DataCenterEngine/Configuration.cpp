@@ -98,6 +98,7 @@ int Configuration::Load()
 {
 	inifile::IniFile	oIniFile;
 	int					nErrCode = 0;
+	char				pszDllPath[218] = { 0 };
 	std::string			sIniPath = GetModulePath(NULL) + "DataCluster.ini";
 
 	///< ---------- load .ini -------------------------
@@ -107,15 +108,32 @@ int Configuration::Load()
 		return -1;
 	}
 
-	///< [service configuration]
-	m_sMemPluginPath = oIniFile.getStringValue( std::string("Plugin"), std::string("memdb"), nErrCode );
+	///< ------------------------ [service configuration] --------------------------------------
+	///< Memory Database Plugin
+	m_sMemPluginPath = oIniFile.getStringValue( std::string("MemDB"), std::string("Path"), nErrCode );
 	if( 0 != nErrCode )	{
 		::printf( "Configuration::Load() : invalid memory plugin path\n" );
 		return -2;
 	}
 
+	///< Quotation Plugin
+	int					nPluginPathCount = oIniFile.getIntValue( std::string("Plugin"), std::string("Count"), nErrCode );
+	if( 0 != nErrCode )	{
+		::printf( "Configuration::Load() : missing node (Plugin::Count)\n" );
+		return -3;
+	}
 
-	//m_oDCPathTable
+	for( int n = 0; n < nPluginPathCount; n++ )
+	{
+		::sprintf( pszDllPath, "Path_%d", n );
+		std::string		sQuotationPluginPath = oIniFile.getStringValue( std::string("Plugin"), std::string(pszDllPath), nErrCode );
+		if( 0 != nErrCode )	{
+			::printf( "Configuration::Load() : missing node (Plugin::Path_%d)\n", n );
+			return -4;
+		}
+
+		m_oDCPathTable.AddPath( sQuotationPluginPath );
+	}
 
 	return 0;
 }

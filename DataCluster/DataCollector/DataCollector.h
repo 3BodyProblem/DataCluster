@@ -128,6 +128,7 @@ public:
 	 * @param[in]			pIDataCallBack					行情回调接口
 	 * @return				>=0								初始化的数据采集插件数量
 							<0								出错
+	 * @note				必须能成功加载和初始化所有子插件
 	 */
 	int						Initialize( I_DataHandle* pIDataCallBack );
 

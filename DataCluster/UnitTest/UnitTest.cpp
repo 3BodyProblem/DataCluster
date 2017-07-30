@@ -83,7 +83,7 @@ void ExecuteTestCase()
 
 	if( false == s_bInit )	{
 		int			nArgc = 1;
-		char*		pszArgv[32] = { "DataNode.EXE", };
+		char*		pszArgv[32] = { "DataCluster.Dll", };
 
 		s_bInit = true;
 		testing::AddGlobalTestEnvironment( new UnitTestEnv() );

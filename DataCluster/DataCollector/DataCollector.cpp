@@ -218,7 +218,7 @@ int DataCollectorPool::Initialize( I_DataHandle* pIDataCallBack )
 		if( this->operator []( n ).Initialize( pIDataCallBack, sDcDllPath ) < 0 )
 		{
 			DataIOEngine::GetEngineObj().WriteError( "DataCollectorPool::Initialize() : failed 2 initialize data collector, %s", sDcDllPath.c_str() );
-			std::vector<DataCollector>::clear();	///< 清空已经初始化成功的插件
+			this->operator []( n ).Release();
 			return -1000 - n;
 		}
 	}
@@ -248,6 +248,7 @@ int DataCollectorPool::PreserveAllConnection()
 			if( 0 == nErrorCode )
 			{
 				nAffectNum++;
+				DataIOEngine::GetEngineObj().WriteInfo( "DataCollectorPool::PreserveAllConnection() : data collector module recovered! errorcode=%d", nErrorCode );
 			}
 			else
 			{
