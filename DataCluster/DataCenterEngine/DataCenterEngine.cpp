@@ -30,12 +30,18 @@ int DataIOEngine::Initialize( I_QuotationCallBack* pIQuotation )
 
 	Release();
 
+	m_pQuotationCallBack = pIQuotation;
+	if( NULL == pIQuotation )
+	{
+		DataIOEngine::GetEngineObj().WriteError( "DataIOEngine::Initialize() : invalid callback object pointer(Null)" );
+		return -1;
+	}
+
 	if( 0 != (nErrorCode = Configuration::GetConfigObj().Load()) )	{
-		DataIOEngine::GetEngineObj().WriteWarning( "DataIOEngine::Initialize() : invalid configuration file, errorcode=%d", nErrorCode );
+		DataIOEngine::GetEngineObj().WriteError( "DataIOEngine::Initialize() : invalid configuration file, errorcode=%d", nErrorCode );
 		return nErrorCode;
 	}
 
-	m_pQuotationCallBack = pIQuotation;
 	DataIOEngine::GetEngineObj().WriteInfo( "DataIOEngine::Initialize() : DataNode Engine is initializing ......" );
 
 	if( 0 != (nErrorCode = m_oDatabaseIO.Initialize()) )
@@ -45,7 +51,7 @@ int DataIOEngine::Initialize( I_QuotationCallBack* pIQuotation )
 	}
 
 	m_oDatabaseIO.RecoverDatabase();
-	if( 0 != (nErrorCode = m_oDataCollectorPool.Initialize( this )) )
+	if( 0 >= (nErrorCode = m_oDataCollectorPool.Initialize( this )) )
 	{
 		DataIOEngine::GetEngineObj().WriteError( "DataIOEngine::Initialize() : failed 2 initialize data collector plugin, errorcode=%d", nErrorCode );
 		return nErrorCode;
@@ -64,9 +70,9 @@ int DataIOEngine::Initialize( I_QuotationCallBack* pIQuotation )
 
 void DataIOEngine::Release()
 {
+	SimpleTask::StopThread();
 	m_oDataCollectorPool.Release();
 	m_oDatabaseIO.Release();
-	SimpleTask::StopThread();
 }
 
 int DataIOEngine::Execute()

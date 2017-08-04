@@ -50,14 +50,14 @@ int DataCollector::Initialize( I_DataHandle* pIDataCallBack, std::string sDllPat
 {
 	Release();
 
-	DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Initialize() : initializing data collector plugin ......" );
+	DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Initialize() : Initializing DataCollector Plugin ......" );
 
 	std::string		sModulePath = GetModulePath(NULL) + sDllPath;
 	int				nErrorCode = m_oDllPlugin.LoadDll( sModulePath );
 
 	if( 0 != nErrorCode )
 	{
-		DataIOEngine::GetEngineObj().WriteError( "DataCollector::Initialize() : failed 2 load data collector module, errorcode=%d", nErrorCode );
+		DataIOEngine::GetEngineObj().WriteError( "DataCollector::Initialize() : failed 2 load data collector [%s], errorcode=%d", sModulePath.c_str(), nErrorCode );
 		return nErrorCode;
 	}
 
@@ -71,20 +71,22 @@ int DataCollector::Initialize( I_DataHandle* pIDataCallBack, std::string sDllPat
 
 	if( NULL == m_pFuncInitialize || NULL == m_pFuncRelease || NULL == m_pFuncRecoverQuotation || NULL == m_pFuncGetStatus || NULL == m_pFuncGetMarketID || NULL == m_pFuncHaltQuotation || NULL == m_pFuncIsProxy )
 	{
-		DataIOEngine::GetEngineObj().WriteError( "DataCollector::Initialize() : invalid fuction pointer(NULL)" );
+		DataIOEngine::GetEngineObj().WriteError( "DataCollector::Initialize() : invalid fuction pointer(NULL) : %s", sModulePath.c_str() );
+		Release();
 		return -10;
 	}
 
 	if( 0 != (nErrorCode = m_pFuncInitialize( pIDataCallBack )) )
 	{
-		DataIOEngine::GetEngineObj().WriteError( "DataCollector::Initialize() : failed 2 initialize data collector module, errorcode=%d", nErrorCode );
+		DataIOEngine::GetEngineObj().WriteError( "DataCollector::Initialize() : failed 2 initialize data collector [%s], errorcode=%d", sModulePath.c_str(), nErrorCode );
+		Release();
 		return nErrorCode;
 	}
 
 	m_nMarketID = m_pFuncGetMarketID();
 	m_bIsProxyPlugin = m_pFuncIsProxy();
 
-	DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Initialize() : data collector plugin is initialized ......" );
+	DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Initialize() : DataCollector [%s] is Initialized! ......", sModulePath.c_str() );
 
 	return 0;
 }
@@ -93,13 +95,13 @@ void DataCollector::Release()
 {
 	if( NULL != m_pFuncRelease )
 	{
-		DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Release() : releasing memory database plugin ......" );
+		DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Release() : releasing DataCollector plugin, MarketID[%u] ......", m_nMarketID );
 		m_pFuncHaltQuotation();
 		m_pFuncHaltQuotation = NULL;
 		m_pFuncRelease();
 		m_pFuncRelease = NULL;
 		m_bActivated = false;
-		DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Release() : memory database plugin is released ......" );
+		DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Release() : DataCollector plugin is released, MarketID[%u] ......", m_nMarketID );
 	}
 
 	m_pFuncGetStatus = NULL;
@@ -241,18 +243,18 @@ int DataCollectorPool::PreserveAllConnection()
 
 		if( ET_SS_DISCONNECTED == eStatus )			///< 在传输断开的时，需要重新连接
 		{
-			DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : [Plugin] connection disconnected, %s", s_pszTmp );
+			DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : initializing DataCollector plugin ..." );
 
 			refDataCollector.HaltDataCollector();	///< 停止插件
 			int		nErrorCode = refDataCollector.RecoverDataCollector();
 			if( 0 == nErrorCode )
 			{
 				nAffectNum++;
-				DataIOEngine::GetEngineObj().WriteInfo( "DataCollectorPool::PreserveAllConnection() : data collector module recovered! errorcode=%d", nErrorCode );
+				DataIOEngine::GetEngineObj().WriteInfo( "DataCollectorPool::PreserveAllConnection() : DataCollector Recovered Successfully! MarketID[%u] !!! ", refDataCollector.GetMarketID() );
 			}
 			else
 			{
-				DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : failed 2 recover data collector module, errorcode=%d", nErrorCode );
+				DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : failed 2 initialize DataCollector, errorcode=%d", nErrorCode );
 			}
 		}
 	}
