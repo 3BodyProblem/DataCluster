@@ -119,23 +119,69 @@ int DataIOEngine::OnQuery( unsigned int nDataID, char* pData, unsigned int nData
 
 int DataIOEngine::OnImage( unsigned int nDataID, char* pData, unsigned int nDataLen, bool bLastFlag )
 {
-	unsigned __int64		nPushSerialNo = 0;				///< 实时行情更新流水
+	unsigned __int64		nSerialNo = 0;
+	int						nAffectNum = 0;
+	InnerRecord*			pRecord = TableFillerRegister::GetRegister().PrepareNewTableBlock( nDataID, pData, nDataLen );
 
-	return m_oDatabaseIO.NewRecord( nDataID, pData, nDataLen, bLastFlag, nPushSerialNo );
+	if( NULL == pRecord )
+	{
+		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::NewRecord() : MessageID is invalid, id=%d", nDataID );
+		return -1;
+	}
+
+	nAffectNum = m_oDatabaseIO.QueryRecord( pRecord->GetInnerTableID(), pRecord->GetInnerRecordPtr(), pRecord->GetInnerRecordLength(), nSerialNo );
+
+	if( nAffectNum < 0 )
+	{
+		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::NewRecord() : error in DatabaseAdaptor::NewRecord(), MessageID=%d", nDataID );
+		return -2;
+	}
+	else if( nAffectNum == 0 )
+	{
+		pRecord->FillMessage2InnerRecord();
+		nAffectNum = m_oDatabaseIO.NewRecord( pRecord->GetInnerTableID(), pRecord->GetInnerRecordPtr(), pRecord->GetInnerRecordLength(), bLastFlag, nSerialNo );
+	}
+	else
+	{
+		pRecord->FillMessage2InnerRecord();
+		nAffectNum = m_oDatabaseIO.UpdateRecord( pRecord->GetInnerTableID(), pRecord->GetInnerRecordPtr(), pRecord->GetInnerRecordLength(), nSerialNo );
+	}
+
+	return nAffectNum;
 }
 
 int DataIOEngine::OnData( unsigned int nDataID, char* pData, unsigned int nDataLen, bool bPushFlag )
 {
-	unsigned __int64	nPushSerialNo = 0;				///< 实时行情更新流水
-	int					nErrorCode = m_oDatabaseIO.UpdateRecord( nDataID, pData, nDataLen, nPushSerialNo );
+	unsigned __int64		nSerialNo = 0;
+	int						nAffectNum = 0;
+	InnerRecord*			pRecord = TableFillerRegister::GetRegister().PrepareNewTableBlock( nDataID, pData, nDataLen );
 
-	m_pQuotationCallBack->OnQuotation( nDataID, pData, nDataLen );
-	if( 0 >= nErrorCode )
+	if( NULL == pRecord )
 	{
-		return nErrorCode;
+		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::NewRecord() : MessageID is invalid, id=%d", nDataID );
+		return -1;
 	}
 
-	return nErrorCode;
+	nAffectNum = m_oDatabaseIO.QueryRecord( pRecord->GetInnerTableID(), pRecord->GetInnerRecordPtr(), pRecord->GetInnerRecordLength(), nSerialNo );
+	if( nAffectNum < 0 )
+	{
+		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::UpdateRecord() : error in DatabaseAdaptor::UpdateRecord(), MessageID=%d", nDataID );
+		return -2;
+	}
+	else if( nAffectNum == 0 )
+	{
+		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::UpdateRecord() : MessageID isn\'t exist, id=%d", nDataID );
+		return -2;
+	}
+	else
+	{
+		pRecord->FillMessage2InnerRecord();
+		nAffectNum = m_oDatabaseIO.UpdateRecord( pRecord->GetInnerTableID(), pRecord->GetInnerRecordPtr(), pRecord->GetInnerRecordLength(), nSerialNo );
+	}
+/*
+	m_pQuotationCallBack->OnQuotation( nDataID, pData, nDataLen );
+*/
+	return nAffectNum;
 }
 
 void DataIOEngine::OnLog( unsigned char nLogLevel, const char* pszFormat, ... )

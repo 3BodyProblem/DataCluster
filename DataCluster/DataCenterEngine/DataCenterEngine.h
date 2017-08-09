@@ -10,6 +10,7 @@
 #include "../Infrastructure/Thread.h"
 #include "../DataCollector/Interface.h"
 #include "../MemoryDB/MemoryDatabase.h"
+#include "../MemoryDB/InnerTableFiller.h"
 #include "../DataCollector/DataCollector.h"
 #include "../../../DataCollector4CTPDL/DataCollector4CTPDL/CTP_DL_QuoProtocal.h"
 
