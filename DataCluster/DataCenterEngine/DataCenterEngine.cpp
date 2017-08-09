@@ -109,11 +109,11 @@ int DataIOEngine::OnQuery( unsigned int nDataID, char* pData, unsigned int nData
 
 	if( 0 == strncmp( pData, s_pszZeroBuff, sizeof(s_pszZeroBuff) ) )
 	{
-		return m_oDatabaseIO.FetchRecordsByID( nDataID, pData, nDataLen, nSerialNo );
+		return m_oDatabaseIO.QueryBatchRecords( nDataID, pData, nDataLen, nSerialNo );
 	}
 	else
 	{
-		return m_oDatabaseIO.QueryQuotation( nDataID, pData, nDataLen, nSerialNo );
+		return m_oDatabaseIO.QueryRecord( nDataID, pData, nDataLen, nSerialNo );
 	}
 }
 
@@ -121,13 +121,13 @@ int DataIOEngine::OnImage( unsigned int nDataID, char* pData, unsigned int nData
 {
 	unsigned __int64		nPushSerialNo = 0;				///< 实时行情更新流水
 
-	return m_oDatabaseIO.BuildMessageTable( nDataID, pData, nDataLen, bLastFlag, nPushSerialNo );
+	return m_oDatabaseIO.NewRecord( nDataID, pData, nDataLen, bLastFlag, nPushSerialNo );
 }
 
 int DataIOEngine::OnData( unsigned int nDataID, char* pData, unsigned int nDataLen, bool bPushFlag )
 {
 	unsigned __int64	nPushSerialNo = 0;				///< 实时行情更新流水
-	int					nErrorCode = m_oDatabaseIO.UpdateQuotation( nDataID, pData, nDataLen, nPushSerialNo );
+	int					nErrorCode = m_oDatabaseIO.UpdateRecord( nDataID, pData, nDataLen, nPushSerialNo );
 
 	m_pQuotationCallBack->OnQuotation( nDataID, pData, nDataLen );
 	if( 0 >= nErrorCode )
@@ -136,34 +136,6 @@ int DataIOEngine::OnData( unsigned int nDataID, char* pData, unsigned int nDataL
 	}
 
 	return nErrorCode;
-}
-
-int DataIOEngine::QueryData( unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen )
-{
-	int					nErrCode = 0;
-	char				pszEmptyCode[20] = { 0 };
-	unsigned __int64	nSerialNoOfAnchor = 0;						///< 实时行情更新流水
-
-	if( 0 == ::memcmp( pDataPtr, pszEmptyCode, sizeof(pszEmptyCode) ) )		///< 查询全部数据表
-	{
-		nErrCode = m_oDatabaseIO.FetchRecordsByID( nMessageID, pDataPtr, nDataLen, nSerialNoOfAnchor );
-		if( nErrCode < 0 )
-		{
-			DataIOEngine::GetEngineObj().WriteWarning( "DataIOEngine::QueryData() : failed 2 fetch table(msgid=%u), errorcode=%d", nMessageID, nErrCode );
-			return nErrCode;
-		}
-	}
-	else																	///< 主键查询
-	{
-		nErrCode = m_oDatabaseIO.QueryQuotation( nMessageID, pDataPtr, nDataLen, nSerialNoOfAnchor );
-		if( nErrCode < 0 )
-		{
-			DataIOEngine::GetEngineObj().WriteWarning( "DataIOEngine::QueryData() : failed 2 fetch record(msgid=%u,code=%s), errorcode=%d", nMessageID, pDataPtr, nErrCode );
-			return nErrCode;
-		}
-	}
-
-	return nErrCode;
 }
 
 void DataIOEngine::OnLog( unsigned char nLogLevel, const char* pszFormat, ... )

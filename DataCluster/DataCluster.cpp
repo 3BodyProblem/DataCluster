@@ -21,7 +21,7 @@ extern "C"
 
 	__declspec(dllexport) int __stdcall	Query( unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen )
 	{
-		return DataIOEngine::GetEngineObj().QueryData( nMessageID, pDataPtr, nDataLen );
+		return DataIOEngine::GetEngineObj().OnQuery( nMessageID, pDataPtr, nDataLen );
 	}
 
 	__declspec(dllexport) void __stdcall	ExecuteUnitTest()

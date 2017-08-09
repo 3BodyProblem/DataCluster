@@ -251,6 +251,14 @@
 			Name="MemoryDB"
 			>
 			<File
+				RelativePath=".\MemoryDB\InnerTableFiller.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MemoryDB\InnerTableFiller.h"
+				>
+			</File>
+			<File
 				RelativePath=".\MemoryDB\Interface.cpp"
 				>
 			</File>
@@ -291,7 +299,11 @@
 			Name="Protocal"
 			>
 			<File
-				RelativePath=".\Protocal\CTP_DL_QuoProtocal.h"
+				RelativePath="..\..\DataCollector4CTPDL\DataCollector4CTPDL\CTP_DL_QuoProtocal.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Protocal\DataCluster_Protocal.h"
 				>
 			</File>
 		</Filter>

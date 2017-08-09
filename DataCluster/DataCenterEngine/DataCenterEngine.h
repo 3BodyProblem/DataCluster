@@ -11,6 +11,7 @@
 #include "../DataCollector/Interface.h"
 #include "../MemoryDB/MemoryDatabase.h"
 #include "../DataCollector/DataCollector.h"
+#include "../../../DataCollector4CTPDL/DataCollector4CTPDL/CTP_DL_QuoProtocal.h"
 
 
 /**
@@ -46,17 +47,6 @@ public:///< 引擎构造和初始化相关功能
 	 * @brief				释放行情模块各资源
 	 */
 	void					Release();
-
-public:///< 功能方法
-	/**
-	 * @brief				查询各市场的数据
-	 * @param[out]			nMessageID					消息ID
-	 * @param[in,out]		pDataPtr					数据地址,如果传入的数据缓存首部带有商品代码，则为主键查询操作
-	 * @param[in]			nDataLen					数据长度
-	 * @return				>=0							返回查询出来的message个数
-							<0							出错
-	 */
-	int						QueryData( unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen );
 
 public:///< 日志接口
 	virtual void			WriteInfo( const char * szFormat,... );
@@ -117,7 +107,7 @@ protected:///< 线程任务相关函数
 	virtual int				Execute();
 
 protected:
-	DatabaseIO				m_oDatabaseIO;					///< 内存数据插件管理
+	DatabaseAdaptor			m_oDatabaseIO;					///< 内存数据插件管理
 	DataCollectorPool		m_oDataCollectorPool;			///< 行情采集模块资源池
 	I_QuotationCallBack*	m_pQuotationCallBack;			///< 行情回调
 };

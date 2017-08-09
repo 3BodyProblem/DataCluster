@@ -116,6 +116,11 @@ int Configuration::Load()
 		return -2;
 	}
 
+	m_sRecoveryFolder = oIniFile.getStringValue( std::string("MemDB"), std::string("DumpFolder"), nErrCode );
+	if( false == m_sRecoveryFolder.empty() )	{
+		::printf( "Configuration::Load() : dump folder = %s\n", m_sRecoveryFolder.c_str() );
+	}
+
 	///< Quotation Plugin
 	int					nPluginPathCount = oIniFile.getIntValue( std::string("Plugin"), std::string("Count"), nErrCode );
 	if( 0 != nErrCode )	{
@@ -153,6 +158,11 @@ const std::string& Configuration::GetMemPluginPath() const
 DllPathTable& Configuration::GetDCPathTable()
 {
 	return m_oDCPathTable;
+}
+
+const std::string& Configuration::GetRecoveryFolderPath() const
+{
+	return m_sRecoveryFolder;
 }
 
 

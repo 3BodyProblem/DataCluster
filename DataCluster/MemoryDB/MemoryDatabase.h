@@ -42,17 +42,21 @@ public:
 	 */
 	void							UnitTest();
 
-public:
+public:///< 状态获取
 	/**
-	 * @brief						取得存在的数据表id列表
-	 * @param[out]					pIDList			数据表id列表指针
-	 * @param[in]					nMaxListSize	数据表的长度
-	 * @param[out]					pWidthList		各数据表结构宽度信息列表
-	 * @param[in]					nMaxWidthlistLen	列表最大长度
-	 * @return						返回实际的数据表数量
+	 * @brief						判断数据表是否已经建立完成
+	 * @note						包括从本地加载，和从行情中加载的都属于true的情况
+									&
+									此标识由调用者来设定
 	 */
-	unsigned int					GetTablesID( unsigned int* pIDList, unsigned int nMaxListSize, unsigned int* pWidthList = NULL, unsigned int nMaxWidthlistLen = 0 );
+	bool							IsBuilded();
 
+	/**
+	 * @brief						获取数据表的数量
+	 */
+	unsigned int					GetTableCount();
+
+public:
 	/**
 	 * @brief						将数据表的数据原样copy到缓存
 	 * @param[in]					nDataID					数据表ID
@@ -62,25 +66,8 @@ public:
 	 * @return						>=0						返回数据长度
 									<						出错
 	 */
-	int								FetchRecordsByID( unsigned int nDataID, char* pBuffer, unsigned int nBufferSize, unsigned __int64& nSerialNo );
+	int								QueryBatchRecords( unsigned int nDataID, char* pBuffer, unsigned int nBufferSize, unsigned __int64& nSerialNo );
 
-	/**
-	 * @brief						判断数据表是否已经建立完成
-	 * @note						包括从本地加载，和从行情中加载的都属于true的情况
-	 */
-	bool							IsBuilded();
-
-	/**
-	 * @brief						获取数据表的数量
-	 */
-	unsigned int					GetTableCount();
-
-	/**
-	 * @brief						获取最后一次更新时间
-	 */
-	time_t							GetLastUpdateTime();
-
-public:
 	/**
 	 * @brief						查询实时行情数据
 	 * @param[in]					nDataID				消息ID
@@ -91,7 +78,7 @@ public:
 									==0					未查到数据
 									!=0					错误
 	 */
-	int								QueryQuotation( unsigned int nDataID, char* pData, unsigned int nDataLen, unsigned __int64& nDbSerialNo );
+	int								QueryRecord( unsigned int nDataID, char* pData, unsigned int nDataLen, unsigned __int64& nDbSerialNo );
 
 	/**
 	 * @brief						更新实时行情数据
@@ -103,7 +90,7 @@ public:
 									==0					成功,但没有实际更新
 									!=0					错误
 	 */
-	int								UpdateQuotation( unsigned int nDataID, char* pData, unsigned int nDataLen, unsigned __int64& nDbSerialNo );
+	virtual int						UpdateRecord( unsigned int nDataID, char* pData, unsigned int nDataLen, unsigned __int64& nDbSerialNo );
 
 	/**
  	 * @brief						初始化性质的行情数据回调
@@ -116,7 +103,7 @@ public:
 	 * @return						==0					成功
 									!=0					错误
 	 */
-	int								BuildMessageTable( unsigned int nDataID, char* pData, unsigned int nDataLen, bool bLastFlag, unsigned __int64& nDbSerialNo );
+	virtual int						NewRecord( unsigned int nDataID, char* pData, unsigned int nDataLen, bool bLastFlag, unsigned __int64& nDbSerialNo );
 
 	/**
 	 * @brief						删除记录
@@ -128,7 +115,68 @@ public:
 	 */
 	int								DeleteRecord( unsigned int nDataID, char* pData, unsigned int nDataLen );
 
-public:
+protected:///< 状态和元数据
+	CriticalObject					m_oLock;						///< 锁
+	TMAP_DATAID2WIDTH				m_mapTableID;					///< 数据表ID集合表
+	bool							m_bBuilded;						///< 数据表是否已经初始化完成
+protected:///< DB插件相关
+	Dll								m_oDllPlugin;					///< 插件加载类
+	IDBFactory*						m_pIDBFactoryPtr;				///< 内存数据插件库的工厂类
+	I_Database*						m_pIDatabase;					///< 数据库指针
+};
+
+
+/**
+ * @class							DatabaseAdaptor
+ * @brief							数据库操作扩展类
+ * @author							barry
+ * @date							2017/5/5
+ */
+class DatabaseAdaptor : public DatabaseIO
+{
+public:///< 初始化
+	DatabaseAdaptor();
+	~DatabaseAdaptor();
+
+	/**
+	 * @brief						初始化数据库管理对象
+	 * @return						==0				成功
+									!=0				错误
+	 */
+	int								Initialize();
+
+	/**
+	 * @brief						释放所有资源
+	 */
+	void							Release();
+
+public:///< 将行情数据使用策略格式化后进行创建/更新到对应的数据表中
+	/**
+	 * @brief						更新实时行情数据
+	 * @param[in]					nDataID				消息ID
+	 * @param[in]					pData				数据内容
+	 * @param[in]					nDataLen			长度
+	 * @param[out]					nDbSerialNo			数据库新增，更新操作流水号
+	 * @return						>0					有更新到记录内容
+									==0					成功,但没有实际更新
+									!=0					错误
+	 */
+	virtual int						UpdateRecord( unsigned int nDataID, char* pData, unsigned int nDataLen, unsigned __int64& nDbSerialNo );
+
+	/**
+ 	 * @brief						初始化性质的行情数据回调
+	 * @note						只是更新构造好行情数据的内存初始结构，不推送
+	 * @param[in]					nDataID				消息ID
+	 * @param[in]					pData				数据内容
+	 * @param[in]					nDataLen			长度
+	 * @param[in]					bLastFlag			是否所有初始化数据已经发完，本条为最后一条的，标识
+	 * @param[out]					nDbSerialNo			数据库新增，更新操作流水号
+	 * @return						==0					成功
+									!=0					错误
+	 */
+	virtual int						NewRecord( unsigned int nDataID, char* pData, unsigned int nDataLen, bool bLastFlag, unsigned __int64& nDbSerialNo );
+
+public:///< 数据库恢复与备份
 	/**
 	 * @brief						从磁盘恢复行情数据到内存插件
 	 * @detail						需要从磁盘文件恢复最近一天的行情数据（检查本地文件日期是否有效）
@@ -139,15 +187,14 @@ public:
 	 */
 	int								RecoverDatabase();
 
-protected:
-	CriticalObject					m_oLock;						///< 锁
-	TMAP_DATAID2WIDTH				m_mapTableID;					///< 数据表ID集合表
-	bool							m_bBuilded;						///< 数据表是否已经初始化完成
-	time_t							m_nUpdateTimeT;					///< 数据库最后一次更新time_t
-	Dll								m_oDllPlugin;					///< 插件加载类
-	IDBFactory*						m_pIDBFactoryPtr;				///< 内存数据插件库的工厂类
-	I_Database*						m_pIDatabase;					///< 数据库指针
+	/**
+	 * @brief						将内存插件中的行情数据进行备份
+	 * @return						==0					成功
+									!=0					失败
+	 */
+	int								BackupDatabase();
 };
+
 
 
 

@@ -1,6 +1,7 @@
 #include <time.h>
 #include <stdio.h>
 #include "MemoryDatabase.h"
+#include "InnerTableFiller.h"
 #include "../DataCenterEngine/DataCenterEngine.h"
 
 
@@ -11,7 +12,6 @@ typedef void						(__stdcall *T_Func_DBUnitTest)();
 DatabaseIO::DatabaseIO()
 : m_pIDBFactoryPtr( NULL ), m_pIDatabase( NULL ), m_bBuilded( false )
 {
-	m_nUpdateTimeT = ::time( NULL );
 }
 
 DatabaseIO::~DatabaseIO()
@@ -24,11 +24,6 @@ bool DatabaseIO::IsBuilded()
 	return m_bBuilded;
 }
 
-time_t DatabaseIO::GetLastUpdateTime()
-{
-	return m_nUpdateTimeT;
-}
-
 unsigned int DatabaseIO::GetTableCount()
 {
 	if( false == IsBuilded() )
@@ -36,31 +31,15 @@ unsigned int DatabaseIO::GetTableCount()
 		return 0;
 	}
 
-	return m_mapTableID.size();
-}
-
-unsigned int DatabaseIO::GetTablesID( unsigned int* pIDList, unsigned int nMaxListSize, unsigned int* pWidthList, unsigned int nMaxWidthlistLen )
-{
-	unsigned int			nIndex = 0;
-	unsigned int*			pIDListPtr = pIDList;
-	CriticalLock			lock( m_oLock );
-
-	for( TMAP_DATAID2WIDTH::iterator it = m_mapTableID.begin(); it != m_mapTableID.end() && nIndex < nMaxListSize; it++ )
+	if( NULL == m_pIDatabase )
 	{
-		*(pIDListPtr+nIndex) = it->first;
-
-		if( NULL != pWidthList && 0 != nMaxWidthlistLen )
-		{
-			*(pWidthList+nIndex) = it->second;
-		}
-
-		nIndex++;
+		return 0;
 	}
 
-	return nIndex;
+	return m_pIDatabase->GetTableCount();
 }
 
-int DatabaseIO::FetchRecordsByID( unsigned int nDataID, char* pBuffer, unsigned int nBufferSize, unsigned __int64& nSerialNo )
+int DatabaseIO::QueryBatchRecords( unsigned int nDataID, char* pBuffer, unsigned int nBufferSize, unsigned __int64& nSerialNo )
 {
 	unsigned __int64		nTmpVal = 0;
 	I_Table*				pTable = NULL;
@@ -70,14 +49,14 @@ int DatabaseIO::FetchRecordsByID( unsigned int nDataID, char* pBuffer, unsigned 
 	if( NULL == pBuffer )
 	{
 		nSerialNo = 0;
-		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::FetchRecordsByID() : invalid buffer pointer(NULL)" );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::QueryBatchRecords() : invalid buffer pointer(NULL)" );
 		return -1;
 	}
 
 	if( NULL == ((pTable = m_pIDatabase->QueryTable( nDataID ))) )
 	{
 		nSerialNo = 0;
-		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::FetchRecordsByID() : failed 2 locate data table 4 message, message id=%d", nDataID );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::QueryBatchRecords() : failed 2 locate data table 4 message, message id=%d", nDataID );
 		return -2;
 	}
 
@@ -86,7 +65,7 @@ int DatabaseIO::FetchRecordsByID( unsigned int nDataID, char* pBuffer, unsigned 
 	if( nAffectNum < 0 )
 	{
 		nSerialNo = 0;
-		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::FetchRecordsByID() : failed 2 copy data from table, errorcode = %d", nAffectNum );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::QueryBatchRecords() : failed 2 copy data from table, errorcode = %d", nAffectNum );
 		return -3;
 	}
 
@@ -94,7 +73,7 @@ int DatabaseIO::FetchRecordsByID( unsigned int nDataID, char* pBuffer, unsigned 
 	return nAffectNum;
 }
 
-int DatabaseIO::BuildMessageTable( unsigned int nDataID, char* pData, unsigned int nDataLen, bool bLastFlag, unsigned __int64& nDbSerialNo )
+int DatabaseIO::NewRecord( unsigned int nDataID, char* pData, unsigned int nDataLen, bool bLastFlag, unsigned __int64& nDbSerialNo )
 {
 	I_Table*				pTable = NULL;
 	int						nAffectNum = 0;
@@ -104,19 +83,19 @@ int DatabaseIO::BuildMessageTable( unsigned int nDataID, char* pData, unsigned i
 	m_bBuilded = bLastFlag;
 	if( false == m_pIDatabase->CreateTable( nDataID, nDataLen, MAX_CODE_LENGTH ) )
 	{
-		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::BuildMessageTable() : failed 2 create data table 4 message, message id=%d", nDataID );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::NewRecord() : failed 2 create data table 4 message, message id=%d", nDataID );
 		return -1;
 	}
 
 	if( NULL == ((pTable = m_pIDatabase->QueryTable( nDataID ))) )
 	{
-		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::BuildMessageTable() : failed 2 locate data table 4 message, message id=%d", nDataID );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::NewRecord() : failed 2 locate data table 4 message, message id=%d", nDataID );
 		return -2;
 	}
 
 	if( 0 > (nAffectNum = pTable->InsertRecord( pData, nDataLen, nDbSerialNo )) )
 	{
-		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::BuildMessageTable() : failed 2 insert into data table 4 message, message id=%d, affectnum=%d", nDataID, nAffectNum );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::NewRecord() : failed 2 insert into data table 4 message, message id=%d, affectnum=%d", nDataID, nAffectNum );
 		return -3;
 	}
 
@@ -152,7 +131,7 @@ int DatabaseIO::DeleteRecord( unsigned int nDataID, char* pData, unsigned int nD
 	return nAffectNum;
 }
 
-int DatabaseIO::UpdateQuotation( unsigned int nDataID, char* pData, unsigned int nDataLen, unsigned __int64& nDbSerialNo )
+int DatabaseIO::UpdateRecord( unsigned int nDataID, char* pData, unsigned int nDataLen, unsigned __int64& nDbSerialNo )
 {
 	I_Table*		pTable = NULL;
 	int				nAffectNum = 0;
@@ -160,28 +139,26 @@ int DatabaseIO::UpdateQuotation( unsigned int nDataID, char* pData, unsigned int
 	nDbSerialNo = 0;
 	if( false == m_bBuilded )
 	{
-		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::UpdateQuotation() : failed 2 update quotation before initialization, message id=%d" );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::UpdateRecord() : failed 2 update quotation before initialization, message id=%d" );
 		return -1;
 	}
 
 	if( NULL == ((pTable = m_pIDatabase->QueryTable( nDataID ))) )
 	{
-		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::UpdateQuotation() : failed 2 locate data table 4 message, message id=%d", nDataID );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::UpdateRecord() : failed 2 locate data table 4 message, message id=%d", nDataID );
 		return -2;
 	}
 
 	if( 0 > (nAffectNum = pTable->UpdateRecord( pData, nDataLen, nDbSerialNo )) )
 	{
-		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::UpdateQuotation() : failed 2 insert into data table 4 message, message id=%d, affectnum=%d", nDataID, nAffectNum );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::UpdateRecord() : failed 2 insert into data table 4 message, message id=%d, affectnum=%d", nDataID, nAffectNum );
 		return -3;
 	}
-
-	m_nUpdateTimeT = ::time( NULL );
 
 	return nAffectNum;
 }
 
-int DatabaseIO::QueryQuotation( unsigned int nDataID, char* pData, unsigned int nDataLen, unsigned __int64& nDbSerialNo )
+int DatabaseIO::QueryRecord( unsigned int nDataID, char* pData, unsigned int nDataLen, unsigned __int64& nDbSerialNo )
 {
 	I_Table*		pTable = NULL;
 	int				nAffectNum = 0;
@@ -189,13 +166,13 @@ int DatabaseIO::QueryQuotation( unsigned int nDataID, char* pData, unsigned int 
 	nDbSerialNo = 0;
 	if( false == m_bBuilded )
 	{
-		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::QueryQuotation() : failed 2 update quotation before initialization, message id=%d" );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::QueryRecord() : failed 2 update quotation before initialization, message id=%d" );
 		return -1;
 	}
 
 	if( NULL == ((pTable = m_pIDatabase->QueryTable( nDataID ))) )
 	{
-		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::QueryQuotation() : failed 2 locate data table 4 message, message id=%d", nDataID );
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::QueryRecord() : failed 2 locate data table 4 message, message id=%d", nDataID );
 		return -2;
 	}
 
@@ -208,45 +185,6 @@ int DatabaseIO::QueryQuotation( unsigned int nDataID, char* pData, unsigned int 
 	::memcpy( pData, oRecord.GetPtr(), oRecord.Length() );
 
 	return oRecord.Length();
-}
-
-int DatabaseIO::RecoverDatabase()
-{
-	try
-	{
-		if( m_pIDatabase )
-		{
-			int				nDBLoadDate = 0;		///< 行情落盘文件日期
-
-			DataIOEngine::GetEngineObj().WriteInfo( "DatabaseIO::RecoverDatabase() : recovering ......" );
-			m_mapTableID.clear();
-			m_nUpdateTimeT = ::time( NULL );
-
-			m_bBuilded = false;
-			if( 0 != m_pIDatabase->DeleteTables() )
-			{
-				DataIOEngine::GetEngineObj().WriteWarning( "DatabaseIO::RecoverDatabase() : failed 2 clean mem-database" );
-				return -1;
-			}
-
-//			m_bBuilded = true;
-			return 0;
-		}
-
-		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseIO::RecoverDatabase() : invalid database pointer(NULL)" );
-
-		return -3;
-	}
-	catch( std::exception& err )
-	{
-		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseIO::RecoverDatabase() : exception : %s", err.what() );
-	}
-	catch( ... )
-	{
-		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseIO::RecoverDatabase() : unknow exception" );
-	}
-
-	return -3;
 }
 
 void DatabaseIO::UnitTest()
@@ -319,6 +257,179 @@ void DatabaseIO::Release()
 }
 
 
+
+DatabaseAdaptor::DatabaseAdaptor()
+{
+}
+
+DatabaseAdaptor::~DatabaseAdaptor()
+{
+	BackupDatabase();		///< 先备份数据库
+	Release();				///< 再释放所有资源
+}
+
+int DatabaseAdaptor::Initialize()
+{
+	int			nErrCode = 0;
+	DataIOEngine::GetEngineObj().WriteInfo( "DatabaseAdaptor::Initialize() : initializing powerfull database object ......" );
+
+	if( (nErrCode=DatabaseIO::Initialize()) < 0 )
+	{
+		DataIOEngine::GetEngineObj().WriteError( "DatabaseAdaptor::Initialize() : failed 2 initialize, errorcode = %d", nErrCode );
+		return nErrCode;
+	}
+
+	DataIOEngine::GetEngineObj().WriteInfo( "DatabaseAdaptor::Initialize() : powerfull database object initialized! ..." );
+
+	return 0;
+}
+
+void DatabaseAdaptor::Release()
+{
+	DatabaseIO::Release();				///< 释放数据库插件的资源
+}
+
+int DatabaseAdaptor::UpdateRecord( unsigned int nDataID, char* pData, unsigned int nDataLen, unsigned __int64& nDbSerialNo )
+{
+	unsigned __int64		nSerialNo = 0;
+	int						nAffectNum = 0;
+	InnerRecord*			pRecord = TableFillerRegister::GetRegister().PrepareNewTableBlock( nDataID, pData, nDataLen );
+
+	if( NULL == pRecord )
+	{
+		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::NewRecord() : MessageID is invalid, id=%d", nDataID );
+		return -1;
+	}
+
+	nAffectNum = DatabaseIO::QueryRecord( pRecord->GetInnerTableID(), pRecord->GetInnerRecordPtr(), pRecord->GetInnerRecordLength(), nSerialNo );
+	if( nAffectNum < 0 )
+	{
+		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::UpdateRecord() : error in DatabaseAdaptor::UpdateRecord(), MessageID=%d", nDataID );
+		return -2;
+	}
+	else if( nAffectNum == 0 )
+	{
+		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::UpdateRecord() : MessageID isn\'t exist, id=%d", nDataID );
+		return -2;
+	}
+	else
+	{
+		pRecord->FillMessage2InnerRecord();
+		nAffectNum = DatabaseIO::UpdateRecord( pRecord->GetInnerTableID(), pRecord->GetInnerRecordPtr(), pRecord->GetInnerRecordLength(), nSerialNo );
+	}
+
+	return nAffectNum;
+}
+
+int DatabaseAdaptor::NewRecord( unsigned int nDataID, char* pData, unsigned int nDataLen, bool bLastFlag, unsigned __int64& nDbSerialNo )
+{
+	unsigned __int64		nSerialNo = 0;
+	int						nAffectNum = 0;
+	InnerRecord*			pRecord = TableFillerRegister::GetRegister().PrepareNewTableBlock( nDataID, pData, nDataLen );
+
+	if( NULL == pRecord )
+	{
+		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::NewRecord() : MessageID is invalid, id=%d", nDataID );
+		return -1;
+	}
+
+	nAffectNum = DatabaseIO::QueryRecord( pRecord->GetInnerTableID(), pRecord->GetInnerRecordPtr(), pRecord->GetInnerRecordLength(), nSerialNo );
+
+	if( nAffectNum < 0 )
+	{
+		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::NewRecord() : error in DatabaseAdaptor::NewRecord(), MessageID=%d", nDataID );
+		return -2;
+	}
+	else if( nAffectNum == 0 )
+	{
+		pRecord->FillMessage2InnerRecord();
+		nAffectNum = DatabaseIO::NewRecord( pRecord->GetInnerTableID(), pRecord->GetInnerRecordPtr(), pRecord->GetInnerRecordLength(), bLastFlag, nSerialNo );
+	}
+	else
+	{
+		pRecord->FillMessage2InnerRecord();
+		nAffectNum = DatabaseIO::UpdateRecord( pRecord->GetInnerTableID(), pRecord->GetInnerRecordPtr(), pRecord->GetInnerRecordLength(), nSerialNo );
+	}
+
+	return nAffectNum;
+}
+
+int DatabaseAdaptor::RecoverDatabase()
+{
+	try
+	{
+		if( m_pIDatabase )
+		{
+			int				nDBLoadDate = 0;		///< 行情落盘文件日期
+
+			DataIOEngine::GetEngineObj().WriteInfo( "DatabaseAdaptor::RecoverDatabase() : recovering ......" );
+			m_mapTableID.clear();
+			m_bBuilded = false;
+
+			if( 0 != m_pIDatabase->DeleteTables() )
+			{
+				DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::RecoverDatabase() : failed 2 clean mem-database" );
+				return -1;
+			}
+
+			///< ----------------- 从磁盘恢复历史数据 --------------------------------------------------
+			if( 0 > (nDBLoadDate=m_pIDatabase->LoadFromDisk( Configuration::GetConfigObj().GetRecoveryFolderPath().c_str() )) )
+			{
+				DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::RecoverDatabase() : failed 2 recover mem-database from disk." );
+				return 0;
+			}
+
+			m_bBuilded = true;
+			return 0;
+		}
+
+		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::RecoverDatabase() : invalid database pointer(NULL)" );
+
+		return -3;
+	}
+	catch( std::exception& err )
+	{
+		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::RecoverDatabase() : exception : %s", err.what() );
+	}
+	catch( ... )
+	{
+		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::RecoverDatabase() : unknow exception" );
+	}
+
+	return -3;
+}
+
+int DatabaseAdaptor::BackupDatabase()
+{
+	try
+	{
+		if( m_pIDatabase )
+		{
+			DataIOEngine::GetEngineObj().WriteInfo( "DatabaseAdaptor::BackupDatabase() : making backup ......" );
+
+			if( true == m_pIDatabase->SaveToDisk( Configuration::GetConfigObj().GetRecoveryFolderPath().c_str() ) )
+			{
+				DataIOEngine::GetEngineObj().WriteInfo( "DatabaseAdaptor::BackupDatabase() : backup completed ......" );
+				return 0;
+			}
+			else
+			{
+				DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::BackupDatabase() : miss backup ......" );
+				return -2;
+			}
+		}
+	}
+	catch( std::exception& err )
+	{
+		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::BackupDatabase() : exception : %s", err.what() );
+	}
+	catch( ... )
+	{
+		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::BackupDatabase() : unknow exception" );
+	}
+
+	return -1;
+}
 
 
 
