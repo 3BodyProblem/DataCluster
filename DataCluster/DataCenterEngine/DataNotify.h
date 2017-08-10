@@ -108,14 +108,6 @@ public:
 	 */
 	void						Release();
 
-protected:
-	/**
-	 * @brief					任务函数(内循环)
-	 * @return					==0						成功
-								!=0						失败
-	 */
-	virtual int					Execute();
-
 public:
 	/**
 	 * @brief					将行情数据压缩后进行缓存
@@ -126,6 +118,14 @@ public:
 								<= 0					失败
 	 */
 	int							PutMessage( unsigned short nMsgID, const char *pData, unsigned int nLen );
+
+protected:
+	/**
+	 * @brief					任务函数(内循环)
+	 * @return					==0						成功
+								!=0						失败
+	 */
+	virtual int					Execute();
 
 	/**
 	 * @brief					从缓存取出消息数据回调给外部调用者

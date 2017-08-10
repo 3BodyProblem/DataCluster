@@ -171,7 +171,7 @@ enum E_SS_Status DataCollector::InquireDataCollectorStatus( char* pszStatusDesc,
 
 DataCollectorPool::DataCollectorPool()
 {
-	std::vector<DataCollector>::reserve( 64 );
+	std::vector<DataCollector>::reserve( 128 );
 }
 
 DataCollectorPool::~DataCollectorPool()

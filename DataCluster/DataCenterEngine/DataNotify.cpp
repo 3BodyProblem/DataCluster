@@ -238,7 +238,7 @@ void QuotationNotify::NotifyMessage()
 		char			pszDataBlock[1024] = { 0 };
 		int				nDataSize = m_oDataBuffer.GetBlock( pszDataBlock, sizeof(pszDataBlock), nMsgID );
 
-		if( nDataSize < 0 )
+		if( nDataSize <= 0 )
 		{
 			DataIOEngine::GetEngineObj().WriteError( "QuotationNotify::NotifyMessage() : failed 2 fetch package from buffer, errorcode = %d", nDataSize );
 			m_oWaitEvent.Wait( 1000 * 1 );
