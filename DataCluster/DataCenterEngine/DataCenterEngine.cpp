@@ -57,6 +57,12 @@ int DataIOEngine::Initialize( I_QuotationCallBack* pIQuotation )
 		return nErrorCode;
 	}
 
+	if( 0 != (nErrorCode = m_oQuoNotify.Initialize( pIQuotation )) )
+	{
+		DataIOEngine::GetEngineObj().WriteError( "DataIOEngine::Initialize() : failed 2 initialize quotation notify, errorcode=%d", nErrorCode );
+		return nErrorCode;
+	}
+
 	if( 0 != (nErrorCode = SimpleTask::Activate()) )
 	{
 		DataIOEngine::GetEngineObj().WriteError( "DataIOEngine::Initialize() : failed 2 initialize task thread, errorcode=%d", nErrorCode );
@@ -171,16 +177,16 @@ int DataIOEngine::OnData( unsigned int nDataID, char* pData, unsigned int nDataL
 	else if( nAffectNum == 0 )
 	{
 		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::UpdateRecord() : MessageID isn\'t exist, id=%d", nDataID );
-		return -2;
+		return -3;
 	}
 	else
 	{
 		pRecord->FillMessage2InnerRecord();
 		nAffectNum = m_oDatabaseIO.UpdateRecord( pRecord->GetInnerTableID(), pRecord->GetInnerRecordPtr(), pRecord->GetInnerRecordLength(), nSerialNo );
 	}
-/*
-	m_pQuotationCallBack->OnQuotation( nDataID, pData, nDataLen );
-*/
+
+	m_oQuoNotify.PutMessage( nDataID, pData, nDataLen );
+
 	return nAffectNum;
 }
 

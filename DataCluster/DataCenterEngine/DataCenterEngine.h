@@ -4,6 +4,7 @@
 
 #include <map>
 #include <string>
+#include "DataNotify.h"
 #include "Configuration.h"
 #include "../Interface.h"
 #include "../Infrastructure/Lock.h"
@@ -39,6 +40,7 @@ public:///< 引擎构造和初始化相关功能
 
 	/**
  	 * @brief				初始化行情各参数，准备工作
+	 * @param[in]			pIQuotation					用于行情回调通知的接口
 	 * @return				==0							成功
 							!=0							失败
 	 */
@@ -108,6 +110,7 @@ protected:///< 线程任务相关函数
 	virtual int				Execute();
 
 protected:
+	QuotationNotify			m_oQuoNotify;					///< 行情数据通知回调
 	DatabaseAdaptor			m_oDatabaseIO;					///< 内存数据插件管理
 	DataCollectorPool		m_oDataCollectorPool;			///< 行情采集模块资源池
 	I_QuotationCallBack*	m_pQuotationCallBack;			///< 行情回调

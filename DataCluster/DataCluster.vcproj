@@ -294,6 +294,14 @@
 				RelativePath=".\DataCenterEngine\DataCenterEngine.h"
 				>
 			</File>
+			<File
+				RelativePath=".\DataCenterEngine\DataNotify.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DataCenterEngine\DataNotify.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Protocal"
