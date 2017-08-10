@@ -13,8 +13,8 @@
 #pragma pack(1)
 typedef struct
 {
-	unsigned short		MsgID;			///< 消息ID
-	unsigned short		MsgLen;			///< 消息长度
+	unsigned short		MsgID;		///< 消息ID
+	unsigned short		MsgLen;		///< 消息长度
 } tagMsgHead;
 #pragma pack()
 
