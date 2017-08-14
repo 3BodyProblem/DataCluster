@@ -33,39 +33,49 @@ enum QUO_MARKET_ID
 };
 
 
-/**
- * @class			QUO_MARKETSTATUS
- * @brief			市场状态
- * @author			barry
- * @date			2017/8/8
- */
-enum QUO_MARKETSTATUS
-{
-	QUO_MARKETSTATUS_INIT = 0,									///< 初始化状态
-	QUO_MARKETSTATUS_NORMAL,									///< 正常状态
-};
-
-
 ///< ---------------------------------------------------------------------------------------
 
 
 typedef struct
 {
+	QUO_MARKET_ID				MarketID;						///< 市场编号
+	unsigned int				MarketDate;						///< 市场日期
+	unsigned int				MarketTime;						///< 市场时间
+	unsigned int				KindCount;						///< 类别数量
+	unsigned int				WareCount;						///< 商品数量
+	unsigned int				PeriodsCount;					///< 交易时段信息列表长度
+	unsigned int				MarketPeriods[8][2];			///< 交易时段描述信息列表
+	char						TradingPhaseCode[QUO_MAX_PHASECODE];///< 市场状态: 对于所有市场的第一位表示[0初始化 1行情中]
+} tagQuoMarketInfo;
+
+
+typedef struct
+{
+	unsigned int				KindID;							///< 商品类别编号
+	char						KindName[QUO_MAX_NAME];			///< 商品类别名称
+	unsigned int				WareCount;						///< 该分类的商品数量
+} tagQuoCategory;
+
+
+typedef struct
+{
 	char						Code[QUO_MAX_CODE];				///< 合约代码
+	char						ContractID[QUO_MAX_CODE];		///< 合约代码【仅期权】
 	char						Name[QUO_MAX_NAME];				///< 合约名称
+	QUO_MARKET_ID				MarketID;						///< 市场编号
 	unsigned int				Kind;							///< 证券类型
 	unsigned char				DerivativeType;					///< 衍生品类型：欧式美式+认购认沽
-	unsigned int				LotSize;						///< 一手等于几张合约
+	unsigned int				uiLotSize;						///< 每手数量（每手多少股、每手多少张等）
+	unsigned int				uiLotFactor;					///< 手比率
 	char						UnderlyingCode[QUO_MAX_CODE];	///< 标的证券代码
 	unsigned int				ContractMult;					///< 合约乘数
-	unsigned int				XqPrice;						///< 行权价格[*放大倍数]
+	unsigned int				uiContractUnit;					///< 合约单位【仅期货、期权】
+	double						XqPrice;						///< 行权价格
 	unsigned int				StartDate;						///< 首个交易日(YYYYMMDD)
 	unsigned int				EndDate;						///< 最后交易日(YYYYMMDD)
 	unsigned int				XqDate;							///< 行权日(YYYYMM)
 	unsigned int				DeliveryDate;					///< 交割日(YYYYMMDD)
 	unsigned int				ExpireDate;						///< 到期日(YYYYMMDD)
-	unsigned short				TypePeriodIdx;					///< 分类交易时间段位置
-	unsigned char				EarlyNightFlag;					///< 日盘or夜盘标志 1：日盘 2：夜盘 
 	double						PriceTick;						///< 最小变动价位
 } tagQuoReferenceData;
 
@@ -80,17 +90,17 @@ typedef struct
 typedef struct
 {
 	char						Code[QUO_MAX_CODE];				///< 合约代码
-	double						Open;							///< 开盘价[*放大倍数]
-	double						Close;							///< 今收价[*放大倍数]
-	double						PreClose;						///< 昨收价[*放大倍数]
-	double						UpperPrice;						///< 当日涨停价格[*放大倍数], 0表示无限制
-	double						LowerPrice;						///< 当日跌停价格[*放大倍数], 0表示无限制
-	double						SettlePrice;					///< 今结价[*放大倍数]
-	double						PreSettlePrice;					///< 合约昨结[*放大倍数]
+	double						Open;							///< 开盘价
+	double						Close;							///< 今收价
+	double						PreClose;						///< 昨收价
+	double						UpperPrice;						///< 当日涨停价格, 0表示无限制
+	double						LowerPrice;						///< 当日跌停价格, 0表示无限制
+	double						SettlePrice;					///< 今结价
+	double						PreSettlePrice;					///< 合约昨结
 	unsigned __int64			PreOpenInterest;				///< 昨日持仓量(张)
-	double						Now;							///< 最新价[*放大倍数]
-	double						High;							///< 最高价[*放大倍数]
-	double						Low;							///< 最低价[*放大倍数]
+	double						Now;							///< 最新价
+	double						High;							///< 最高价
+	double						Low;							///< 最低价
 	double						Amount;							///< 总成交金额[元]
 	unsigned __int64			Volume;							///< 总成交量[股/张]
 	unsigned __int64			Position;						///< 持仓量
@@ -122,8 +132,6 @@ typedef struct
 //			0= 正常状态 正常状态 正常状态
 //			1= 全天停牌 全天停牌 全
 //（3）其他交易所无附件内
-
-
 
 
 #pragma pack()
