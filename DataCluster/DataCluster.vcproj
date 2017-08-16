@@ -311,6 +311,30 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\DataCollector4CTPDLOPT\DataCollector4CTPDLOPT\CTP_DLOPT_QuoProtocal.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\DataCollector4CTPEC\DataCollector4CTPEC\CTP_EC_QuoProtocal.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\DataCollector4CTPSH\DataCollector4CTPSH\CTP_SH_QuoProtocal.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\DataCollector4CTPSHOPT\DataCollector4CTPSHOPT\CTP_SHOPT_QuoProtocal.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\DataCollector4CTPZZ\DataCollector4CTPZZ\CTP_ZZ_QuoProtocal.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\DataCollector4CTPZZOPT\DataCollector4CTPZZOPT\CTP_ZZOPT_QuoProtocal.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Protocal\DataCluster_Protocal.h"
 				>
 			</File>

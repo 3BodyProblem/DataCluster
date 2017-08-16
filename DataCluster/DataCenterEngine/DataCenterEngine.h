@@ -14,6 +14,8 @@
 #include "../MemoryDB/InnerTableFiller.h"
 #include "../DataCollector/DataCollector.h"
 #include "../../../DataCollector4CTPDL/DataCollector4CTPDL/CTP_DL_QuoProtocal.h"
+#include "../../../DataCollector4CTPSH/DataCollector4CTPSH/CTP_SH_QuoProtocal.h"
+#include "../../../DataCollector4CTPZZ/DataCollector4CTPZZ/CTP_ZZ_QuoProtocal.h"
 
 
 /**

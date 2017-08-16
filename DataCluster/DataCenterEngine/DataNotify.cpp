@@ -65,7 +65,7 @@ int PackagesLoopBuffer::PushBlock( unsigned int nDataID, const char* pData, unsi
 	}
 
 	///< 构建新的数据块
-	char				pszDataBlock[1024] = { 0 };
+	char				pszDataBlock[2048] = { 0 };
 	*((unsigned short*)pszDataBlock) = nDataID;
 	*((unsigned short*)(pszDataBlock+sizeof(unsigned short))) = nDataSize;
 	::memcpy( pszDataBlock+sizeof(unsigned short)*2, pData, nDataSize );
@@ -73,12 +73,12 @@ int PackagesLoopBuffer::PushBlock( unsigned int nDataID, const char* pData, unsi
 	int				nConsecutiveFreeSize = m_nMaxPkgBufSize - m_nLastRecord;
 	if( nConsecutiveFreeSize >= nMsgLen )
 	{
-		::memcpy( &m_pPkgBuffer[m_nLastRecord], (char*)pData, nMsgLen );
+		::memcpy( &m_pPkgBuffer[m_nLastRecord], (char*)pszDataBlock, nMsgLen );
 	}
 	else
 	{
-		::memcpy( &m_pPkgBuffer[m_nLastRecord], pData, nConsecutiveFreeSize );
-		::memcpy( &m_pPkgBuffer[0], pData + nConsecutiveFreeSize, (nMsgLen - nConsecutiveFreeSize) );
+		::memcpy( &m_pPkgBuffer[m_nLastRecord], pszDataBlock, nConsecutiveFreeSize );
+		::memcpy( &m_pPkgBuffer[0], pszDataBlock + nConsecutiveFreeSize, (nMsgLen - nConsecutiveFreeSize) );
 	}
 
 	m_nLastRecord = (m_nLastRecord + nMsgLen) % m_nMaxPkgBufSize;
@@ -101,7 +101,7 @@ int PackagesLoopBuffer::GetBlock( char* pBuff, unsigned int nBuffSize, unsigned 
 		return -2;		///< 缓存为空
 	}
 
-	if( sizeof(tagMsgHead) < nDataLen )
+	if( sizeof(tagMsgHead) > nDataLen )
 	{
 		return -3;		///< 数据不足msghead的size
 	}
@@ -118,7 +118,8 @@ int PackagesLoopBuffer::GetBlock( char* pBuff, unsigned int nBuffSize, unsigned 
 		::memcpy( (char*)&oMsgHead + nConsecutiveSize, m_pPkgBuffer+0, sizeof(tagMsgHead)-nConsecutiveSize );
 	}
 
-	if( (oMsgHead.MsgLen + sizeof(tagMsgHead)) < nDataLen )
+	nMsgID = oMsgHead.MsgID;
+	if( (oMsgHead.MsgLen + sizeof(tagMsgHead)) > nDataLen )
 	{
 		return -4;		///< 数据部分长度不全
 	}

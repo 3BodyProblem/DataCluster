@@ -3,6 +3,7 @@
 
 
 #include <vector>
+#include "../Protocal/DataCluster_Protocal.h"
 
 
 /**
@@ -15,30 +16,51 @@ class InnerRecord
 {
 friend class TableFillerRegister;
 public:
+	InnerRecord( unsigned int nMsgID, unsigned int nMsgLen, unsigned int nBigTableID );
+
 	/**
-	 * @brief					获取大表记录的ID号
+	 * @brief					获取消息记录的ID号
 	 */
-	virtual unsigned int		GetInnerTableID() = 0;
+	unsigned int				GetMessageID();
+
+	/**
+	 * @brief					获取消息记录结构长度
+	 */
+	unsigned int				GetMessageLength();
+
+	/**
+	 * @brief					获取大表ID
+	 */
+	unsigned int				GetBigTableID();
+
+	/**
+	 * @brief					获取大表的数据结构宽度
+	 */
+	unsigned int				GetBigTableWidth();
 
 	/**
 	 * @brief					获取可写的大表记录结构地址
 	 */
-	virtual char*				GetInnerRecordPtr() = 0;
+	char*						GetBigTableRecordPtr();
 
-	/**
-	 * @brief					获取大表记录结构长度
-	 */
-	virtual unsigned int		GetInnerRecordLength() = 0;
-
+public:
 	/**
 	 * @brief					将协议消息结构的数据设置到大表记录
 								每个传输体系里的Message都要实现一个本方法
 	 */
-	virtual void				FillMessage2InnerRecord() = 0;
+	virtual void				FillMessage2BigTableRecord( char* pMessagePtr ) = 0;
 
-private:
-	char*						m_pMsgPtr;				///< 从行情体系转入的协议消息地址
-	unsigned int				m_nMsgLen;				///< 从行情体系传入的协议消息长度
+protected:
+	unsigned int				m_nMessageID;			///< 消息ID
+	unsigned int				m_nMessageLength;		///< 消息长度
+	unsigned int				m_nBigTableID;			///< 数据大表的ID
+protected:
+	union BigTableRecord {
+		tagQuoMarketInfo		MarketData_1;
+		tagQuoCategory			CategoryData_2;
+		tagQuoReferenceData		ReferenceData_3;
+		tagQuoSnapData			SnapData_4;
+	}							m_objUnionData;			///< 大表数据结构联合体
 };
 
 
@@ -61,6 +83,21 @@ public:
 	 * @brief					获取单键引用
 	 */
 	static TableFillerRegister&	GetRegister();
+
+	/**
+	 * @brief					初始化
+	 * @return					==0					成功
+	 */
+	int							Initialize();
+
+	/**
+	 * @brief					将消息结构转换器进行注册
+	 * @param[in]				refRecordFiller		消息结构转换器
+	 * @return					==0					成功
+								-1					已经注册过了
+								-2					出错
+	 */
+	int							Register( InnerRecord& refRecordFiller );
 
 	/**
 	 * @brief					根据行情的消息信息，生成只填充了商品Code的新的对应的大数据表映射对象的地址

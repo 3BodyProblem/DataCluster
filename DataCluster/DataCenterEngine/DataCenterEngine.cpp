@@ -42,6 +42,12 @@ int DataIOEngine::Initialize( I_QuotationCallBack* pIQuotation )
 		return nErrorCode;
 	}
 
+	if( 0 != (nErrorCode = TableFillerRegister::GetRegister().Initialize()) )
+	{
+		DataIOEngine::GetEngineObj().WriteError( "DataIOEngine::Initialize() : failed 2 register message filler 2 table, errorcode=%d", nErrorCode );
+		return nErrorCode;
+	}
+
 	DataIOEngine::GetEngineObj().WriteInfo( "DataIOEngine::Initialize() : DataNode Engine is initializing ......" );
 
 	if( 0 != (nErrorCode = m_oDatabaseIO.Initialize()) )
@@ -135,22 +141,18 @@ int DataIOEngine::OnImage( unsigned int nDataID, char* pData, unsigned int nData
 		return -1;
 	}
 
-	nAffectNum = m_oDatabaseIO.QueryRecord( pRecord->GetInnerTableID(), pRecord->GetInnerRecordPtr(), pRecord->GetInnerRecordLength(), nSerialNo );
+	///< 只有Code有内容填充，其他字段都为空, 所以再从内存查询一把，取得其他字段的内容
+	nAffectNum = m_oDatabaseIO.QueryRecord( pRecord->GetBigTableID(), pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), nSerialNo );
 
-	if( nAffectNum < 0 )
+	if( nAffectNum <= 0 )
 	{
-		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::NewRecord() : error in DatabaseAdaptor::NewRecord(), MessageID=%d", nDataID );
-		return -2;
-	}
-	else if( nAffectNum == 0 )
-	{
-		pRecord->FillMessage2InnerRecord();
-		nAffectNum = m_oDatabaseIO.NewRecord( pRecord->GetInnerTableID(), pRecord->GetInnerRecordPtr(), pRecord->GetInnerRecordLength(), bLastFlag, nSerialNo );
+		pRecord->FillMessage2BigTableRecord( pData );
+		nAffectNum = m_oDatabaseIO.NewRecord( pRecord->GetBigTableID(), pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), bLastFlag, nSerialNo );
 	}
 	else
 	{
-		pRecord->FillMessage2InnerRecord();
-		nAffectNum = m_oDatabaseIO.UpdateRecord( pRecord->GetInnerTableID(), pRecord->GetInnerRecordPtr(), pRecord->GetInnerRecordLength(), nSerialNo );
+		pRecord->FillMessage2BigTableRecord( pData );
+		nAffectNum = m_oDatabaseIO.UpdateRecord( pRecord->GetBigTableID(), pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), nSerialNo );
 	}
 
 	return nAffectNum;
@@ -168,10 +170,11 @@ int DataIOEngine::OnData( unsigned int nDataID, char* pData, unsigned int nDataL
 		return -1;
 	}
 
-	nAffectNum = m_oDatabaseIO.QueryRecord( pRecord->GetInnerTableID(), pRecord->GetInnerRecordPtr(), pRecord->GetInnerRecordLength(), nSerialNo );
+	///< 只有Code有内容填充，其他字段都为空, 所以再从内存查询一把，取得其他字段的内容
+	nAffectNum = m_oDatabaseIO.QueryRecord( pRecord->GetBigTableID(), pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), nSerialNo );
 	if( nAffectNum < 0 )
 	{
-		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::UpdateRecord() : error in DatabaseAdaptor::UpdateRecord(), MessageID=%d", nDataID );
+		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::UpdateRecord() : error occur in UpdateRecord(), MessageID=%d", nDataID );
 		return -2;
 	}
 	else if( nAffectNum == 0 )
@@ -181,11 +184,11 @@ int DataIOEngine::OnData( unsigned int nDataID, char* pData, unsigned int nDataL
 	}
 	else
 	{
-		pRecord->FillMessage2InnerRecord();
-		nAffectNum = m_oDatabaseIO.UpdateRecord( pRecord->GetInnerTableID(), pRecord->GetInnerRecordPtr(), pRecord->GetInnerRecordLength(), nSerialNo );
+		pRecord->FillMessage2BigTableRecord( pData );
+		nAffectNum = m_oDatabaseIO.UpdateRecord( pRecord->GetBigTableID(), pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), nSerialNo );
 	}
 
-	m_oQuoNotify.PutMessage( nDataID, pData, nDataLen );
+	m_oQuoNotify.PutMessage( pRecord->GetBigTableID(), pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth() );
 
 	return nAffectNum;
 }

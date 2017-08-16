@@ -110,22 +110,16 @@ int DatabaseIO::DeleteRecord( unsigned int nDataID, char* pData, unsigned int nD
 	int					nAffectNum = 0;
 	unsigned __int64	nDbSerialNo = 0;
 
-	if( false == m_bBuilded )
-	{
-		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::DeleteRecord() : failed 2 delete record before initialization, message id=%d" );
-		return -1;
-	}
-
 	if( NULL == ((pTable = m_pIDatabase->QueryTable( nDataID ))) )
 	{
 		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::DeleteRecord() : failed 2 locate data table 4 message, message id=%d", nDataID );
-		return -2;
+		return -1;
 	}
 
 	if( 0 > (nAffectNum = pTable->DeleteRecord( pData, nDataLen, nDbSerialNo )) )
 	{
 		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::DeleteRecord() : failed 2 delete record from table, message id=%d, affectnum=%d", nDataID, nAffectNum );
-		return -3;
+		return -2;
 	}
 
 	return nAffectNum;
@@ -137,22 +131,17 @@ int DatabaseIO::UpdateRecord( unsigned int nDataID, char* pData, unsigned int nD
 	int				nAffectNum = 0;
 
 	nDbSerialNo = 0;
-	if( false == m_bBuilded )
-	{
-		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::UpdateRecord() : failed 2 update quotation before initialization, message id=%d" );
-		return -1;
-	}
 
 	if( NULL == ((pTable = m_pIDatabase->QueryTable( nDataID ))) )
 	{
 		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::UpdateRecord() : failed 2 locate data table 4 message, message id=%d", nDataID );
-		return -2;
+		return -1;
 	}
 
 	if( 0 > (nAffectNum = pTable->UpdateRecord( pData, nDataLen, nDbSerialNo )) )
 	{
 		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::UpdateRecord() : failed 2 insert into data table 4 message, message id=%d, affectnum=%d", nDataID, nAffectNum );
-		return -3;
+		return -2;
 	}
 
 	return nAffectNum;
@@ -164,16 +153,10 @@ int DatabaseIO::QueryRecord( unsigned int nDataID, char* pData, unsigned int nDa
 	int				nAffectNum = 0;
 
 	nDbSerialNo = 0;
-	if( false == m_bBuilded )
-	{
-		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::QueryRecord() : failed 2 update quotation before initialization, message id=%d" );
-		return -1;
-	}
-
 	if( NULL == ((pTable = m_pIDatabase->QueryTable( nDataID ))) )
 	{
 		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::QueryRecord() : failed 2 locate data table 4 message, message id=%d", nDataID );
-		return -2;
+		return -1;
 	}
 
 	RecordBlock	oRecord = pTable->SelectRecord( pData, ::strlen(pData) );

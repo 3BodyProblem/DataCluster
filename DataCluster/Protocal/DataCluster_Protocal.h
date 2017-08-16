@@ -38,20 +38,20 @@ enum QUO_MARKET_ID
 
 typedef struct
 {
+	char						Key[QUO_MAX_CODE];				///< 索引键
 	QUO_MARKET_ID				MarketID;						///< 市场编号
 	unsigned int				MarketDate;						///< 市场日期
 	unsigned int				MarketTime;						///< 市场时间
 	unsigned int				KindCount;						///< 类别数量
 	unsigned int				WareCount;						///< 商品数量
 	unsigned int				PeriodsCount;					///< 交易时段信息列表长度
-	unsigned int				MarketPeriods[8][2];			///< 交易时段描述信息列表
+	unsigned int				MarketPeriods[10][2];			///< 交易时段描述信息列表
 	char						TradingPhaseCode[QUO_MAX_PHASECODE];///< 市场状态: 对于所有市场的第一位表示[0初始化 1行情中]
 } tagQuoMarketInfo;
 
-
 typedef struct
 {
-	unsigned int				KindID;							///< 商品类别编号
+	char						Key[QUO_MAX_CODE];				///< 索引键
 	char						KindName[QUO_MAX_NAME];			///< 商品类别名称
 	unsigned int				WareCount;						///< 该分类的商品数量
 } tagQuoCategory;
@@ -65,11 +65,11 @@ typedef struct
 	QUO_MARKET_ID				MarketID;						///< 市场编号
 	unsigned int				Kind;							///< 证券类型
 	unsigned char				DerivativeType;					///< 衍生品类型：欧式美式+认购认沽
-	unsigned int				uiLotSize;						///< 每手数量（每手多少股、每手多少张等）
-	unsigned int				uiLotFactor;					///< 手比率
+	unsigned int				LotSize;						///< 每手数量（每手多少股、每手多少张等）
+	unsigned int				LotFactor;						///< 手比率
 	char						UnderlyingCode[QUO_MAX_CODE];	///< 标的证券代码
 	unsigned int				ContractMult;					///< 合约乘数
-	unsigned int				uiContractUnit;					///< 合约单位【仅期货、期权】
+	unsigned int				ContractUnit;					///< 合约单位【仅期货、期权】
 	double						XqPrice;						///< 行权价格
 	unsigned int				StartDate;						///< 首个交易日(YYYYMMDD)
 	unsigned int				EndDate;						///< 最后交易日(YYYYMMDD)
