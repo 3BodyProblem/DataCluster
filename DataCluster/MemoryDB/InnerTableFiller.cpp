@@ -177,7 +177,7 @@ struct MappingDLFuture_BuySell2QuoSnapData : public InnerRecord { MappingDLFutur
 };
 
 ///< 上海商品期货
-struct MappingSHFuture_MkInfo2QuoMarketInfo : public InnerRecord { MappingSHFuture_MkInfo2QuoMarketInfo() : InnerRecord( 107, sizeof(tagSHFutureMarketInfo_LF107), QUO_MARKET_DCE*100+1 ) {}
+struct MappingSHFuture_MkInfo2QuoMarketInfo : public InnerRecord { MappingSHFuture_MkInfo2QuoMarketInfo() : InnerRecord( 107, sizeof(tagSHFutureMarketInfo_LF107), QUO_MARKET_SHFE*100+1 ) {}
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagSHFutureMarketInfo_LF107*	pMkInfo = (tagSHFutureMarketInfo_LF107*)pMessagePtr;
@@ -193,7 +193,7 @@ struct MappingSHFuture_MkInfo2QuoMarketInfo : public InnerRecord { MappingSHFutu
 	}
 };
 
-struct MappingSHFuture_Kind2QuoCategory : public InnerRecord { MappingSHFuture_Kind2QuoCategory() : InnerRecord( 108, sizeof(tagSHFutureKindDetail_LF108), QUO_MARKET_DCE*100+2 ) {}
+struct MappingSHFuture_Kind2QuoCategory : public InnerRecord { MappingSHFuture_Kind2QuoCategory() : InnerRecord( 108, sizeof(tagSHFutureKindDetail_LF108), QUO_MARKET_SHFE*100+2 ) {}
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagSHFutureKindDetail_LF108*	pKind = (tagSHFutureKindDetail_LF108*)pMessagePtr;
@@ -205,7 +205,7 @@ struct MappingSHFuture_Kind2QuoCategory : public InnerRecord { MappingSHFuture_K
 	}
 };
 
-struct MappingSHFuture_MkStatus2QuoMarketInfo : public InnerRecord { MappingSHFuture_MkStatus2QuoMarketInfo() : InnerRecord( 109, sizeof(tagSHFutureMarketStatus_HF109), QUO_MARKET_DCE*100+1 ) {}
+struct MappingSHFuture_MkStatus2QuoMarketInfo : public InnerRecord { MappingSHFuture_MkStatus2QuoMarketInfo() : InnerRecord( 109, sizeof(tagSHFutureMarketStatus_HF109), QUO_MARKET_SHFE*100+1 ) {}
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagSHFutureMarketStatus_HF109*	pMkStatus = (tagSHFutureMarketStatus_HF109*)pMessagePtr;
@@ -217,7 +217,7 @@ struct MappingSHFuture_MkStatus2QuoMarketInfo : public InnerRecord { MappingSHFu
 	}
 };
 
-struct MappingSHFuture_Reference2QuoReference : public InnerRecord { MappingSHFuture_Reference2QuoReference() : InnerRecord( 110, sizeof(tagSHFutureReferenceData_LF110), QUO_MARKET_DCE*100+3 ) {}
+struct MappingSHFuture_Reference2QuoReference : public InnerRecord { MappingSHFuture_Reference2QuoReference() : InnerRecord( 110, sizeof(tagSHFutureReferenceData_LF110), QUO_MARKET_SHFE*100+3 ) {}
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagSHFutureReferenceData_LF110*	pRefData = (tagSHFutureReferenceData_LF110*)pMessagePtr;
@@ -240,7 +240,7 @@ struct MappingSHFuture_Reference2QuoReference : public InnerRecord { MappingSHFu
 	}
 };
 
-struct MappingSHFuture_SnapLF2QuoSnapData : public InnerRecord { MappingSHFuture_SnapLF2QuoSnapData() : InnerRecord( 111, sizeof(tagSHFutureSnapData_LF111), QUO_MARKET_DCE*100+4 ) {}
+struct MappingSHFuture_SnapLF2QuoSnapData : public InnerRecord { MappingSHFuture_SnapLF2QuoSnapData() : InnerRecord( 111, sizeof(tagSHFutureSnapData_LF111), QUO_MARKET_SHFE*100+4 ) {}
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagSHFutureSnapData_LF111*		pSnapData = (tagSHFutureSnapData_LF111*)pMessagePtr;
@@ -259,7 +259,7 @@ struct MappingSHFuture_SnapLF2QuoSnapData : public InnerRecord { MappingSHFuture
 	}
 };
 
-struct MappingSHFuture_SnapHF2QuoSnapData : public InnerRecord { MappingSHFuture_SnapHF2QuoSnapData() : InnerRecord( 112, sizeof(tagSHFutureSnapData_HF112), QUO_MARKET_DCE*100+4 ) {}
+struct MappingSHFuture_SnapHF2QuoSnapData : public InnerRecord { MappingSHFuture_SnapHF2QuoSnapData() : InnerRecord( 112, sizeof(tagSHFutureSnapData_HF112), QUO_MARKET_SHFE*100+4 ) {}
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagSHFutureSnapData_HF112*		pSnapData = (tagSHFutureSnapData_HF112*)pMessagePtr;
@@ -276,10 +276,123 @@ struct MappingSHFuture_SnapHF2QuoSnapData : public InnerRecord { MappingSHFuture
 	}
 };
 
-struct MappingSHFuture_BuySell2QuoSnapData : public InnerRecord { MappingSHFuture_BuySell2QuoSnapData() : InnerRecord( 113, sizeof(tagSHFutureSnapBuySell_HF113), QUO_MARKET_DCE*100+4 ) {}
+struct MappingSHFuture_BuySell2QuoSnapData : public InnerRecord { MappingSHFuture_BuySell2QuoSnapData() : InnerRecord( 113, sizeof(tagSHFutureSnapBuySell_HF113), QUO_MARKET_SHFE*100+4 ) {}
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagSHFutureSnapBuySell_HF113*	pSnapData = (tagSHFutureSnapBuySell_HF113*)pMessagePtr;
+			tagQuoSnapData*					pBigTable = (tagQuoSnapData*)&(m_objUnionData.SnapData_4);
+
+			::memcpy( pBigTable->Code, pSnapData->Code, sizeof(pSnapData->Code) );
+			::memcpy( pBigTable->Buy, pSnapData->Buy, sizeof(pSnapData->Buy) );
+			::memcpy( pBigTable->Sell, pSnapData->Sell, sizeof(pSnapData->Sell) );
+		}
+	}
+};
+
+///< 郑州商品期货
+struct MappingZZFuture_MkInfo2QuoMarketInfo : public InnerRecord { MappingZZFuture_MkInfo2QuoMarketInfo() : InnerRecord( 114, sizeof(tagZZFutureMarketInfo_LF114), QUO_MARKET_CZCE*100+1 ) {}
+	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
+		if( NULL != pMessagePtr )	{
+			tagZZFutureMarketInfo_LF114*	pMkInfo = (tagZZFutureMarketInfo_LF114*)pMessagePtr;
+			tagQuoMarketInfo*				pBigTable = (tagQuoMarketInfo*)&(m_objUnionData.MarketData_1);
+
+			pBigTable->MarketDate = pMkInfo->MarketDate;
+			pBigTable->MarketID = (enum QUO_MARKET_ID)pMkInfo->MarketID;
+			pBigTable->WareCount = pMkInfo->KindCount;
+			pBigTable->WareCount = pMkInfo->WareCount;
+			pBigTable->PeriodsCount = pMkInfo->PeriodsCount;
+			::memcpy( pBigTable->MarketPeriods, pMkInfo->MarketPeriods, sizeof(pBigTable->MarketPeriods) );
+		}
+	}
+};
+
+struct MappingZZFuture_Kind2QuoCategory : public InnerRecord { MappingZZFuture_Kind2QuoCategory() : InnerRecord( 115, sizeof(tagZZFutureKindDetail_LF115), QUO_MARKET_CZCE*100+2 ) {}
+	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
+		if( NULL != pMessagePtr )	{
+			tagZZFutureKindDetail_LF115*	pKind = (tagZZFutureKindDetail_LF115*)pMessagePtr;
+			tagQuoCategory*					pBigTable = (tagQuoCategory*)&(m_objUnionData.CategoryData_2);
+
+			pBigTable->WareCount= pKind->WareCount;
+			::memcpy( pBigTable->KindName, pKind->KindName, sizeof(pBigTable->KindName) );
+		}
+	}
+};
+
+struct MappingZZFuture_MkStatus2QuoMarketInfo : public InnerRecord { MappingZZFuture_MkStatus2QuoMarketInfo() : InnerRecord( 116, sizeof(tagZZFutureMarketStatus_HF116), QUO_MARKET_CZCE*100+1 ) {}
+	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
+		if( NULL != pMessagePtr )	{
+			tagZZFutureMarketStatus_HF116*	pMkStatus = (tagZZFutureMarketStatus_HF116*)pMessagePtr;
+			tagQuoMarketInfo*				pBigTable = (tagQuoMarketInfo*)&(m_objUnionData.MarketData_1);
+
+			pBigTable->MarketTime = pMkStatus->MarketTime;
+			pBigTable->TradingPhaseCode[0] = pMkStatus->MarketStatus;
+		}
+	}
+};
+
+struct MappingZZFuture_Reference2QuoReference : public InnerRecord { MappingZZFuture_Reference2QuoReference() : InnerRecord( 117, sizeof(tagZZFutureReferenceData_LF117), QUO_MARKET_CZCE*100+3 ) {}
+	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
+		if( NULL != pMessagePtr )	{
+			tagZZFutureReferenceData_LF117*	pRefData = (tagZZFutureReferenceData_LF117*)pMessagePtr;
+			tagQuoReferenceData*			pBigTable = (tagQuoReferenceData*)&(m_objUnionData.ReferenceData_3);
+
+			::memcpy( pBigTable->Code, pRefData->Code, sizeof(pRefData->Code) );
+			::memcpy( pBigTable->Name, pRefData->Name, sizeof(pRefData->Name) );
+			pBigTable->Kind = pRefData->Kind;
+			pBigTable->DerivativeType = pRefData->DerivativeType;
+			pBigTable->LotSize = pRefData->LotSize;
+			::memcpy( pBigTable->UnderlyingCode, pRefData->UnderlyingCode, sizeof(pRefData->UnderlyingCode) );
+			pBigTable->ContractMult = pRefData->ContractMult;
+			pBigTable->XqPrice = pRefData->XqPrice;
+			pBigTable->StartDate = pRefData->StartDate;
+			pBigTable->EndDate = pRefData->EndDate;
+			pBigTable->DeliveryDate = pRefData->DeliveryDate;
+			pBigTable->ExpireDate = pRefData->ExpireDate;
+			pBigTable->PriceTick = pRefData->PriceTick;
+		}
+	}
+};
+
+struct MappingZZFuture_SnapLF2QuoSnapData : public InnerRecord { MappingZZFuture_SnapLF2QuoSnapData() : InnerRecord( 118, sizeof(tagZZFutureSnapData_LF118), QUO_MARKET_CZCE*100+4 ) {}
+	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
+		if( NULL != pMessagePtr )	{
+			tagZZFutureSnapData_LF118*		pSnapData = (tagZZFutureSnapData_LF118*)pMessagePtr;
+			tagQuoSnapData*					pBigTable = (tagQuoSnapData*)&(m_objUnionData.SnapData_4);
+
+			::memcpy( pBigTable->Code, pSnapData->Code, sizeof(pSnapData->Code) );
+			pBigTable->Open = pSnapData->Open;
+			pBigTable->Close = pSnapData->Close;
+			pBigTable->PreClose = pSnapData->PreClose;
+			pBigTable->UpperPrice = pSnapData->UpperPrice;
+			pBigTable->LowerPrice = pSnapData->LowerPrice;
+			pBigTable->SettlePrice = pSnapData->SettlePrice;
+			pBigTable->PreSettlePrice = pSnapData->PreSettlePrice;
+			pBigTable->PreOpenInterest = pSnapData->PreOpenInterest;
+		}
+	}
+};
+
+struct MappingZZFuture_SnapHF2QuoSnapData : public InnerRecord { MappingZZFuture_SnapHF2QuoSnapData() : InnerRecord( 119, sizeof(tagZZFutureSnapData_HF119), QUO_MARKET_CZCE*100+4 ) {}
+	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
+		if( NULL != pMessagePtr )	{
+			tagZZFutureSnapData_HF119*		pSnapData = (tagZZFutureSnapData_HF119*)pMessagePtr;
+			tagQuoSnapData*					pBigTable = (tagQuoSnapData*)&(m_objUnionData.SnapData_4);
+
+			::memcpy( pBigTable->Code, pSnapData->Code, sizeof(pSnapData->Code) );
+			pBigTable->Now = pSnapData->Now;
+			pBigTable->High = pSnapData->High;
+			pBigTable->Low = pSnapData->Low;
+			pBigTable->Amount = pSnapData->Amount;
+			pBigTable->Volume = pSnapData->Volume;
+			pBigTable->Position = pSnapData->Position;
+		}
+	}
+};
+
+struct MappingZZFuture_BuySell2QuoSnapData : public InnerRecord { MappingZZFuture_BuySell2QuoSnapData() : InnerRecord( 120, sizeof(tagZZFutureSnapBuySell_HF120), QUO_MARKET_CZCE*100+4 ) {}
+	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
+		if( NULL != pMessagePtr )	{
+			tagZZFutureSnapBuySell_HF120*	pSnapData = (tagZZFutureSnapBuySell_HF120*)pMessagePtr;
 			tagQuoSnapData*					pBigTable = (tagQuoSnapData*)&(m_objUnionData.SnapData_4);
 
 			::memcpy( pBigTable->Code, pSnapData->Code, sizeof(pSnapData->Code) );
@@ -335,6 +448,22 @@ int TableFillerRegister::Initialize()
 	if( GetRegister().Register( objSHFuture111Cast ) != 0 )	return -12;
 	if( GetRegister().Register( objSHFuture112Cast ) != 0 )	return -13;
 	if( GetRegister().Register( objSHFuture113Cast ) != 0 )	return -14;
+
+	///< 郑州商品期货
+	static MappingZZFuture_MkInfo2QuoMarketInfo		objZZFuture114Cast;
+	static MappingZZFuture_Kind2QuoCategory			objZZFuture115Cast;
+	static MappingZZFuture_MkStatus2QuoMarketInfo	objZZFuture116Cast;
+	static MappingZZFuture_Reference2QuoReference	objZZFuture117Cast;
+	static MappingZZFuture_SnapLF2QuoSnapData		objZZFuture118Cast;
+	static MappingZZFuture_SnapHF2QuoSnapData		objZZFuture119Cast;
+	static MappingZZFuture_BuySell2QuoSnapData		objZZFuture120Cast;
+	if( GetRegister().Register( objZZFuture114Cast ) != 0 )	return -15;
+	if( GetRegister().Register( objZZFuture115Cast ) != 0 )	return -16;
+	if( GetRegister().Register( objZZFuture116Cast ) != 0 )	return -17;
+	if( GetRegister().Register( objZZFuture117Cast ) != 0 )	return -18;
+	if( GetRegister().Register( objZZFuture118Cast ) != 0 )	return -19;
+	if( GetRegister().Register( objZZFuture119Cast ) != 0 )	return -20;
+	if( GetRegister().Register( objZZFuture120Cast ) != 0 )	return -21;
 
 	return 0;
 }
