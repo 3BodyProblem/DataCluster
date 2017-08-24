@@ -50,7 +50,7 @@ int DataCollector::Initialize( I_DataHandle* pIDataCallBack, std::string sDllPat
 {
 	Release();
 
-	DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Initialize() : Initializing DataCollector Plugin ......" );
+	DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Initialize() : Initializing DataCollector [%s] ......", sDllPath.c_str() );
 
 	std::string		sModulePath = GetModulePath(NULL) + sDllPath;
 	int				nErrorCode = m_oDllPlugin.LoadDll( sModulePath );
@@ -255,6 +255,11 @@ int DataCollectorPool::PreserveAllConnection()
 			else
 			{
 				DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : failed 2 initialize DataCollector, errorcode=%d", nErrorCode );
+			}
+
+			if( (n+1) == GetCount() )
+			{
+				DataIOEngine::GetEngineObj().WriteInfo( "DataCollectorPool::PreserveAllConnection() : All Connections had been established! Num=[%u] .......!!! ", GetCount() );
 			}
 		}
 	}
