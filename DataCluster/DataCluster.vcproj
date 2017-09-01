@@ -394,6 +394,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\QuoteClientApi.h"
+			>
+		</File>
+		<File
+			RelativePath=".\QuoteCltDef.h"
+			>
+		</File>
+		<File
 			RelativePath=".\ReadMe.txt"
 			>
 		</File>

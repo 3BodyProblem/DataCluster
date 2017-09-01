@@ -195,16 +195,10 @@ int DataCollectorPool::Initialize( I_DataHandle* pIDataCallBack )
 
 	DataIOEngine::GetEngineObj().WriteInfo( "DataCollectorPool::Initialize() : initializing ... " );
 
-	if( nDllCount <= 0 )
+	if( nDllCount >= 64 || nDllCount == 0 )
 	{
-		DataIOEngine::GetEngineObj().WriteError( "DataCollectorPool::Initialize() : data collector table is empty" );
+		DataIOEngine::GetEngineObj().WriteError( "DataCollectorPool::Initialize() : invalid data collector configuration, dll count = %d (>=64)", nDllCount );
 		return -1;
-	}
-
-	if( nDllCount >= 64 )
-	{
-		DataIOEngine::GetEngineObj().WriteError( "DataCollectorPool::Initialize() : 2 many data collector configuration, dll count = %d (>=64)", nDllCount );
-		return -2;
 	}
 
 	if( GetCount() > 0 )							///< ±ÜÃâÖØ¸´³õÊ¼»¯

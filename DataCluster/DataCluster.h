@@ -4,6 +4,8 @@
 
 #include "Interface.h"
 #include "DataCollector/Interface.h"
+#include "QuoteCltDef.h"
+#include "QuoteClientApi.h"
 
 
 /**
@@ -40,6 +42,11 @@ extern "C"
 	 * @brief								单元测试导出函数
 	 */
 	__declspec(dllexport) void __stdcall	ExecuteUnitTest();
+
+
+	///< -------------------- 兼容老接口QuoClientApi.Dll ------------------------------------------
+	__declspec(dllexport) const char*		GetDllVersion( int &nMajorVersion, int &nMinorVersion );
+	__declspec(dllexport) QuoteClientApi*	CreateQuoteApi( const char* pszDebugPath );
 }
 
 

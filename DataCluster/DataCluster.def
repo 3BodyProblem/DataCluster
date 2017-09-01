@@ -3,6 +3,9 @@ EXPORTS
 	Destroy
 	Query
 	ExecuteUnitTest
-
+	GetDllVersion
+	CreateQuoteApi
+	GetSettingInfo
+	CreatePrimeApi
 
 
