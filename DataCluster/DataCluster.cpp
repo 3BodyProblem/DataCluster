@@ -5,6 +5,7 @@
 #include "DataCluster.h"
 #include "UnitTest/UnitTest.h"
 #include "DataCenterEngine/DataCenterEngine.h"
+#include "QuoteClientApi.h"
 
 
 extern "C"
@@ -19,7 +20,7 @@ extern "C"
 		DataIOEngine::GetEngineObj().Release();
 	}
 
-	__declspec(dllexport) int __stdcall	Query( unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen )
+	__declspec(dllexport) int __stdcall		Query( unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen )
 	{
 		return DataIOEngine::GetEngineObj().OnQuery( nMessageID, pDataPtr, nDataLen );
 	}
@@ -44,15 +45,70 @@ extern "C"
 		return pszBuf;
 	}
 
+///< ---------------------------------------------------------------------------------------
+	MPrimeClient				Global_PrimeClient;
+	bool						Global_bInit = false;
+	MDataClient					Global_Client;
+	QuotationAdaptor			Global_CBAdaptor;
+
 	__declspec(dllexport) QuoteClientApi*	CreateQuoteApi( const char* pszDebugPath )
 	{
-/*		if (!Global_bInit)
+		if (!Global_bInit)
 		{
 			Global_bInit = true;
-			Global_StartWork();
+
+			if( NULL == Activate( &Global_CBAdaptor ) )
+			{
+				return NULL;
+			}
 		}
-		return &Global_Client;*/
-		return NULL;
+
+		return &Global_Client;
+	}
+
+	__declspec(dllexport) QuotePrimeApi* CreatePrimeApi()
+	{
+		return &Global_PrimeClient;
+	}
+
+	__declspec(dllexport) int	GetSettingInfo( tagQuoteSettingInfo* pArrMarket, int nCount )
+	{
+		if( 0 != Configuration::GetConfigObj().Load() )
+		{
+			return -1;
+		}
+
+		if( NULL == pArrMarket )
+		{
+			return -2;
+		}
+
+		DllPathTable&		refDllTable = Configuration::GetConfigObj().GetDCPathTable();
+		int					nDllNum = min( refDllTable.GetCount(), nCount );
+
+		for( int n = 0; n < nDllNum; n++ )
+		{
+			::strcpy( pArrMarket[n].cAddress, refDllTable.GetPathByPos( n ).c_str() );
+
+/*	char			szDll[255];
+	int				nMarketID;
+	int				nSleep;
+	char			cMarketChn[64];
+	char			cAddress[128];*/
+		}
+
+/*
+		tagKeyFileInfo oInfo;
+		for (int i=0; i<ncopycount; i++)
+		{
+		Global_Option.GetKeyFileInfo(i, oInfo);
+		pArrMarket[i].cMarketID = oInfo.nMarketID;
+		strcpy(pArrMarket[i].cMarketChn, oInfo.cMarketChn);
+		strcpy(pArrMarket[i].cAddress, oInfo.cAddress);
+		pArrMarket[i].nStatus = Global_DllMgr.GetMarketStat(oInfo.nMarketID);
+		}*/
+
+		return nDllNum;
 	}
 }
 

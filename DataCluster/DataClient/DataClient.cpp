@@ -1,61 +1,7 @@
-
-
-
-#include "stdafx.h"
 #include "DataClient.h"
-#include "../GlobalIO/GlobalIO.h"
+//#include "../GlobalIO/GlobalIO.h"
 
-CTYPENAMEFUNC  QuoteClientApi * STDCALL CreateQuoteApi(const char *pszDebugPath)
-{
-	if (!Global_bInit)
-	{
-		Global_bInit = true;
-		Global_StartWork();
-	}
-	return &Global_Client;
-}
 
-CTYPENAMEFUNC  QuotePrimeApi * STDCALL CreatePrimeApi()
-{
-	return &Global_PrimeClient;
-}
-
-CTYPENAMEFUNC  const char * STDCALL GetDllVersion(int &nMajorVersion, int &nMinorVersion)
-{
-	
-	static char szbuf[255]={0};
-	_snprintf(szbuf,254,"V%.02d B%.02d", Global_MajorVer,Global_MinorVer);
-	nMajorVersion = Global_MajorVer;
-	nMinorVersion = Global_MinorVer;
-	
-	return szbuf;
-}
-
-CTYPENAMEFUNC  int 	STDCALL GetSettingInfo(tagQuoteSettingInfo* pArrMarket, int nCount)
-{
-	Global_Option.Instance();
-	int nrealcount = Global_Option.GetKeyFileCount();
-	if (0 == pArrMarket)
-	{
-		return nrealcount;
-	}
-	
-	tagKeyFileInfo oInfo;
-	int ncopycount = min(nrealcount, nCount);
-	for (int i=0; i<ncopycount; i++)
-	{
-		Global_Option.GetKeyFileInfo(i, oInfo);
-		pArrMarket[i].cMarketID = oInfo.nMarketID;
-		strcpy(pArrMarket[i].cMarketChn, oInfo.cMarketChn);
-		strcpy(pArrMarket[i].cAddress, oInfo.cAddress);
-		pArrMarket[i].nStatus = Global_DllMgr.GetMarketStat(oInfo.nMarketID);
-	}
-	return nrealcount;
-}
-//....................................................................................................................................................................................................................................................................
-//....................................................................................................................................................................................................................................................................
-//....................................................................................................................................................................................................................................................................
-//....................................................................................................................................................................................................................................................................
 MDataClient::MDataClient()
 {
 	
@@ -66,44 +12,40 @@ MDataClient::~MDataClient()
 
 }
 
-int32_t STDCALL	MDataClient::Init()
+int STDCALL	MDataClient::Init()
 {
-	if (!Global_bInit)
+/*	if (!Global_bInit)
 	{
 		Global_bInit = true;
 		Global_StartWork();
 	}
-
+*/
 	return 1;
 }
 
 void STDCALL MDataClient::Release()
 {
-	if (Global_bInit)
+/*	if (Global_bInit)
 	{
 		Global_bInit=false;
 		Global_EndWork();
 		Global_pSpi=0;
-	}
+	}*/
 }
 
 void STDCALL MDataClient::RegisterSpi(QuoteClientSpi * pspi)
 {
-	Global_pSpi = pspi;
-
-char pszTmp[64] = { 0 };
-::sprintf( pszTmp, "TEST: spi pointer : %x", pspi );
-Global_pSpi->XDF_OnRspOutLog( 0, 1, pszTmp );
+//	Global_pSpi = pspi;
 }
 
-int32_t STDCALL	MDataClient::BeginWork()
+int STDCALL	MDataClient::BeginWork()
 {
-	int iret = Global_DataIO.Instance(); 
+	int iret = 0;/*Global_DataIO.Instance(); 
 	if (iret <0)
 	{
 		return  -1;
 	}
-	iret = Global_DllMgr.BeginWork();
+	iret = Global_DllMgr.BeginWork();*/
 	if (iret<0)
 	{
 		return -2;
@@ -113,32 +55,31 @@ int32_t STDCALL	MDataClient::BeginWork()
 
 void STDCALL MDataClient::EndWork()
 {
-	Global_DllMgr.EndWork();
-	Global_DataIO.Release();
+//	Global_DllMgr.EndWork();
+//	Global_DataIO.Release();
 }
 
 int	 STDCALL		MDataClient::GetMarketInfo(unsigned char cMarket, char* pszInBuf, int nInBytes)
 {
-	int iret = Global_DllMgr.GetMarketInfo(cMarket, pszInBuf, nInBytes);
+	int iret = 0;//Global_DllMgr.GetMarketInfo(cMarket, pszInBuf, nInBytes);
 	return iret;
 }
 
-int32_t	STDCALL		MDataClient::GetCodeTable(uint8_t cMarket, char* pszInBuf, int32_t nInBytes, int32_t& nCount)
+int	STDCALL		MDataClient::GetCodeTable(unsigned char cMarket, char* pszInBuf, int nInBytes, int& nCount)
 {
-	int iret = Global_DllMgr.GetCodeTable(cMarket, pszInBuf, nInBytes, nCount);
+	int iret = 0;//Global_DllMgr.GetCodeTable(cMarket, pszInBuf, nInBytes, nCount);
 	return iret;
 }
 
-
-int32_t STDCALL		MDataClient::GetLastMarketDataAll(uint8_t cMarket, char* pszInBuf, int32_t nInBytes)
+int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszInBuf, int nInBytes)
 {
-	int iret = Global_DllMgr.GetLastMarketDataAll(cMarket, pszInBuf, nInBytes);
+	int iret = 0;//Global_DllMgr.GetLastMarketDataAll(cMarket, pszInBuf, nInBytes);
 	return iret;
 }
 
-int32_t STDCALL		MDataClient::GetMarketStatus(uint8_t cMarket,int32_t& nStatus, uint32_t& ulTime, int64_t * pI64Send, int64_t * pI64Recv)
+int STDCALL		MDataClient::GetMarketStatus(unsigned char cMarket,int& nStatus, unsigned int& ulTime, __int64 * pI64Send, __int64 * pI64Recv)
 {
-	int iret = Global_DllMgr.GetMarketStatus(cMarket,nStatus, ulTime, pI64Send, pI64Recv);
+	int iret = 0;//Global_DllMgr.GetMarketStatus(cMarket,nStatus, ulTime, pI64Send, pI64Recv);
 	return iret;
 }
 
@@ -158,7 +99,7 @@ MPrimeClient::~MPrimeClient()
 
 int		STDCALL		MPrimeClient::ReqFuncData(int FuncNo, void* wParam, void* lParam)
 {
-	if (FuncNo ==100)		//获取某个市场的市场日期和市场时间(参数:uint8*,   XDFAPI_MarketStatusInfo*)
+/*	if (FuncNo ==100)		//获取某个市场的市场日期和市场时间(参数:uint8*,   XDFAPI_MarketStatusInfo*)
 	{
 		uint8_t * pMarket = (uint8_t*)wParam;
 		XDFAPI_MarketStatusInfo* pInfo = (XDFAPI_MarketStatusInfo*)lParam;
@@ -193,7 +134,7 @@ int		STDCALL		MPrimeClient::ReqFuncData(int FuncNo, void* wParam, void* lParam)
 				return 1;
 			}
 		}
-	}
+	}*/
 	/*
 	else if (FuncNo == 101)		//获取 当前｛商品期货和商品期权｝挂载的是14 还是35, 还是(-1) ??( 参数:int*  )
 	{
@@ -213,6 +154,20 @@ int		STDCALL		MPrimeClient::ReqFuncData(int FuncNo, void* wParam, void* lParam)
 
 
 
+void QuotationAdaptor::OnQuotation( unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen )
+{
+
+}
+
+void QuotationAdaptor::OnStatusChg( unsigned int nMarketID, unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen )
+{
+
+}
+
+void QuotationAdaptor::OnLog( unsigned char nLogLevel, const char* pszLogBuf )
+{
+
+}
 
 
 

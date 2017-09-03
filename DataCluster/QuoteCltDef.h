@@ -46,32 +46,32 @@ enum XDFRunStat
 //数据包Head
 typedef struct  
 {
-	uint8_t					MarketID;		//见XDFMarket定义
-	uint32_t				PkgSize;		//数据包的大小
+	unsigned char			MarketID;		//见XDFMarket定义
+	unsigned int			PkgSize;		//数据包的大小
 	char					Reserved[59];	//
 }XDFAPI_PkgHead;
 
 //消息包Head
 typedef struct  
 {
-	int16_t					MsgType;		//消息类型，[有符号，当符号为负有其他含义，详细见文档]
-	uint16_t				MsgLen;			//消息体长度
+	short					MsgType;		//消息类型，[有符号，当符号为负有其他含义，详细见文档]
+	unsigned short			MsgLen;			//消息体长度
 }XDFAPI_MsgHead;
 
 //组合消息包Head
 typedef struct  
 {
-	int16_t					MsgType;		//复合消息类型，[符号为负]
-	uint16_t				MsgLen;			//复合消息体长度(含MsgCount字段在内)
-	uint16_t				MsgCount;		//消息的个数
+	short					MsgType;		//复合消息类型，[符号为负]
+	unsigned short			MsgLen;			//复合消息体长度(含MsgCount字段在内)
+	unsigned short			MsgCount;		//消息的个数
 }XDFAPI_UniMsgHead;
 
 
 //价位
 typedef struct
 {
-	uint32_t				Price;					//委托价格[* 放大倍数]
-	uint64_t				Volume;					//委托量[股]
+	unsigned int			Price;					//委托价格[* 放大倍数]
+	unsigned __int64		Volume;					//委托量[股]
 } tagXDFAPI_BuySell;
 
 
@@ -123,8 +123,8 @@ typedef struct
 //[MsgType=2 MsgLen=158]上海期权代码表
 typedef struct
 {
-	uint8_t					Market;						//XDFMarket取值
-	uint8_t					SecKind;					//证券类型[见文档]
+	unsigned char			Market;						//XDFMarket取值
+	unsigned char			SecKind;					//证券类型[见文档]
 	char					Code[8];					//产品ID
 	char					Name[20];					//合约简称
 	char					ContractID[19];				//合约代码
@@ -227,8 +227,8 @@ typedef struct
 //[MsgType=3  MsgLen=69]中金期权代码表
 typedef struct  
 {
-	uint8_t					Market;					//XDFMarket取值
-	uint8_t					SecKind;				//证券类型[见文档]
+	unsigned char			Market;					//XDFMarket取值
+	unsigned char			SecKind;				//证券类型[见文档]
 	char					Code[32];				//合约代码
 	unsigned int			ContractMult;			//合约乘数
 	int						ContractUnit;			//合约单位
@@ -281,8 +281,8 @@ typedef struct
 //[MsgType=4  MsgLen=28]中金期货代码表
 typedef struct  
 {
-	uint8_t					Market;					//XDFMarket取值
-	uint8_t					SecKind;				//证券类型[见文档]
+	unsigned char			Market;					//XDFMarket取值
+	unsigned char			SecKind;				//证券类型[见文档]
 	unsigned char			ExFlag;					//最后交易日标记,0x01表示是最后交易日只对普通合约有效；其他值暂未定义
     char					Code[6];                //商品代码
     char					Name[8];               	//商品名称
@@ -331,8 +331,8 @@ typedef struct
 //[MsgType=5 MsgLen= 16]上海证券代码表
 typedef struct  
 {
-	uint8_t					Market;					//XDFMarket取值
-	uint8_t					SecKind;				//证券类型[见文档]
+	unsigned char			Market;					//XDFMarket取值
+	unsigned char			SecKind;				//证券类型[见文档]
 	char					Code[6];				//商品代码
 	char					Name[8];				//商品名称
 	//unsigned char			SFlag;					//停牌标记，是否可交易
@@ -412,8 +412,8 @@ typedef struct
 //[MsgType=6 MsgLen= 20]深圳证券代码表(带前缀)
 typedef struct  
 {
-	uint8_t					Market;					//XDFMarket取值
-	uint8_t					SecKind;				//证券类型[见文档]
+	unsigned char			Market;					//XDFMarket取值
+	unsigned char			SecKind;				//证券类型[见文档]
 	char					Code[6];				//商品代码
 	char					Name[8];				//商品名称
 	char					PreName[4];				//证券前缀
@@ -439,8 +439,8 @@ typedef struct
 //[MsgType =7 MsgLen= 20]商品期货码表
 typedef struct  
 {
-	uint8_t							Market;					//XDFMarket取值
-	uint8_t							SecKind;				//证券类型[见文档]
+	unsigned char					Market;					//XDFMarket取值
+	unsigned char					SecKind;				//证券类型[见文档]
 	char							Code[6];				//商品代码
 	char							Name[8];				//商品名称
 	unsigned long					LotFactor;				//手比率
@@ -512,8 +512,8 @@ typedef struct
 //[MsgType=9 MsgLen=114]深圳期权代码表
 typedef struct
 {
-	uint8_t					Market;						//XDFMarket取值
-	uint8_t					SecKind;					//类型[见文档]
+	unsigned char			Market;						//XDFMarket取值
+	unsigned char			SecKind;					//类型[见文档]
 	char					Code[8];					//产品ID
 	char					Name[20];					//合约简称
 	char					ContractID[20];				//合约代码
@@ -612,8 +612,8 @@ typedef struct
 //[MsgType =11 MsgLen= ]商品期货与期权码表
 typedef struct  
 {
-	uint8_t							Market;					//XDFMarket取值(XDF_CNFOPT=35)
-	uint8_t							SecKind;				//证券类型[见文档]
+	unsigned char					Market;					//XDFMarket取值(XDF_CNFOPT=35)
+	unsigned char					SecKind;				//证券类型[见文档]
 	char							Code[20];				//商品代码
 	char							Name[40];				//商品名称
 	unsigned long					LotFactor;				//手比率

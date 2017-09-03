@@ -80,6 +80,7 @@ public:
 	const std::string&					GetRecoveryFolderPath() const;
 
 protected:
+	bool								m_bLoaded;						///< 加载标识
 	DllPathTable						m_oDCPathTable;					///< 数据采集器加载地址表
 	std::string							m_sMemPluginPath;				///< 数据内存块插件所在路径
 	std::string							m_sRecoveryFolder;				///< 行情数据存储/恢复目录

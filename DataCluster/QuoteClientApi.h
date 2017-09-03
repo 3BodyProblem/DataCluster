@@ -1,8 +1,8 @@
-
-
-
 #ifndef  _QUOTECLIENT_APIDEFINE_H
 #define  _QUOTECLIENT_APIDEFINE_H
+
+
+#include "QuoteCltDef.h"
 
 
 // The following ifdef block is the standard way of creating macros which make exporting 

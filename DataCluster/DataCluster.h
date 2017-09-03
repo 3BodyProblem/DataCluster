@@ -6,6 +6,7 @@
 #include "DataCollector/Interface.h"
 #include "QuoteCltDef.h"
 #include "QuoteClientApi.h"
+#include "DataClient/DataClient.h"
 
 
 /**
@@ -43,10 +44,14 @@ extern "C"
 	 */
 	__declspec(dllexport) void __stdcall	ExecuteUnitTest();
 
-
 	///< -------------------- ¼æÈÝÀÏ½Ó¿ÚQuoClientApi.Dll ------------------------------------------
+	extern MPrimeClient						Global_PrimeClient;
+	extern bool								Global_bInit;
+	extern MDataClient						Global_Client;
 	__declspec(dllexport) const char*		GetDllVersion( int &nMajorVersion, int &nMinorVersion );
 	__declspec(dllexport) QuoteClientApi*	CreateQuoteApi( const char* pszDebugPath );
+	__declspec(dllexport) QuotePrimeApi*	CreatePrimeApi();
+	__declspec(dllexport) int				GetSettingInfo( tagQuoteSettingInfo* pArrMarket, int nCount );
 }
 
 

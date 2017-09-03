@@ -91,6 +91,7 @@ std::string DllPathTable::GetPathByPos( unsigned int nPos )
 
 
 Configuration::Configuration()
+ : m_bLoaded( false )
 {
 }
 
@@ -100,6 +101,11 @@ int Configuration::Load()
 	int					nErrCode = 0;
 	char				pszDllPath[218] = { 0 };
 	std::string			sIniPath = GetModulePath(NULL) + "DataCluster.ini";
+
+	if( true == m_bLoaded )
+	{
+		return 0;
+	}
 
 	///< ---------- load .ini -------------------------
 	if( 0 != (nErrCode=oIniFile.load( sIniPath )) )
@@ -139,6 +145,8 @@ int Configuration::Load()
 
 		m_oDCPathTable.AddPath( sQuotationPluginPath );
 	}
+
+	m_bLoaded = true;
 
 	return 0;
 }

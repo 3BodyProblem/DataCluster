@@ -2,6 +2,10 @@
 #define _DATACLIENT_DEFINE_H
 
 
+#include "../Interface.h"
+#include "../QuoteClientApi.h"
+
+
 /**
  * @class	MDataClient
  * @brief	api接口的实现
@@ -72,6 +76,13 @@ private:
 
 
 
+class QuotationAdaptor : public I_QuotationCallBack
+{
+public:
+	virtual void			OnQuotation( unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen );
+	virtual void			OnStatusChg( unsigned int nMarketID, unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen );
+	virtual void			OnLog( unsigned char nLogLevel, const char* pszLogBuf );
+};
 
 
 

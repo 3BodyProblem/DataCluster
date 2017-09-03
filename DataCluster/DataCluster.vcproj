@@ -355,6 +355,18 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="DataClient"
+			>
+			<File
+				RelativePath=".\DataClient\DataClient.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DataClient\DataClient.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\DataCluster.cpp"
 			>
