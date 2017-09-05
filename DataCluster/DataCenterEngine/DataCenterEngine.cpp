@@ -24,6 +24,16 @@ DataIOEngine& DataIOEngine::GetEngineObj()
 	return obj;
 }
 
+DatabaseAdaptor& DataIOEngine::GetDatabaseObj()
+{
+	return m_oDatabaseIO;
+}
+
+DataCollectorPool& DataIOEngine::GetCollectorPool()
+{
+	return m_oDataCollectorPool;
+}
+
 int DataIOEngine::Initialize( I_QuotationCallBack* pIQuotation )
 {
 	int			nErrorCode = 0;

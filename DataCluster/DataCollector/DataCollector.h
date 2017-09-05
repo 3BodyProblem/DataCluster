@@ -2,6 +2,7 @@
 #define	__DATA_COLLECTOR_H__
 
 
+#include <map>
 #include <string>
 #include <vector>
 #include "Interface.h"
@@ -150,8 +151,17 @@ public:
 	 */
 	unsigned int			GetCount();
 
+public:
+	/**
+	 * @brief				根据市场编号取得数据采集模块
+	 */
+	DataCollector*			GetCollectorByMkID( unsigned int nMkID );
+
+	static int				MkIDCast( unsigned int nOldMkID );
+
 protected:
 	CriticalObject			m_oLock;						///< 锁
+	std::map<int,int>		m_mapMkID2Index;				///< 根据市场编号，取得位置索引值
 };
 
 

@@ -1,4 +1,6 @@
 #include "DataCollector.h"
+#include "../QuoteCltDef.h"
+#include "../Protocal/DataCluster_Protocal.h"
 #include "../DataCenterEngine/DataCenterEngine.h"
 
 
@@ -185,10 +187,13 @@ void DataCollectorPool::Release()
 	{
 		this->operator []( n ).Release();
 	}
+
+	m_mapMkID2Index.clear();
 }
 
 int DataCollectorPool::Initialize( I_DataHandle* pIDataCallBack )
 {
+	CriticalLock			lock( m_oLock );
 	Configuration&			refCnf = Configuration::GetConfigObj();
 	DllPathTable&			refDcDllTable = refCnf.GetDCPathTable();
 	unsigned int			nDllCount = refDcDllTable.GetCount();
@@ -206,6 +211,7 @@ int DataCollectorPool::Initialize( I_DataHandle* pIDataCallBack )
 		return GetCount();
 	}
 
+	m_mapMkID2Index.clear();
 	for( unsigned int n = 0; n < nDllCount; n++ )
 	{
 		std::string		sDcDllPath = refDcDllTable.GetPathByPos( n );
@@ -230,6 +236,7 @@ int DataCollectorPool::PreserveAllConnection()
 
 	for( unsigned int n = 0; n < GetCount(); n++ )
 	{
+		CriticalLock		lock( m_oLock );
 		static char			s_pszTmp[2048] = { 0 };
 		unsigned int		nBufLen = sizeof(s_pszTmp);
 		DataCollector&		refDataCollector = this->operator []( n );
@@ -243,8 +250,9 @@ int DataCollectorPool::PreserveAllConnection()
 			int		nErrorCode = refDataCollector.RecoverDataCollector();
 			if( 0 == nErrorCode )
 			{
+				DataIOEngine::GetEngineObj().WriteInfo( "DataCollectorPool::PreserveAllConnection() : DataCollector Recovered Successfully! MarketID[%u] --> Index[%d] !!! ", refDataCollector.GetMarketID(), n );
 				nAffectNum++;
-				DataIOEngine::GetEngineObj().WriteInfo( "DataCollectorPool::PreserveAllConnection() : DataCollector Recovered Successfully! MarketID[%u] !!! ", refDataCollector.GetMarketID() );
+				m_mapMkID2Index[refDataCollector.GetMarketID()] = n;
 			}
 			else
 			{
@@ -268,8 +276,52 @@ unsigned int DataCollectorPool::GetCount()
 	return std::vector<DataCollector>::size();
 }
 
+int DataCollectorPool::MkIDCast( unsigned int nOldMkID )
+{
+	switch( nOldMkID )
+	{
+	case XDF_SH:
+		return QUO_MARKET_SSE;
+	case XDF_SZ:
+		return QUO_MARKET_SZSE;
+	case XDF_CF:
+		return QUO_MARKET_CFFEX;
+	case XDF_CNF:
+		return QUO_MARKET_DCE;//QUO_MARKET_CZCE//QUO_MARKET_SHFE
+	case XDF_SHOPT:
+		return QUO_MARKET_SSEOPT;
+	case XDF_ZJOPT:
+		return QUO_MARKET_CFFEXOPT;
+	case XDF_SZOPT:
+		return QUO_MARKET_SZSEOPT;
+	case XDF_CNFOPT:
+		return QUO_MARKET_DCEOPT;//QUO_MARKET_CZCEOPT//QUO_MARKET_SHFEOPT
+	default:
+		return -1;
+	}
+}
 
+DataCollector* DataCollectorPool::GetCollectorByMkID( unsigned int nMkID )
+{
+	int						nInnerMkID = DataCollectorPool::MkIDCast( nMkID );
+	CriticalLock			lock( m_oLock );
 
+	if( nInnerMkID < 0 )
+	{
+		return NULL;
+	}
+
+	std::map<int,int>::iterator		it = m_mapMkID2Index.find( nInnerMkID );
+
+	if( it != m_mapMkID2Index.end() )
+	{
+		DataCollector&				refCollector = this->operator []( it->second );
+
+		return &refCollector;
+	}
+
+	return NULL;
+}
 
 
 

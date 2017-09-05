@@ -50,6 +50,7 @@ extern "C"
 	bool						Global_bInit = false;
 	MDataClient					Global_Client;
 	QuotationAdaptor			Global_CBAdaptor;
+	QuoteClientSpi*				Global_pSpi = NULL;
 
 	__declspec(dllexport) QuoteClientApi*	CreateQuoteApi( const char* pszDebugPath )
 	{
@@ -57,7 +58,7 @@ extern "C"
 		{
 			Global_bInit = true;
 
-			if( NULL == Activate( &Global_CBAdaptor ) )
+			if( 0 != Activate( &Global_CBAdaptor ) )
 			{
 				return NULL;
 			}

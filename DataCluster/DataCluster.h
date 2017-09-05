@@ -48,6 +48,8 @@ extern "C"
 	extern MPrimeClient						Global_PrimeClient;
 	extern bool								Global_bInit;
 	extern MDataClient						Global_Client;
+	extern QuotationAdaptor					Global_CBAdaptor;
+	extern QuoteClientSpi*					Global_pSpi;
 	__declspec(dllexport) const char*		GetDllVersion( int &nMajorVersion, int &nMinorVersion );
 	__declspec(dllexport) QuoteClientApi*	CreateQuoteApi( const char* pszDebugPath );
 	__declspec(dllexport) QuotePrimeApi*	CreatePrimeApi();

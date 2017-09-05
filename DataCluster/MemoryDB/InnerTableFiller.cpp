@@ -857,7 +857,7 @@ struct MappingCFFFuture_BuySell2QuoSnapData : public InnerRecord { MappingCFFFut
 struct MappingSHL1_MkInfo2QuoMarketInfo : public InnerRecord { MappingSHL1_MkInfo2QuoMarketInfo() : InnerRecord( 149, sizeof(tagSHL1MarketInfo_LF149), QUO_MARKET_SSE*100+1 ) {}
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
-			tagSHL1MarketInfo_LF149*	pMkInfo = (tagSHL1MarketInfo_LF149*)pMessagePtr;
+			tagSHL1MarketInfo_LF149*		pMkInfo = (tagSHL1MarketInfo_LF149*)pMessagePtr;
 			tagQuoMarketInfo*				pBigTable = (tagQuoMarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->MarketDate = pMkInfo->MarketDate;

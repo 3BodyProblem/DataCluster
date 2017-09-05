@@ -119,6 +119,17 @@ protected:///< 线程任务相关函数
 	 */
 	virtual int				Execute();
 
+public:
+	/**
+	 * @brief				获取数据采集集合
+	 */
+	DataCollectorPool&		GetCollectorPool();
+
+	/**
+	 * @brief				获取数据库对象
+	 */
+	DatabaseAdaptor&		GetDatabaseObj();
+
 protected:
 	QuotationNotify			m_oQuoNotify;					///< 行情数据通知回调
 	DatabaseAdaptor			m_oDatabaseIO;					///< 内存数据插件管理
