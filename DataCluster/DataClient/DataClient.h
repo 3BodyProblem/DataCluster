@@ -77,6 +77,7 @@ private:
 };
 
 
+extern MDataIO				g_oDataIO;
 
 
 /**

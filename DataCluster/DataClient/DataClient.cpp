@@ -264,6 +264,9 @@ void	MStreamWrite::PutMsg(unsigned int ntype, char* pStruct, int nStructSize)
 }
 
 
+MDataIO				g_oDataIO;
+
+
 MDataClient::MDataClient()
 : m_pQueryBuffer( NULL )
 {
@@ -289,9 +292,14 @@ int STDCALL	MDataClient::Init()
 	{
 		Global_bInit = true;
 
-		if( 0 != Activate( &Global_CBAdaptor ) )
+		if( g_oDataIO.Instance() < 0 )
 		{
 			return -1;
+		}
+
+		if( 0 != Activate( &Global_CBAdaptor ) )
+		{
+			return -2;
 		}
 	}
 
@@ -304,6 +312,7 @@ void STDCALL MDataClient::Release()
 	{
 		Global_bInit = false;
 		Destroy();
+		g_oDataIO.Release();
 	}
 }
 
@@ -1066,22 +1075,35 @@ void QuotationAdaptor::OnQuotation( unsigned int nMessageID, char* pDataPtr, uns
 		return;
 	}
 
+	char outbuf[81920]={0};
+	MStreamWrite oMSW(outbuf, 81920);
+
 	switch( nMessageID )
 	{
 	case 151:
 		{
 			XDFAPI_MarketStatusInfo			tagData = { 0 };
 			tagSHL1MarketStatus_HF151*		pData = (tagSHL1MarketStatus_HF151*)pDataPtr;
-/*
-			tagData.MarketDate = pData->MarketDate;
+
+//			tagData.MarketDate = pData->MarketDate;
 			tagData.MarketTime = pData->MarketTime;
 			tagData.MarketID = XDF_SH;
 			tagData.MarketStatus = pData->MarketStatus;
-*/
+
+			oMSW.PutSingleMsg(1, (char*)&tagData, sizeof(XDFAPI_MarketStatusInfo));
 		}
 		break;
 	}
 
+	oMSW.Detach();
+
+	//[3]·ÅÈë³Ø×Ó(PkgHead+PkgBuf)
+	XDFAPI_PkgHead pkghead;
+	memset(&pkghead, 0, sizeof(XDFAPI_PkgHead));
+	pkghead.MarketID = XDF_SH;
+	pkghead.PkgSize = oMSW.GetOffset();
+
+	g_oDataIO.PutData( &pkghead, outbuf, oMSW.GetOffset() );
 }
 
 void QuotationAdaptor::OnStatusChg( unsigned int nMarketID, unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen )
