@@ -1,21 +1,10 @@
-//------------------------------------------------------------------------------------------------------------------------------
-//单元名称：循环缓冲单元
-//单元描述：定义了一个缓冲去，但是以循环方式存储，使用者可以不用每次都去关心移动内存的事情
-//创建日期：2007.3.14
-//创建人员：卢明远
-//修改纪录
-//修改日期		修改人员	修改内容和原因
-//
-//
-//
-//
-//
-//------------------------------------------------------------------------------------------------------------------------------
-#ifndef __MEngine_MLoopBufferH__
-#define __MEngine_MLoopBufferH__
-//------------------------------------------------------------------------------------------------------------------------------
-#include "../BaseUnit/MMutex.h"
-//------------------------------------------------------------------------------------------------------------------------------
+#ifndef __INFRASTRUCTURE__LOOPBUFFER_H__
+#define __INFRASTRUCTURE__LOOPBUFFER_H__
+
+
+#include "Lock.h"
+
+
 //注意：tempclass对指针不另外分配空间，所以，对于需要分配空间的指针不要作为tempclass的成员
 template<class tempclass>class MLoopBufferSt
 {
@@ -58,11 +47,11 @@ public:
 	//获取数据百分比
 	int  GetPercent(void);
 };
-//------------------------------------------------------------------------------------------------------------------------------
+
 template<class tempclass>class MLoopBufferMt : public MLoopBufferSt<tempclass>
 {
 protected:
-	MCriticalSection				m_mSection;
+	CriticalObject				m_mSection;
 public:
 	MLoopBufferMt(void);
 	virtual ~MLoopBufferMt();
@@ -116,7 +105,7 @@ template<class tempclass> MLoopBufferSt<tempclass>::~MLoopBufferSt()
 //..............................................................................................................................
 template<class tempclass>int  MLoopBufferSt<tempclass>::Instance(unsigned long lMaxSize)
 {
-	my_assert(lMaxSize != 0);
+	assert(lMaxSize != 0);
 
 	Release();
 #ifndef	_LINUXTRYOFF
@@ -131,7 +120,7 @@ template<class tempclass>int  MLoopBufferSt<tempclass>::Instance(unsigned long l
 #endif
 	if ( m_lpRecordData == NULL )
 	{
-		return(ERR_PUBLIC_NOMEMORY);
+		return -1;
 	}
 	m_lMaxRecord = lMaxSize;
 
@@ -159,7 +148,7 @@ template<class tempclass>int  MLoopBufferSt<tempclass>::PutData(const tempclass 
 	register int				errorcode;
 	register int				icopysize;
 
-	my_assert(lpIn != NULL);
+	assert(lpIn != NULL);
 	
 	if ( lInSize == 0 )
 	{
@@ -169,7 +158,7 @@ template<class tempclass>int  MLoopBufferSt<tempclass>::PutData(const tempclass 
 	if ( m_lpRecordData == NULL || m_lMaxRecord == 0 )
 	{
 		assert(0);
-		return(ERR_PUBLIC_NOINSTANCE);
+		return -1;
 	}
 
 	errorcode = (m_lFirstRecord + m_lMaxRecord - m_lLastRecord - 1) % m_lMaxRecord;
@@ -178,7 +167,7 @@ template<class tempclass>int  MLoopBufferSt<tempclass>::PutData(const tempclass 
 #ifdef _DEBUG	//	GUOGUO TEMP
 //printf("FAIL:%d,%d, %d, %d, %d, %d\n", m_lFirstRecord, m_lMaxRecord, m_lLastRecord, m_lMaxRecord, errorcode, lInSize);fflush(stdout);
 #endif
-		return(ERR_MLOOPBUF_FULL);
+		return -2;
 	}
 	
 	icopysize = m_lMaxRecord - m_lLastRecord;
@@ -204,18 +193,18 @@ template<class tempclass>int  MLoopBufferSt<tempclass>::GetData(tempclass * lpOu
 	register int				errorcode;
 	register int				icopysize;
 	
-	my_assert(lpOut != NULL);
+	assert(lpOut != NULL);
 
 	if ( m_lpRecordData == NULL || m_lMaxRecord == 0 )
 	{
 		assert(0);
-		return(ERR_PUBLIC_NOINSTANCE);
+		return -1;
 	}
 
 	errorcode = (m_lLastRecord + m_lMaxRecord - m_lFirstRecord) % m_lMaxRecord;
 	if ( errorcode == 0 )
 	{
-		return(ERR_MLOOPBUF_EMPTY);
+		return -2;
 	}
 	else if ( lInSize > errorcode )
 	{
@@ -243,18 +232,18 @@ template<class tempclass>int  MLoopBufferSt<tempclass>::LookData(tempclass * lpO
 	register int				errorcode;
 	register int				icopysize;
 	
-	my_assert(lpOut != NULL);
+	assert(lpOut != NULL);
 	
 	if ( m_lpRecordData == NULL || m_lMaxRecord == 0 )
 	{
 		assert(0);
-		return(ERR_PUBLIC_NOINSTANCE);
+		return -1;
 	}
 	
 	errorcode = (m_lLastRecord + m_lMaxRecord - m_lFirstRecord) % m_lMaxRecord;
 	if ( errorcode <= 0 )
 	{
-		return(ERR_MLOOPBUF_EMPTY);
+		return -2;
 	}
 	else if ( lInSize > errorcode )
 	{
@@ -371,7 +360,6 @@ template<class tempclass>int  MLoopBufferSt<tempclass>::GetPercent(void)
 //------------------------------------------------------------------------------------------------------------------------------
 template<class tempclass> MLoopBufferMt<tempclass>::MLoopBufferMt(void)
 {
-	m_mSection.SetSpObejctName("MLoopBufferMt");
 }
 //..............................................................................................................................
 template<class tempclass> MLoopBufferMt<tempclass>::~MLoopBufferMt()
@@ -381,91 +369,91 @@ template<class tempclass> MLoopBufferMt<tempclass>::~MLoopBufferMt()
 //..............................................................................................................................
 template<class tempclass> int  MLoopBufferMt<tempclass>::Instance(unsigned long lMaxSize)
 {
-	MLocalSection				section(&m_mSection);
+	CriticalLock				section(m_mSection);
 
 	return(MLoopBufferSt<tempclass>::Instance(lMaxSize));
 }
 //..............................................................................................................................
 template<class tempclass> void MLoopBufferMt<tempclass>::Release(void)
 {
-	MLocalSection				section(&m_mSection);
+	CriticalLock				section(m_mSection);
 	
 	MLoopBufferSt<tempclass>::Release();
 }
 //..............................................................................................................................
 template<class tempclass> int  MLoopBufferMt<tempclass>::PutData(const tempclass * lpIn,unsigned long lInSize)
 {
-	MLocalSection				section(&m_mSection);
+	CriticalLock				section(m_mSection);
 
 	return(MLoopBufferSt<tempclass>::PutData(lpIn,lInSize));
 }
 //..............................................................................................................................
 template<class tempclass> int  MLoopBufferMt<tempclass>::GetData(tempclass * lpOut,unsigned long lInSize)
 {
-	MLocalSection				section(&m_mSection);
+	CriticalLock				section(m_mSection);
 	
 	return(MLoopBufferSt<tempclass>::GetData(lpOut,lInSize));
 }
 //..............................................................................................................................
 template<class tempclass> int  MLoopBufferMt<tempclass>::LookData(tempclass * lpOut,unsigned long lInSize)
 {
-	MLocalSection				section(&m_mSection);
+	CriticalLock				section(m_mSection);
 	
 	return(MLoopBufferSt<tempclass>::LookData(lpOut,lInSize));
 }
 //..............................................................................................................................
 template<class tempclass> int  MLoopBufferMt<tempclass>::MoveData(unsigned long lInSize)
 {
-	MLocalSection				section(&m_mSection);
+	CriticalLock				section(m_mSection);
 	
 	return(MLoopBufferSt<tempclass>::MoveData(lInSize));
 }
 //..............................................................................................................................
 template<class tempclass> void MLoopBufferMt<tempclass>::Clear(void)
 {
-	MLocalSection				section(&m_mSection);
+	CriticalLock				section(m_mSection);
 	
 	MLoopBufferSt<tempclass>::Clear();
 }
 //..............................................................................................................................
 template<class tempclass> bool MLoopBufferMt<tempclass>::IsEmpty(void)
 {
-	MLocalSection				section(&m_mSection);
+	CriticalLock				section(m_mSection);
 	
 	return(MLoopBufferSt<tempclass>::IsEmpty());
 }
 //..............................................................................................................................
 template<class tempclass> bool MLoopBufferMt<tempclass>::IsFull(void)
 {
-	MLocalSection				section(&m_mSection);
+	CriticalLock				section(m_mSection);
 	
 	return(MLoopBufferSt<tempclass>::IsFull());
 }
 //..............................................................................................................................
 template<class tempclass> int  MLoopBufferMt<tempclass>::GetRecordCount(void)
 {
-	MLocalSection				section(&m_mSection);
+	CriticalLock				section(m_mSection);
 	
 	return(MLoopBufferSt<tempclass>::GetRecordCount());
 }
 //..............................................................................................................................
 template<class tempclass> int  MLoopBufferMt<tempclass>::GetFreeRecordCount(void)
 {
-	MLocalSection				section(&m_mSection);
+	CriticalLock				section(m_mSection);
 	
 	return(MLoopBufferSt<tempclass>::GetFreeRecordCount());
 }
 //..............................................................................................................................
 template<class tempclass> int  MLoopBufferMt<tempclass>::GetMaxRecord(void)
 {
-	MLocalSection				section(&m_mSection);
+	CriticalLock				section(m_mSection);
 	
 	return(MLoopBufferSt<tempclass>::GetMaxRecord());
 }
 //..............................................................................................................................
 template<class tempclass> int  MLoopBufferMt<tempclass>::GetPercent(void)
 {
-	MLocalSection				section(&m_mSection);
+	CriticalLock				section(m_mSection);
 	
 	return(MLoopBufferSt<tempclass>::GetPercent());
 }

@@ -33,19 +33,19 @@ int		MDataIO::Instance()
 	{
 		return -2;
 	}
-	iret = m_threadClient.StartThread("DataThread",DataThreadFunc, this);
+	iret = m_threadClient.Create("DataThread",DataThreadFunc, this);
 	if (iret <0)
 	{
 		return -3;
 	}
-	m_oCounter.SetCurTickCount();
 
 	return 1;
 }
 
 void	MDataIO::Release()
 {
-	m_threadClient.StopThread(15000);
+	m_threadClient.StopThread();
+	m_threadClient.Join(15000);
 	m_PushBuffer.Release();
 	if (m_pPkgBuf)
 	{
@@ -58,10 +58,9 @@ int		MDataIO::PutData(XDFAPI_PkgHead* pHead, const char* pszInBuf, int	nInBytes)
 {
 	if (nInBytes > 0)
 	{
-		CriticalLock Lock(&m_oSection);
+		CriticalLock Lock(m_oSection);
 		m_PushBuffer.PutData((char*)pHead, sizeof(XDFAPI_PkgHead));
 		m_PushBuffer.PutData(pszInBuf, nInBytes);
-		Lock.UnAttch();
 
 		m_oWEvent.Active();
 	}
@@ -73,7 +72,7 @@ void* STDCALL MDataIO::DataThreadFunc(void *pParam)
 {
 	MDataIO * pSelf = (MDataIO*)pParam;
 
-	while (!pSelf->m_threadClient.GetThreadStopFlag())
+	while( pSelf->m_threadClient.IsAlive() )
     {
 		try
 		{
@@ -1073,12 +1072,12 @@ void QuotationAdaptor::OnQuotation( unsigned int nMessageID, char* pDataPtr, uns
 		{
 			XDFAPI_MarketStatusInfo			tagData = { 0 };
 			tagSHL1MarketStatus_HF151*		pData = (tagSHL1MarketStatus_HF151*)pDataPtr;
-
+/*
 			tagData.MarketDate = pData->MarketDate;
 			tagData.MarketTime = pData->MarketTime;
 			tagData.MarketID = XDF_SH;
 			tagData.MarketStatus = pData->MarketStatus;
-
+*/
 		}
 		break;
 	}

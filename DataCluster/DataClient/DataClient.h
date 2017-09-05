@@ -6,6 +6,7 @@
 #include "../QuoteClientApi.h"
 #include "../Infrastructure/Lock.h"
 #include "../Infrastructure/Thread.h"
+#include "../Infrastructure/LoopBuffer.h"
 
 
 /**
@@ -31,10 +32,9 @@ protected:
 protected:
 	char*					m_pPkgBuf;
 	WaitEvent				m_oWEvent;
-	MThread					m_threadClient;
+	SimpleThread			m_threadClient;
 	MLoopBufferMt<char>		m_PushBuffer;
 	CriticalObject			m_oSection;
-	MCounter				m_oCounter;
 };
 
 
