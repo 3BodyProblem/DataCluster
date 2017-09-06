@@ -151,8 +151,8 @@ private:
 class QuotationAdaptor : public I_QuotationCallBack
 {
 public:
-	virtual void			OnQuotation( unsigned int nMarketID, unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen );
-	virtual void			OnStatusChg( unsigned int nMarketID, unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen );
+	virtual void			OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen );
+	virtual void			OnStatus( QUO_MARKET_ID eMarketID, QUO_MARKET_STATUS eMarketStatus );
 	virtual void			OnLog( unsigned char nLogLevel, const char* pszLogBuf );
 };
 

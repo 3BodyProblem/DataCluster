@@ -56,10 +56,10 @@ protected:
 	unsigned int				m_nBigTableID;			///< 数据大表的ID
 protected:
 	union BigTableRecord {
-		tagQuoMarketInfo		MarketData_1;
-		tagQuoCategory			CategoryData_2;
-		tagQuoReferenceData		ReferenceData_3;
-		tagQuoSnapData			SnapData_4;
+		tagQUO_MarketInfo		MarketData_1;
+		tagQUO_KindInfo			CategoryData_2;
+		tagQUO_ReferenceData	ReferenceData_3;
+		tagQUO_SnapData			SnapData_4;
 	}							m_objUnionData;			///< 大表数据结构联合体
 };
 

@@ -337,7 +337,7 @@ int	 STDCALL		MDataClient::GetMarketInfo( unsigned char cMarket, char* pszInBuf,
 	int							nInnerMkID = DataCollectorPool::MkIDCast( cMarket );
 	unsigned __int64			nSerialNo = 0;
 	XDFAPI_MarketKindHead		oHead = { 0 };
-	tagQuoMarketInfo			tagMkInfo = { 0 };
+	tagQUO_MarketInfo			tagMkInfo = { 0 };
 	MStreamWrite				oMSW( pszInBuf, nInBytes );
 	DatabaseAdaptor&			refDatabase = DataIOEngine::GetEngineObj().GetDatabaseObj();
 
@@ -346,7 +346,7 @@ int	 STDCALL		MDataClient::GetMarketInfo( unsigned char cMarket, char* pszInBuf,
 		return -1;
 	}
 
-	if( refDatabase.QueryRecord( (nInnerMkID*100+1), (char*)&tagMkInfo, sizeof(tagQuoMarketInfo), nSerialNo ) <= 0 )
+	if( refDatabase.QueryRecord( (nInnerMkID*100+1), (char*)&tagMkInfo, sizeof(tagQUO_MarketInfo), nSerialNo ) <= 0 )
 	{
 		return -2;
 	}
@@ -382,7 +382,7 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 {
 	int							nInnerMkID = DataCollectorPool::MkIDCast( cMarket );
 	unsigned __int64			nSerialNo = 0;
-	tagQuoMarketInfo			tagMkInfo = { 0 };
+	tagQUO_MarketInfo			tagMkInfo = { 0 };
 	CriticalLock				lock( m_oLock );
 	MStreamWrite				oMSW( pszInBuf, nInBytes );
 	DatabaseAdaptor&			refDatabase = DataIOEngine::GetEngineObj().GetDatabaseObj();
@@ -395,7 +395,7 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 		return -1;
 	}
 
-	if( refDatabase.QueryRecord( (nInnerMkID*100+1), (char*)&tagMkInfo, sizeof(tagQuoMarketInfo), nSerialNo ) <= 0 )
+	if( refDatabase.QueryRecord( (nInnerMkID*100+1), (char*)&tagMkInfo, sizeof(tagQUO_MarketInfo), nSerialNo ) <= 0 )
 	{
 		return -2;
 	}
@@ -661,7 +661,7 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 {
 	int							nInnerMkID = DataCollectorPool::MkIDCast( cMarket );
 	unsigned __int64			nSerialNo = 0;
-	tagQuoMarketInfo			tagMkInfo = { 0 };
+	tagQUO_MarketInfo			tagMkInfo = { 0 };
 	CriticalLock				lock( m_oLock );
 	MStreamWrite				oMSW( pszInBuf, nInBytes );
 	DatabaseAdaptor&			refDatabase = DataIOEngine::GetEngineObj().GetDatabaseObj();
@@ -674,7 +674,7 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 		return -1;
 	}
 
-	if( refDatabase.QueryRecord( (nInnerMkID*100+1), (char*)&tagMkInfo, sizeof(tagQuoMarketInfo), nSerialNo ) <= 0 )
+	if( refDatabase.QueryRecord( (nInnerMkID*100+1), (char*)&tagMkInfo, sizeof(tagQUO_MarketInfo), nSerialNo ) <= 0 )
 	{
 		return -2;
 	}
@@ -1067,8 +1067,7 @@ int		STDCALL		MPrimeClient::ReqFuncData(int FuncNo, void* wParam, void* lParam)
 	return 0;
 }
 
-
-void QuotationAdaptor::OnQuotation( unsigned int nMarketID, unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen )
+void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen )
 {
 	if( NULL == Global_pSpi )
 	{
@@ -1078,7 +1077,7 @@ void QuotationAdaptor::OnQuotation( unsigned int nMarketID, unsigned int nMessag
 	char			outbuf[81920]={0};
 	MStreamWrite	oMSW(outbuf, 81920);
 	unsigned int	nMsgID = nMessageID % 100;
-	unsigned int	nOldMkID = DataCollectorPool::Cast2OldMkID( nMarketID );
+	unsigned int	nOldMkID = DataCollectorPool::Cast2OldMkID( eMarketID );
 
 	switch( nOldMkID )
 	{
@@ -1087,7 +1086,7 @@ void QuotationAdaptor::OnQuotation( unsigned int nMarketID, unsigned int nMessag
 		if( nMsgID == 1 )
 		{
 			XDFAPI_MarketStatusInfo		tagData = { 0 };
-			tagQuoMarketInfo*			pData = (tagQuoMarketInfo*)pDataPtr;
+			tagQUO_MarketInfo*			pData = (tagQUO_MarketInfo*)pDataPtr;
 
 			tagData.MarketDate = pData->MarketDate;
 			tagData.MarketTime = pData->MarketTime;
@@ -1138,7 +1137,7 @@ void QuotationAdaptor::OnQuotation( unsigned int nMarketID, unsigned int nMessag
 		if( nMsgID == 1 )
 		{
 			XDFAPI_MarketStatusInfo		tagData = { 0 };
-			tagQuoMarketInfo*			pData = (tagQuoMarketInfo*)pDataPtr;
+			tagQUO_MarketInfo*			pData = (tagQUO_MarketInfo*)pDataPtr;
 
 			tagData.MarketDate = pData->MarketDate;
 			tagData.MarketTime = pData->MarketTime;
@@ -1185,7 +1184,7 @@ void QuotationAdaptor::OnQuotation( unsigned int nMarketID, unsigned int nMessag
 		if( nMsgID == 1 )
 		{
 			XDFAPI_MarketStatusInfo		tagData = { 0 };
-			tagQuoMarketInfo*			pData = (tagQuoMarketInfo*)pDataPtr;
+			tagQUO_MarketInfo*			pData = (tagQUO_MarketInfo*)pDataPtr;
 
 			tagData.MarketDate = pData->MarketDate;
 			tagData.MarketTime = pData->MarketTime;
@@ -1233,7 +1232,7 @@ void QuotationAdaptor::OnQuotation( unsigned int nMarketID, unsigned int nMessag
 		if( nMsgID == 1 )
 		{
 			XDFAPI_ShOptMarketStatus	tagData = { 0 };
-			tagQuoMarketInfo*			pData = (tagQuoMarketInfo*)pDataPtr;
+			tagQUO_MarketInfo*			pData = (tagQUO_MarketInfo*)pDataPtr;
 
 			tagData.MarketDate = pData->MarketDate;
 			tagData.MarketTime = pData->MarketTime;
@@ -1276,7 +1275,7 @@ void QuotationAdaptor::OnQuotation( unsigned int nMarketID, unsigned int nMessag
 		if( nMsgID == 1 )
 		{
 			XDFAPI_MarketStatusInfo		tagData = { 0 };
-			tagQuoMarketInfo*			pData = (tagQuoMarketInfo*)pDataPtr;
+			tagQUO_MarketInfo*			pData = (tagQUO_MarketInfo*)pDataPtr;
 
 			tagData.MarketDate = pData->MarketDate;
 			tagData.MarketTime = pData->MarketTime;
@@ -1324,7 +1323,7 @@ void QuotationAdaptor::OnQuotation( unsigned int nMarketID, unsigned int nMessag
 		if( nMsgID == 1 )
 		{
 			XDFAPI_MarketStatusInfo		tagData = { 0 };
-			tagQuoMarketInfo*			pData = (tagQuoMarketInfo*)pDataPtr;
+			tagQUO_MarketInfo*			pData = (tagQUO_MarketInfo*)pDataPtr;
 
 			tagData.MarketDate = pData->MarketDate;
 			tagData.MarketTime = pData->MarketTime;
@@ -1366,7 +1365,7 @@ void QuotationAdaptor::OnQuotation( unsigned int nMarketID, unsigned int nMessag
 		if( nMsgID == 1 )
 		{
 			XDFAPI_MarketStatusInfo		tagData = { 0 };
-			tagQuoMarketInfo*			pData = (tagQuoMarketInfo*)pDataPtr;
+			tagQUO_MarketInfo*			pData = (tagQUO_MarketInfo*)pDataPtr;
 
 			tagData.MarketDate = pData->MarketDate;
 			tagData.MarketTime = pData->MarketTime;
@@ -1423,7 +1422,7 @@ void QuotationAdaptor::OnQuotation( unsigned int nMarketID, unsigned int nMessag
 	g_oDataIO.PutData( &pkghead, outbuf, oMSW.GetOffset() );
 }
 
-void QuotationAdaptor::OnStatusChg( unsigned int nMarketID, unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen )
+void QuotationAdaptor::OnStatus( QUO_MARKET_ID eMarketID,QUO_MARKET_STATUS eMarketStatus )
 {
 	if( Global_pSpi )
 	{

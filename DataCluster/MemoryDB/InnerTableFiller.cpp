@@ -68,13 +68,13 @@ struct MappingDLFuture_MkInfo2QuoMarketInfo : public InnerRecord { MappingDLFutu
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagDLFutureMarketInfo_LF100*	pMkInfo = (tagDLFutureMarketInfo_LF100*)pMessagePtr;
-			tagQuoMarketInfo*				pBigTable = (tagQuoMarketInfo*)&(m_objUnionData.MarketData_1);
+			tagQUO_MarketInfo*				pBigTable = (tagQUO_MarketInfo*)&(m_objUnionData.MarketData_1);
 
-			pBigTable->MarketDate = pMkInfo->MarketDate;
-			pBigTable->MarketID = (enum QUO_MARKET_ID)pMkInfo->MarketID;
-			pBigTable->WareCount = pMkInfo->KindCount;
-			pBigTable->WareCount = pMkInfo->WareCount;
-			pBigTable->PeriodsCount = pMkInfo->PeriodsCount;
+			pBigTable->uiMarketDate = pMkInfo->MarketDate;
+			pBigTable->eMarketID = (enum QUO_MARKET_ID)pMkInfo->MarketID;
+			pBigTable->uiKindCount = pMkInfo->KindCount;
+			pBigTable->uiWareCount = pMkInfo->WareCount;
+			pBigTable- = pMkInfo->PeriodsCount;
 			::memcpy( pBigTable->MarketPeriods, pMkInfo->MarketPeriods, sizeof(pBigTable->MarketPeriods) );
 		}
 	}
@@ -96,7 +96,7 @@ struct MappingDLFuture_MkStatus2QuoMarketInfo : public InnerRecord { MappingDLFu
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagDLFutureMarketStatus_HF102*	pMkStatus = (tagDLFutureMarketStatus_HF102*)pMessagePtr;
-			tagQuoMarketInfo*				pBigTable = (tagQuoMarketInfo*)&(m_objUnionData.MarketData_1);
+			tagQUO_MarketInfo*				pBigTable = (tagQUO_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->MarketTime = pMkStatus->MarketTime;
 			pBigTable->TradingPhaseCode[0] = pMkStatus->MarketStatus;
@@ -181,7 +181,7 @@ struct MappingSHFuture_MkInfo2QuoMarketInfo : public InnerRecord { MappingSHFutu
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagSHFutureMarketInfo_LF107*	pMkInfo = (tagSHFutureMarketInfo_LF107*)pMessagePtr;
-			tagQuoMarketInfo*				pBigTable = (tagQuoMarketInfo*)&(m_objUnionData.MarketData_1);
+			tagQUO_MarketInfo*				pBigTable = (tagQUO_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->MarketDate = pMkInfo->MarketDate;
 			pBigTable->MarketID = (enum QUO_MARKET_ID)pMkInfo->MarketID;
@@ -209,7 +209,7 @@ struct MappingSHFuture_MkStatus2QuoMarketInfo : public InnerRecord { MappingSHFu
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagSHFutureMarketStatus_HF109*	pMkStatus = (tagSHFutureMarketStatus_HF109*)pMessagePtr;
-			tagQuoMarketInfo*				pBigTable = (tagQuoMarketInfo*)&(m_objUnionData.MarketData_1);
+			tagQUO_MarketInfo*				pBigTable = (tagQUO_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->MarketTime = pMkStatus->MarketTime;
 			pBigTable->TradingPhaseCode[0] = pMkStatus->MarketStatus;
@@ -294,7 +294,7 @@ struct MappingZZFuture_MkInfo2QuoMarketInfo : public InnerRecord { MappingZZFutu
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagZZFutureMarketInfo_LF114*	pMkInfo = (tagZZFutureMarketInfo_LF114*)pMessagePtr;
-			tagQuoMarketInfo*				pBigTable = (tagQuoMarketInfo*)&(m_objUnionData.MarketData_1);
+			tagQUO_MarketInfo*				pBigTable = (tagQUO_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->MarketDate = pMkInfo->MarketDate;
 			pBigTable->MarketID = (enum QUO_MARKET_ID)pMkInfo->MarketID;
@@ -322,7 +322,7 @@ struct MappingZZFuture_MkStatus2QuoMarketInfo : public InnerRecord { MappingZZFu
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagZZFutureMarketStatus_HF116*	pMkStatus = (tagZZFutureMarketStatus_HF116*)pMessagePtr;
-			tagQuoMarketInfo*				pBigTable = (tagQuoMarketInfo*)&(m_objUnionData.MarketData_1);
+			tagQUO_MarketInfo*				pBigTable = (tagQUO_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->MarketTime = pMkStatus->MarketTime;
 			pBigTable->TradingPhaseCode[0] = pMkStatus->MarketStatus;
@@ -407,7 +407,7 @@ struct MappingDLOption_MkInfo2QuoMarketInfo : public InnerRecord { MappingDLOpti
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagDLOptionMarketInfo_LF128*	pMkInfo = (tagDLOptionMarketInfo_LF128*)pMessagePtr;
-			tagQuoMarketInfo*				pBigTable = (tagQuoMarketInfo*)&(m_objUnionData.MarketData_1);
+			tagQUO_MarketInfo*				pBigTable = (tagQUO_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->MarketDate = pMkInfo->MarketDate;
 			pBigTable->MarketID = (enum QUO_MARKET_ID)pMkInfo->MarketID;
@@ -435,7 +435,7 @@ struct MappingDLOption_MkStatus2QuoMarketInfo : public InnerRecord { MappingDLOp
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagDLOptionMarketStatus_HF130*	pMkStatus = (tagDLOptionMarketStatus_HF130*)pMessagePtr;
-			tagQuoMarketInfo*				pBigTable = (tagQuoMarketInfo*)&(m_objUnionData.MarketData_1);
+			tagQUO_MarketInfo*				pBigTable = (tagQUO_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->MarketTime = pMkStatus->MarketTime;
 			pBigTable->TradingPhaseCode[0] = pMkStatus->MarketStatus;
@@ -520,7 +520,7 @@ struct MappingSHOption_MkInfo2QuoMarketInfo : public InnerRecord { MappingSHOpti
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagSHOptionMarketInfo_LF135*	pMkInfo = (tagSHOptionMarketInfo_LF135*)pMessagePtr;
-			tagQuoMarketInfo*				pBigTable = (tagQuoMarketInfo*)&(m_objUnionData.MarketData_1);
+			tagQUO_MarketInfo*				pBigTable = (tagQUO_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->MarketDate = pMkInfo->MarketDate;
 			pBigTable->MarketID = (enum QUO_MARKET_ID)pMkInfo->MarketID;
@@ -548,7 +548,7 @@ struct MappingSHOption_MkStatus2QuoMarketInfo : public InnerRecord { MappingSHOp
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagSHOptionMarketStatus_HF137*	pMkStatus = (tagSHOptionMarketStatus_HF137*)pMessagePtr;
-			tagQuoMarketInfo*				pBigTable = (tagQuoMarketInfo*)&(m_objUnionData.MarketData_1);
+			tagQUO_MarketInfo*				pBigTable = (tagQUO_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->MarketTime = pMkStatus->MarketTime;
 			pBigTable->TradingPhaseCode[0] = pMkStatus->MarketStatus;
@@ -633,7 +633,7 @@ struct MappingZZOption_MkInfo2QuoMarketInfo : public InnerRecord { MappingZZOpti
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagZZOptionMarketInfo_LF142*	pMkInfo = (tagZZOptionMarketInfo_LF142*)pMessagePtr;
-			tagQuoMarketInfo*				pBigTable = (tagQuoMarketInfo*)&(m_objUnionData.MarketData_1);
+			tagQUO_MarketInfo*				pBigTable = (tagQUO_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->MarketDate = pMkInfo->MarketDate;
 			pBigTable->MarketID = (enum QUO_MARKET_ID)pMkInfo->MarketID;
@@ -661,7 +661,7 @@ struct MappingZZOption_MkStatus2QuoMarketInfo : public InnerRecord { MappingZZOp
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagZZOptionMarketStatus_HF144*	pMkStatus = (tagZZOptionMarketStatus_HF144*)pMessagePtr;
-			tagQuoMarketInfo*				pBigTable = (tagQuoMarketInfo*)&(m_objUnionData.MarketData_1);
+			tagQUO_MarketInfo*				pBigTable = (tagQUO_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->MarketTime = pMkStatus->MarketTime;
 			pBigTable->TradingPhaseCode[0] = pMkStatus->MarketStatus;
@@ -746,7 +746,7 @@ struct MappingCFFFuture_MkInfo2QuoMarketInfo : public InnerRecord { MappingCFFFu
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagCFFFutureMarketInfo_LF172*	pMkInfo = (tagCFFFutureMarketInfo_LF172*)pMessagePtr;
-			tagQuoMarketInfo*				pBigTable = (tagQuoMarketInfo*)&(m_objUnionData.MarketData_1);
+			tagQUO_MarketInfo*				pBigTable = (tagQUO_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->MarketDate = pMkInfo->MarketDate;
 			pBigTable->MarketID = (enum QUO_MARKET_ID)pMkInfo->MarketID;
@@ -774,7 +774,7 @@ struct MappingCFFFuture_MkStatus2QuoMarketInfo : public InnerRecord { MappingCFF
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagCFFFutureMarketStatus_HF174*	pMkStatus = (tagCFFFutureMarketStatus_HF174*)pMessagePtr;
-			tagQuoMarketInfo*				pBigTable = (tagQuoMarketInfo*)&(m_objUnionData.MarketData_1);
+			tagQUO_MarketInfo*				pBigTable = (tagQUO_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->MarketTime = pMkStatus->MarketTime;
 			::memcpy( &(pBigTable->TradingPhaseCode[0]),pMkStatus->StatusFlag, sizeof(pMkStatus->StatusFlag) );
@@ -858,7 +858,7 @@ struct MappingSHL1_MkInfo2QuoMarketInfo : public InnerRecord { MappingSHL1_MkInf
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagSHL1MarketInfo_LF149*		pMkInfo = (tagSHL1MarketInfo_LF149*)pMessagePtr;
-			tagQuoMarketInfo*				pBigTable = (tagQuoMarketInfo*)&(m_objUnionData.MarketData_1);
+			tagQUO_MarketInfo*				pBigTable = (tagQUO_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->MarketDate = pMkInfo->MarketDate;
 			pBigTable->MarketID = (enum QUO_MARKET_ID)pMkInfo->MarketID;
@@ -886,7 +886,7 @@ struct MappingSHL1_MkStatus2QuoMarketInfo : public InnerRecord { MappingSHL1_MkS
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagSHL1MarketStatus_HF151*		pMkStatus = (tagSHL1MarketStatus_HF151*)pMessagePtr;
-			tagQuoMarketInfo*				pBigTable = (tagQuoMarketInfo*)&(m_objUnionData.MarketData_1);
+			tagQUO_MarketInfo*				pBigTable = (tagQUO_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->MarketTime = pMkStatus->MarketTime;
 			pBigTable->TradingPhaseCode[0] = pMkStatus->MarketStatus;
@@ -967,7 +967,7 @@ struct MappingSHL1Option_MkInfo2QuoMarketInfo : public InnerRecord { MappingSHL1
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagSHOptMarketInfo_LF157*	pMkInfo = (tagSHOptMarketInfo_LF157*)pMessagePtr;
-			tagQuoMarketInfo*			pBigTable = (tagQuoMarketInfo*)&(m_objUnionData.MarketData_1);
+			tagQUO_MarketInfo*			pBigTable = (tagQUO_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->MarketDate = pMkInfo->MarketDate;
 			pBigTable->MarketID = (enum QUO_MARKET_ID)pMkInfo->MarketID;
@@ -995,7 +995,7 @@ struct MappingSHL1Option_MkStatus2QuoMarketInfo : public InnerRecord { MappingSH
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagSHOptMarketStatus_HF159*		pMkStatus = (tagSHOptMarketStatus_HF159*)pMessagePtr;
-			tagQuoMarketInfo*				pBigTable = (tagQuoMarketInfo*)&(m_objUnionData.MarketData_1);
+			tagQUO_MarketInfo*				pBigTable = (tagQUO_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->MarketTime = pMkStatus->MarketTime;
 			::memcpy( &(pBigTable->TradingPhaseCode[0]), pMkStatus->StatusFlag, sizeof(pMkStatus->StatusFlag) );
@@ -1079,7 +1079,7 @@ struct MappingSZL1_MkInfo2QuoMarketInfo : public InnerRecord { MappingSZL1_MkInf
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagSZL1MarketInfo_LF164*	pMkInfo = (tagSZL1MarketInfo_LF164*)pMessagePtr;
-			tagQuoMarketInfo*				pBigTable = (tagQuoMarketInfo*)&(m_objUnionData.MarketData_1);
+			tagQUO_MarketInfo*				pBigTable = (tagQUO_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->MarketDate = pMkInfo->MarketDate;
 			pBigTable->MarketID = (enum QUO_MARKET_ID)pMkInfo->MarketID;
@@ -1107,7 +1107,7 @@ struct MappingSZL1_MkStatus2QuoMarketInfo : public InnerRecord { MappingSZL1_MkS
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagSZL1MarketStatus_HF166*		pMkStatus = (tagSZL1MarketStatus_HF166*)pMessagePtr;
-			tagQuoMarketInfo*				pBigTable = (tagQuoMarketInfo*)&(m_objUnionData.MarketData_1);
+			tagQUO_MarketInfo*				pBigTable = (tagQUO_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->MarketTime = pMkStatus->MarketTime;
 			pBigTable->TradingPhaseCode[0] = pMkStatus->MarketStatus;
