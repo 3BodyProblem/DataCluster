@@ -1068,29 +1068,346 @@ int		STDCALL		MPrimeClient::ReqFuncData(int FuncNo, void* wParam, void* lParam)
 }
 
 
-void QuotationAdaptor::OnQuotation( unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen )
+void QuotationAdaptor::OnQuotation( unsigned int nMarketID, unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen )
 {
 	if( NULL == Global_pSpi )
 	{
 		return;
 	}
 
-	char outbuf[81920]={0};
-	MStreamWrite oMSW(outbuf, 81920);
+	char			outbuf[81920]={0};
+	MStreamWrite	oMSW(outbuf, 81920);
+	unsigned int	nMsgID = nMessageID % 100;
+	unsigned int	nOldMkID = DataCollectorPool::Cast2OldMkID( nMarketID );
 
-	switch( nMessageID )
+	switch( nOldMkID )
 	{
-	case 151:
+	case XDF_SZ:
+	case XDF_SH:
+		if( nMsgID == 1 )
 		{
-			XDFAPI_MarketStatusInfo			tagData = { 0 };
-			tagSHL1MarketStatus_HF151*		pData = (tagSHL1MarketStatus_HF151*)pDataPtr;
+			XDFAPI_MarketStatusInfo		tagData = { 0 };
+			tagQuoMarketInfo*			pData = (tagQuoMarketInfo*)pDataPtr;
 
-//			tagData.MarketDate = pData->MarketDate;
+			tagData.MarketDate = pData->MarketDate;
 			tagData.MarketTime = pData->MarketTime;
 			tagData.MarketID = XDF_SH;
-			tagData.MarketStatus = pData->MarketStatus;
+			tagData.MarketStatus = pData->TradingPhaseCode[0];
 
 			oMSW.PutSingleMsg(1, (char*)&tagData, sizeof(XDFAPI_MarketStatusInfo));
+		}
+		else if( nMsgID == 2 )
+		{
+			XDFAPI_StopFlag				tagData = { 0 };
+			tagQuoCategory*				pData = (tagQuoCategory*)pDataPtr;
+		}
+		else if( nMsgID == 3 )
+		{
+			tagQuoReferenceData*		pData = (tagQuoReferenceData*)pDataPtr;
+		}
+		else if( nMsgID == 4 )
+		{
+			XDFAPI_StockData5			tagData = { 0 };
+			tagQuoSnapData*				pData = (tagQuoSnapData*)pDataPtr;
+
+			memcpy(tagData.Code, pData->Code,6);
+			tagData.High = pData->High;
+			tagData.Open = pData->Open;
+			tagData.Low = pData->Low;
+			tagData.PreClose = pData->Close;
+			tagData.Now = pData->Now;
+			tagData.Amount = pData->Amount;
+			tagData.Volume = pData->Volume;
+			//tagSHL1Stock.Records = pData->Records;
+			//tagSHL1Stock.HighLimit = pData->HighLimit;
+			//tagSHL1Stock.LowLimit = pData->LowLimit;
+			//tagSHL1Stock.Voip = pData->Voip;
+
+			for (int i=0; i<5; i++)
+			{
+				tagData.Buy[i].Price = pData->Buy[i].Price;
+				tagData.Buy[i].Volume = pData->Buy[i].Volume;
+				tagData.Sell[i].Price = pData->Sell[i].Price;
+				tagData.Sell[i].Volume = pData->Sell[i].Volume;
+			}
+
+			oMSW.PutMsg(22, (char*)&tagData,sizeof(XDFAPI_StockData5) );
+		}
+		break;
+	case XDF_CF://中金期货
+		if( nMsgID == 1 )
+		{
+			XDFAPI_MarketStatusInfo		tagData = { 0 };
+			tagQuoMarketInfo*			pData = (tagQuoMarketInfo*)pDataPtr;
+
+			tagData.MarketDate = pData->MarketDate;
+			tagData.MarketTime = pData->MarketTime;
+			tagData.MarketID = XDF_SH;
+			tagData.MarketStatus = pData->TradingPhaseCode[0];
+
+			oMSW.PutSingleMsg(1, (char*)&tagData, sizeof(XDFAPI_MarketStatusInfo));
+			
+		}
+		else if( nMsgID == 4 )
+		{
+			XDFAPI_CffexData			tagData = { 0 };
+			tagQuoSnapData*				pData = (tagQuoSnapData*)pDataPtr;
+
+			//tagCFFStock.DataTimeStamp = pSnapData->DataTimeStamp;
+			memcpy(tagData.Code, pData->Code,6);
+			tagData.High = pData->High;						//最高价格[* 放大倍数]
+			tagData.Open = pData->Open;						//开盘价格[* 放大倍数]
+			tagData.Low = pData->Low;						//最低价格[* 放大倍数]
+			tagData.PreClose = pData->PreClose;				//昨收价格[* 放大倍数]
+			tagData.PreSettlePrice = pData->PreSettlePrice;	//昨日结算价格[* 放大倍数]
+			tagData.Now = pData->Now;                    //最新价格[* 放大倍数]
+			tagData.Close = pData->Close;                  //今日收盘价格[* 放大倍数]
+			tagData.SettlePrice	= pData->SettlePrice;      //今日结算价格[* 放大倍数]
+			tagData.UpperPrice = pData->UpperPrice;         //涨停价格[* 放大倍数]
+			tagData.LowerPrice = pData->LowerPrice;         //跌停价格[* 放大倍数]
+			tagData.Amount = pData->Amount;             //总成交金额[元]
+			tagData.Volume = pData->Volume;             //总成交量[股]
+			tagData.PreOpenInterest = pData->PreOpenInterest; //昨日持仓量[股]
+			tagData.OpenInterest = pData->Position;       //持仓量[股]
+
+			for (int i=0; i<5; i++)
+			{
+				tagData.Buy[i].Price = pData->Buy[i].Price;
+				tagData.Buy[i].Volume = pData->Buy[i].Volume;
+				tagData.Sell[i].Price = pData->Sell[i].Price;
+				tagData.Sell[i].Volume = pData->Sell[i].Volume;
+			}
+
+			oMSW.PutMsg(20, (char*)&tagData,sizeof(XDFAPI_CffexData) );
+		}
+		break;
+	case XDF_CNF://商品期货(上海/郑州/大连)
+		if( nMsgID == 1 )
+		{
+			XDFAPI_MarketStatusInfo		tagData = { 0 };
+			tagQuoMarketInfo*			pData = (tagQuoMarketInfo*)pDataPtr;
+
+			tagData.MarketDate = pData->MarketDate;
+			tagData.MarketTime = pData->MarketTime;
+			tagData.MarketID = XDF_SH;
+			tagData.MarketStatus = pData->TradingPhaseCode[0];
+
+			oMSW.PutSingleMsg(1, (char*)&tagData, sizeof(XDFAPI_MarketStatusInfo));
+			
+		}
+		else if( nMsgID == 4 )
+		{
+			XDFAPI_CNFutureData			tagData = { 0 };
+			tagQuoSnapData*				pData = (tagQuoSnapData*)pDataPtr;
+
+			//tagData.Date = pData->Date;
+			//tagData.DataTimeStamp = pData->DataTimeStamp;
+			memcpy(tagData.Code, pData->Code,20);
+			tagData.High = pData->High;						//最高价格[* 放大倍数]
+			tagData.Open = pData->Open;						//开盘价格[* 放大倍数]
+			tagData.Low = pData->Low;						//最低价格[* 放大倍数]
+			tagData.PreClose = pData->PreClose;				//昨收价格[* 放大倍数]
+			tagData.PreSettlePrice = pData->PreSettlePrice;	//昨日结算价格[* 放大倍数]
+			tagData.Now = pData->Now;                    //最新价格[* 放大倍数]
+			tagData.Close = pData->Close;                  //今日收盘价格[* 放大倍数]
+			tagData.SettlePrice	 = pData->SettlePrice;        //今日结算价格[* 放大倍数]
+			tagData.UpperPrice	 = pData->UpperPrice;         //涨停价格[* 放大倍数]
+			tagData.LowerPrice	 = pData->LowerPrice;         //跌停价格[* 放大倍数]
+			tagData.Amount		 = pData->Amount;             //总成交金额[元]
+			tagData.Volume		 = pData->Volume;             //总成交量[股]
+			tagData.PreOpenInterest = pData->PreOpenInterest; //昨日持仓量[股]
+			tagData.OpenInterest = pData->Position;       //持仓量[股]
+
+			for (int i=0; i<5; i++)
+			{
+				tagData.Buy[i].Price = pData->Buy[i].Price;
+				tagData.Buy[i].Volume = pData->Buy[i].Volume;
+				tagData.Sell[i].Price = pData->Sell[i].Price;
+				tagData.Sell[i].Volume = pData->Sell[i].Volume;
+			}
+
+			oMSW.PutMsg(26, (char*)&tagData, sizeof(XDFAPI_CNFutureData) );
+		}
+		break;
+	case XDF_SHOPT://上证期权
+		if( nMsgID == 1 )
+		{
+			XDFAPI_ShOptMarketStatus	tagData = { 0 };
+			tagQuoMarketInfo*			pData = (tagQuoMarketInfo*)pDataPtr;
+
+			tagData.MarketDate = pData->MarketDate;
+			tagData.MarketTime = pData->MarketTime;
+			memcpy( tagData.TradingPhaseCode, pData->TradingPhaseCode, 8 );
+
+			oMSW.PutSingleMsg(14, (char*)&tagData, sizeof(XDFAPI_ShOptMarketStatus));
+			
+		}
+		else if( nMsgID == 4 )
+		{
+			XDFAPI_ShOptData			tagData = { 0 };
+			tagQuoSnapData*				pData = (tagQuoSnapData*)pDataPtr;
+
+			memcpy(tagData.Code, pData->Code,8);
+			//tagData.Time = pData->DataTimeStamp;
+			tagData.PreSettlePx = pData->PreSettlePrice;
+			tagData.SettlePrice = pData->SettlePrice;
+			tagData.OpenPx = pData->Open;
+			tagData.HighPx = pData->High;
+			tagData.LowPx = pData->Low;
+			tagData.Now = pData->Now;
+			tagData.Volume = pData->Volume;
+			tagData.Amount = pData->Amount;
+			memcpy(tagData.TradingPhaseCode, pData->TradingPhaseCode,4);
+			//tagData.AuctionPrice = pData->AuctionPrice;
+			//tagData.AuctionQty = pData->AuctionQty;
+			tagData.Position = pData->Position;
+			for (int i=0; i<5; i++)
+			{
+				tagData.Buy[i].Price = pData->Buy[i].Price;
+				tagData.Buy[i].Volume = pData->Buy[i].Volume;
+				tagData.Sell[i].Price = pData->Sell[i].Price;
+				tagData.Sell[i].Volume = pData->Sell[i].Volume;
+			}
+
+			oMSW.PutMsg(15, (char*)&tagData, sizeof(XDFAPI_ShOptData));
+		}
+		break;
+	case XDF_ZJOPT://中金期权
+		if( nMsgID == 1 )
+		{
+			XDFAPI_MarketStatusInfo		tagData = { 0 };
+			tagQuoMarketInfo*			pData = (tagQuoMarketInfo*)pDataPtr;
+
+			tagData.MarketDate = pData->MarketDate;
+			tagData.MarketTime = pData->MarketTime;
+			tagData.MarketID = XDF_SH;
+			tagData.MarketStatus = pData->TradingPhaseCode[0];
+
+			oMSW.PutSingleMsg(1, (char*)&tagData, sizeof(XDFAPI_MarketStatusInfo));
+			
+		}
+		else if( nMsgID == 4 )
+		{
+			XDFAPI_ZjOptData			tagData = { 0 };
+			tagQuoSnapData*				pData = (tagQuoSnapData*)pDataPtr;
+
+			//tagData.DataTimeStamp = pData->DataTimeStamp;
+			memcpy(tagData.Code, pData->Code,32);
+			tagData.High = pData->High;						//最高价格[* 放大倍数]
+			tagData.Open = pData->Open;						//开盘价格[* 放大倍数]
+			tagData.Low = pData->Low;						//最低价格[* 放大倍数]
+			tagData.PreClose = pData->PreClose;				//昨收价格[* 放大倍数]
+			tagData.PreSettlePrice = pData->PreSettlePrice;	//昨日结算价格[* 放大倍数]
+			
+			tagData.Now = pData->Now;                    //最新价格[* 放大倍数]
+			tagData.Close	= pData->Close;                  //今日收盘价格[* 放大倍数]
+			tagData.SettlePrice = pData->SettlePrice;        //今日结算价格[* 放大倍数]
+			tagData.UpperPrice = pData->UpperPrice;         //涨停价格[* 放大倍数]
+			tagData.LowerPrice = pData->LowerPrice;         //跌停价格[* 放大倍数]
+			tagData.Amount = pData->Amount;             //总成交金额[元]
+			tagData.Volume = pData->Volume;             //总成交量[股]
+			tagData.PreOpenInterest = pData->PreOpenInterest; //昨日持仓量[股]
+			tagData.OpenInterest = pData->Position;       //持仓量[股]
+
+			for (int i=0; i<5; i++)
+			{
+				tagData.Buy[i].Price = pData->Buy[i].Price;
+				tagData.Buy[i].Volume = pData->Buy[i].Volume;
+				tagData.Sell[i].Price = pData->Sell[i].Price;
+				tagData.Sell[i].Volume = pData->Sell[i].Volume;
+			}
+
+			oMSW.PutMsg(18, (char*)&tagData, sizeof(XDFAPI_ZjOptData) );
+		}
+		break;
+	case XDF_SZOPT://深圳期权
+		if( nMsgID == 1 )
+		{
+			XDFAPI_MarketStatusInfo		tagData = { 0 };
+			tagQuoMarketInfo*			pData = (tagQuoMarketInfo*)pDataPtr;
+
+			tagData.MarketDate = pData->MarketDate;
+			tagData.MarketTime = pData->MarketTime;
+			tagData.MarketID = XDF_SH;
+			tagData.MarketStatus = pData->TradingPhaseCode[0];
+
+			oMSW.PutSingleMsg(1, (char*)&tagData, sizeof(XDFAPI_MarketStatusInfo));
+			
+		}
+		else if( nMsgID == 4 )
+		{
+			XDFAPI_SzOptData			tagData = { 0 };
+			tagQuoSnapData*				pData = (tagQuoSnapData*)pDataPtr;
+
+			memcpy(tagData.Code, pData->Code,8);
+			//tagData.Time = pData->DataTimeStamp;
+			tagData.PreSettlePx = pData->PreSettlePrice;
+			tagData.SettlePrice = pData->SettlePrice;
+			tagData.OpenPx = pData->Open;
+			tagData.HighPx = pData->High;
+			tagData.LowPx = pData->Low;
+			tagData.Now = pData->Now;
+			tagData.Volume = pData->Volume;
+			tagData.Amount = pData->Amount;
+			memcpy(tagData.TradingPhaseCode, pData->TradingPhaseCode,4);
+			tagData.Position = pData->Position;
+			for (int i=0; i<5; i++)
+			{
+				tagData.Buy[i].Price = pData->Buy[i].Price;
+				tagData.Buy[i].Volume = pData->Buy[i].Volume;
+				tagData.Sell[i].Price = pData->Sell[i].Price;
+				tagData.Sell[i].Volume = pData->Sell[i].Volume;
+			}
+
+			oMSW.PutMsg(35, (char*)&tagData, sizeof(XDFAPI_SzOptData));
+		}
+		break;
+	case XDF_CNFOPT://商品期货和商品期权(上海/郑州/大连)
+		if( nMsgID == 1 )
+		{
+			XDFAPI_MarketStatusInfo		tagData = { 0 };
+			tagQuoMarketInfo*			pData = (tagQuoMarketInfo*)pDataPtr;
+
+			tagData.MarketDate = pData->MarketDate;
+			tagData.MarketTime = pData->MarketTime;
+			tagData.MarketID = XDF_SH;
+			tagData.MarketStatus = pData->TradingPhaseCode[0];
+
+			oMSW.PutSingleMsg(1, (char*)&tagData, sizeof(XDFAPI_MarketStatusInfo));
+			
+		}
+		else if( nMsgID == 4 )
+		{
+			XDFAPI_CNFutOptData			tagData = { 0 };
+			tagQuoSnapData*				pData = (tagQuoSnapData*)pDataPtr;
+
+			//tagData.Date = pData->Date;
+			//tagData.DataTimeStamp = pData->DataTimeStamp;
+			memcpy(tagData.Code, pData->Code,20);
+			tagData.High = pData->High;						//最高价格[* 放大倍数]
+			tagData.Open = pData->Open;						//开盘价格[* 放大倍数]
+			tagData.Low = pData->Low;						//最低价格[* 放大倍数]
+			tagData.PreClose = pData->PreClose;				//昨收价格[* 放大倍数]
+			tagData.PreSettlePrice = pData->PreSettlePrice;	//昨日结算价格[* 放大倍数]
+			tagData.Now = pData->Now;                    //最新价格[* 放大倍数]
+			tagData.Close = pData->Close;                  //今日收盘价格[* 放大倍数]
+			tagData.SettlePrice = pData->SettlePrice;        //今日结算价格[* 放大倍数]
+			tagData.UpperPrice = pData->UpperPrice;         //涨停价格[* 放大倍数]
+			tagData.LowerPrice = pData->LowerPrice;         //跌停价格[* 放大倍数]
+			tagData.Amount = pData->Amount;             //总成交金额[元]
+			tagData.Volume = pData->Volume;             //总成交量[股]
+			tagData.PreOpenInterest = pData->PreOpenInterest; //昨日持仓量[股]
+			tagData.OpenInterest = pData->Position;       //持仓量[股]
+
+			for (int i=0; i<5; i++)
+			{
+				tagData.Buy[i].Price = pData->Buy[i].Price;
+				tagData.Buy[i].Volume = pData->Buy[i].Volume;
+				tagData.Sell[i].Price = pData->Sell[i].Price;
+				tagData.Sell[i].Volume = pData->Sell[i].Volume;
+			}
+
+			oMSW.PutMsg(34, (char*)&tagData, sizeof(XDFAPI_CNFutOptData) );
 		}
 		break;
 	}
@@ -1100,7 +1417,7 @@ void QuotationAdaptor::OnQuotation( unsigned int nMessageID, char* pDataPtr, uns
 	//[3]放入池子(PkgHead+PkgBuf)
 	XDFAPI_PkgHead pkghead;
 	memset(&pkghead, 0, sizeof(XDFAPI_PkgHead));
-	pkghead.MarketID = XDF_SH;
+	pkghead.MarketID = nOldMkID;
 	pkghead.PkgSize = oMSW.GetOffset();
 
 	g_oDataIO.PutData( &pkghead, outbuf, oMSW.GetOffset() );
@@ -1108,12 +1425,18 @@ void QuotationAdaptor::OnQuotation( unsigned int nMessageID, char* pDataPtr, uns
 
 void QuotationAdaptor::OnStatusChg( unsigned int nMarketID, unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen )
 {
-
+	if( Global_pSpi )
+	{
+		Global_pSpi->XDF_OnRspStatusChanged( nMarketID, 1 );
+	}
 }
 
 void QuotationAdaptor::OnLog( unsigned char nLogLevel, const char* pszLogBuf )
 {
-
+	if( Global_pSpi )
+	{
+		Global_pSpi->XDF_OnRspOutLog( 0, nLogLevel, pszLogBuf );
+	}
 }
 
 

@@ -45,7 +45,7 @@ void PackagesLoopBuffer::Release()
 	}
 }
 
-int PackagesLoopBuffer::PushBlock( unsigned int nDataID, const char* pData, unsigned int nDataSize )
+int PackagesLoopBuffer::PushBlock( unsigned int nMarketID, unsigned int nDataID, const char* pData, unsigned int nDataSize )
 {
 	CriticalLock		guard( m_oLock );
 
@@ -58,7 +58,7 @@ int PackagesLoopBuffer::PushBlock( unsigned int nDataID, const char* pData, unsi
 	int	nFreeSize = (m_nFirstRecord + m_nMaxPkgBufSize - m_nLastRecord - 1) % m_nMaxPkgBufSize;
 
 	///< 考虑msgid+msglen+message空间占用条件
-	int	nMsgLen = nDataSize + 2*sizeof(unsigned short);
+	int	nMsgLen = nDataSize + 3*sizeof(unsigned short);
 	if( nMsgLen > nFreeSize )
 	{
 		return -2;	///< 空间不足
@@ -66,9 +66,10 @@ int PackagesLoopBuffer::PushBlock( unsigned int nDataID, const char* pData, unsi
 
 	///< 构建新的数据块
 	char				pszDataBlock[2048] = { 0 };
-	*((unsigned short*)pszDataBlock) = nDataID;
-	*((unsigned short*)(pszDataBlock+sizeof(unsigned short))) = nDataSize;
-	::memcpy( pszDataBlock+sizeof(unsigned short)*2, pData, nDataSize );
+	*((unsigned short*)pszDataBlock) = nMarketID;
+	*((unsigned short*)pszDataBlock+sizeof(unsigned short)) = nDataID;
+	*((unsigned short*)(pszDataBlock+sizeof(unsigned int))) = nDataSize;
+	::memcpy( pszDataBlock+sizeof(unsigned short)*3, pData, nDataSize );
 
 	int				nConsecutiveFreeSize = m_nMaxPkgBufSize - m_nLastRecord;
 	if( nConsecutiveFreeSize >= nMsgLen )
@@ -86,7 +87,7 @@ int PackagesLoopBuffer::PushBlock( unsigned int nDataID, const char* pData, unsi
 	return 0;
 }
 
-int PackagesLoopBuffer::GetBlock( char* pBuff, unsigned int nBuffSize, unsigned int& nMsgID )
+int PackagesLoopBuffer::GetBlock( char* pBuff, unsigned int nBuffSize, unsigned int& nMsgID, unsigned int& nMarketID )
 {
 	CriticalLock		guard( m_oLock );
 	if( NULL == pBuff || nBuffSize == 0 || NULL == m_pPkgBuffer || m_nMaxPkgBufSize == 0 )	{
@@ -118,6 +119,7 @@ int PackagesLoopBuffer::GetBlock( char* pBuff, unsigned int nBuffSize, unsigned 
 		::memcpy( (char*)&oMsgHead + nConsecutiveSize, m_pPkgBuffer+0, sizeof(tagMsgHead)-nConsecutiveSize );
 	}
 
+	nMarketID = oMsgHead.MkID;
 	nMsgID = oMsgHead.MsgID;
 	if( (oMsgHead.MsgLen + sizeof(tagMsgHead)) > nDataLen )
 	{
@@ -209,14 +211,14 @@ int QuotationNotify::Execute()
 	return 0;
 }
 
-int QuotationNotify::PutMessage( unsigned short nMsgID, const char *pData, unsigned int nLen )
+int QuotationNotify::PutMessage( unsigned int nMarketID, unsigned short nMsgID, const char *pData, unsigned int nLen )
 {
 	if( NULL == pData  )
 	{
 		return -12345;
 	}
 
-	int		nErrorCode = m_oDataBuffer.PushBlock( nMsgID, pData, nLen );	///< 缓存数据
+	int		nErrorCode = m_oDataBuffer.PushBlock( nMarketID, nMsgID, pData, nLen );	///< 缓存数据
 	if( nErrorCode < 0 )
 	{
 		DataIOEngine::GetEngineObj().WriteError( "QuotationNotify::PutMessage() : failed 2 push message data 2 buffer, errorcode = %d", nErrorCode );
@@ -235,9 +237,10 @@ void QuotationNotify::NotifyMessage()
 {
 	if( false == m_oDataBuffer.IsEmpty() )
 	{
+		unsigned int	nMarketID = 0;
 		unsigned int	nMsgID = 0;
 		char			pszDataBlock[1024] = { 0 };
-		int				nDataSize = m_oDataBuffer.GetBlock( pszDataBlock, sizeof(pszDataBlock), nMsgID );
+		int				nDataSize = m_oDataBuffer.GetBlock( pszDataBlock, sizeof(pszDataBlock), nMsgID, nMarketID );
 
 		if( nDataSize <= 0 )
 		{
@@ -246,7 +249,7 @@ void QuotationNotify::NotifyMessage()
 			return;
 		}
 
-		m_pQuotationCallBack->OnQuotation( nMsgID, pszDataBlock, nDataSize );
+		m_pQuotationCallBack->OnQuotation( nMarketID, nMsgID, pszDataBlock, nDataSize );
 	}
 }
 

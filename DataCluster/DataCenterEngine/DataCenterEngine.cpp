@@ -198,7 +198,7 @@ int DataIOEngine::OnData( unsigned int nDataID, char* pData, unsigned int nDataL
 		nAffectNum = m_oDatabaseIO.UpdateRecord( pRecord->GetBigTableID(), pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), nSerialNo );
 	}
 
-	m_oQuoNotify.PutMessage( pRecord->GetBigTableID(), pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth() );
+	m_oQuoNotify.PutMessage( pRecord->GetBigTableID()/100, pRecord->GetBigTableID(), pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth() );
 
 	return nAffectNum;
 }

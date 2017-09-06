@@ -158,6 +158,7 @@ public:
 	DataCollector*			GetCollectorByMkID( unsigned int nMkID );
 
 	static int				MkIDCast( unsigned int nOldMkID );
+	static int				Cast2OldMkID( unsigned int nNewMkID );
 
 protected:
 	CriticalObject			m_oLock;						///< Ëø

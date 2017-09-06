@@ -13,6 +13,7 @@
 #pragma pack(1)
 typedef struct
 {
+	unsigned short		MkID;		///< 市场ID
 	unsigned short		MsgID;		///< 消息ID
 	unsigned short		MsgLen;		///< 消息长度
 } tagMsgHead;
@@ -47,13 +48,14 @@ public:
 public:
 	/**
 	 * @brief						存储数据
+	 * @param[in]					nMarketID				市场ID
 	 * @param[in]					nDataID					数据ID
 	 * @param[in]					pData					数据指针
 	 * @param[in]					nDataSize				数据长度
 	 * @return						==0						成功
 	 * @note						当nDataID不等于前一个包的nDataID时，将新启用一个Package封装
 	 */
-	int								PushBlock( unsigned int nDataID, const char* pData, unsigned int nDataSize );
+	int								PushBlock( unsigned int nMarketID, unsigned int nDataID, const char* pData, unsigned int nDataSize );
 
 	/**
 	 * @brief						获取一个数据包
@@ -64,7 +66,7 @@ public:
 									==0						无数据
 									<0						出错
 	 */
-	int								GetBlock( char* pBuff, unsigned int nBuffSize, unsigned int& nMsgID );
+	int								GetBlock( char* pBuff, unsigned int nBuffSize, unsigned int& nMsgID, unsigned int& nMarketID );
 
 	/**
 	 * @brief						是否为空
@@ -117,7 +119,7 @@ public:
 	 * @return					> 0						成功，返回历次调用累积的序列化的长度
 								<= 0					失败
 	 */
-	int							PutMessage( unsigned short nMsgID, const char *pData, unsigned int nLen );
+	int							PutMessage( unsigned int nMarketID, unsigned short nMsgID, const char *pData, unsigned int nLen );
 
 protected:
 	/**

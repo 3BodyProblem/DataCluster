@@ -301,6 +301,37 @@ int DataCollectorPool::MkIDCast( unsigned int nOldMkID )
 	}
 }
 
+int DataCollectorPool::Cast2OldMkID( unsigned int nNewMkID )
+{
+	switch( nNewMkID )
+	{
+	case QUO_MARKET_SSE:
+		return XDF_SH;
+	case QUO_MARKET_SZSE:
+		return XDF_SZ;
+	case QUO_MARKET_CFFEX:
+		return XDF_CF;
+	case QUO_MARKET_DCE:
+	case QUO_MARKET_CZCE:
+	case QUO_MARKET_SHFE:
+		return XDF_CNF;
+	case QUO_MARKET_SSEOPT:
+		return XDF_SHOPT;
+	case QUO_MARKET_CFFEXOPT:
+		return XDF_ZJOPT;
+	case QUO_MARKET_SZSEOPT:
+		return XDF_SZOPT;
+	case QUO_MARKET_DCEOPT:
+	case QUO_MARKET_CZCEOPT:
+	case QUO_MARKET_SHFEOPT:
+		return XDF_CNFOPT;
+	default:
+		return -1;
+	}
+
+	return -100;
+}
+
 DataCollector* DataCollectorPool::GetCollectorByMkID( unsigned int nMkID )
 {
 	int						nInnerMkID = DataCollectorPool::MkIDCast( nMkID );
