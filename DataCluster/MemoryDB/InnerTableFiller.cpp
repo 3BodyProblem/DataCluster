@@ -29,11 +29,9 @@ char* InnerRecord::GetBigTableRecordPtr()
 	case 1:
 		return (char*)&(m_objUnionData.MarketData_1);
 	case 2:
-		return (char*)&(m_objUnionData.CategoryData_2);
+		return (char*)&(m_objUnionData.ReferenceData_2);
 	case 3:
-		return (char*)&(m_objUnionData.ReferenceData_3);
-	case 4:
-		return (char*)&(m_objUnionData.SnapData_4);
+		return (char*)&(m_objUnionData.SnapData_3);
 	default:
 		return NULL;
 	}
@@ -48,11 +46,9 @@ unsigned int InnerRecord::GetBigTableWidth()
 	case 1:
 		return sizeof( m_objUnionData.MarketData_1 );
 	case 2:
-		return sizeof( m_objUnionData.CategoryData_2 );
+		return sizeof( m_objUnionData.ReferenceData_2 );
 	case 3:
-		return sizeof( m_objUnionData.ReferenceData_3 );
-	case 4:
-		return sizeof( m_objUnionData.SnapData_4 );
+		return sizeof( m_objUnionData.SnapData_3 );
 	default:
 		return 0;
 	}
@@ -68,26 +64,36 @@ struct MappingDLFuture_MkInfo2QuoMarketInfo : public InnerRecord { MappingDLFutu
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagDLFutureMarketInfo_LF100*	pMkInfo = (tagDLFutureMarketInfo_LF100*)pMessagePtr;
-			tagQUO_MarketInfo*				pBigTable = (tagQUO_MarketInfo*)&(m_objUnionData.MarketData_1);
+			T_Inner_MarketInfo*				pBigTable = (T_Inner_MarketInfo*)&(m_objUnionData.MarketData_1);
 
-			pBigTable->uiMarketDate = pMkInfo->MarketDate;
-			pBigTable->eMarketID = (enum QUO_MARKET_ID)pMkInfo->MarketID;
-			pBigTable->uiKindCount = pMkInfo->KindCount;
-			pBigTable->uiWareCount = pMkInfo->WareCount;
-			pBigTable- = pMkInfo->PeriodsCount;
-			::memcpy( pBigTable->MarketPeriods, pMkInfo->MarketPeriods, sizeof(pBigTable->MarketPeriods) );
+			::memset( pBigTable->szCode, 0, sizeof(pBigTable->szCode) );
+			pBigTable->objData.uiMarketDate = pMkInfo->MarketDate;
+			pBigTable->objData.eMarketID = (enum QUO_MARKET_ID)pMkInfo->MarketID;
+			pBigTable->objData.uiKindCount = pMkInfo->KindCount;
+			pBigTable->objData.uiWareCount = pMkInfo->WareCount;
+			pBigTable->objData.mKindRecord[0].uiTradeSessionCount = pMkInfo->PeriodsCount;
+
+			for( int n = 0; n < pMkInfo->PeriodsCount; n++ )
+			{
+				pBigTable->objData.mKindRecord[0].mTradeSessionRecord[n].iBeginTime = pMkInfo->MarketPeriods[n][0];
+				pBigTable->objData.mKindRecord[0].mTradeSessionRecord[n].iEndTime = pMkInfo->MarketPeriods[n][1];
+			}
 		}
 	}
 };
 
-struct MappingDLFuture_Kind2QuoCategory : public InnerRecord { MappingDLFuture_Kind2QuoCategory() : InnerRecord( 101, sizeof(tagDLFutureKindDetail_LF101), QUO_MARKET_DCE*100+2 ) {}
+struct MappingDLFuture_Kind2QuoCategory : public InnerRecord { MappingDLFuture_Kind2QuoCategory() : InnerRecord( 101, sizeof(tagDLFutureKindDetail_LF101), QUO_MARKET_DCE*100+1 ) {}
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
 		if( NULL != pMessagePtr )	{
 			tagDLFutureKindDetail_LF101*	pKind = (tagDLFutureKindDetail_LF101*)pMessagePtr;
-			tagQuoCategory*					pBigTable = (tagQuoCategory*)&(m_objUnionData.CategoryData_2);
+			T_Inner_MarketInfo*				pBigTable = (T_Inner_MarketInfo*)&(m_objUnionData.MarketData_1);
+			int								nIndex = ::atoi( pKind->Key );
 
-			pBigTable->WareCount= pKind->WareCount;
-			::memcpy( pBigTable->KindName, pKind->KindName, sizeof(pBigTable->KindName) );
+			if( nIndex >= 0 && nIndex < QUO_MAX_KIND )
+			{
+				memcpy( (pBigTable->objData.mKindRecord[0].mTradeSessionRecord)+nIndex, (pBigTable->objData.mKindRecord[0].mTradeSessionRecord)+0, sizeof(tagQUO_TradeSession) );
+				::strcpy( pBigTable->objData.mKindRecord[nIndex].szKindName, pKind->KindName );
+			}
 		}
 	}
 };

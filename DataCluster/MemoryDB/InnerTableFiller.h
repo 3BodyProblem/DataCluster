@@ -6,6 +6,13 @@
 #include "../Protocal/DataCluster_Protocal.h"
 
 
+typedef struct													///< 名称代码表信息
+{
+	char						szCode[QUO_MAX_CODE];			///< 商品代码
+	tagQUO_MarketInfo			objData;
+} T_Inner_MarketInfo;
+
+
 /**
  * @class				InnerRecord
  * @brief				数据大表和行情消息之间的结构转换数据填充类
@@ -56,10 +63,9 @@ protected:
 	unsigned int				m_nBigTableID;			///< 数据大表的ID
 protected:
 	union BigTableRecord {
-		tagQUO_MarketInfo		MarketData_1;
-		tagQUO_KindInfo			CategoryData_2;
-		tagQUO_ReferenceData	ReferenceData_3;
-		tagQUO_SnapData			SnapData_4;
+		T_Inner_MarketInfo		MarketData_1;
+		tagQUO_ReferenceData	ReferenceData_2;
+		tagQUO_SnapData			SnapData_3;
 	}							m_objUnionData;			///< 大表数据结构联合体
 };
 
