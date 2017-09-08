@@ -37,7 +37,7 @@ std::string GetModulePath( void* hModule )
 		if( iRet <= 0 )	{
 			return "";
 		} else {
-			return __BasePath( szPath );
+			return szPath;//__BasePath( szPath );
 		}
 #else
 		if( !hModule ) {
@@ -100,7 +100,10 @@ int Configuration::Load()
 	inifile::IniFile	oIniFile;
 	int					nErrCode = 0;
 	char				pszDllPath[218] = { 0 };
-	std::string			sIniPath = GetModulePath(NULL) + "DataCluster.ini";
+	std::string			sIniPath = GetModulePath(g_oModule);
+	std::string			sFolder = sIniPath;
+	sFolder = __BasePath( (char*)sFolder.c_str() );
+    sIniPath = sIniPath.substr( 0, sIniPath.find(".") ) + ".ini";
 
 	if( true == m_bLoaded )
 	{
@@ -116,13 +119,13 @@ int Configuration::Load()
 
 	///< ------------------------ [service configuration] --------------------------------------
 	///< Memory Database Plugin
-	m_sMemPluginPath = oIniFile.getStringValue( std::string("MemDB"), std::string("Path"), nErrCode );
+	m_sMemPluginPath = sFolder + oIniFile.getStringValue( std::string("MemDB"), std::string("Path"), nErrCode );
 	if( 0 != nErrCode )	{
 		::printf( "Configuration::Load() : invalid memory plugin path\n" );
 		return -2;
 	}
 
-	m_sRecoveryFolder = oIniFile.getStringValue( std::string("MemDB"), std::string("DumpFolder"), nErrCode );
+	m_sRecoveryFolder = sFolder + oIniFile.getStringValue( std::string("MemDB"), std::string("DumpFolder"), nErrCode );
 	if( false == m_sRecoveryFolder.empty() )	{
 		::printf( "Configuration::Load() : dump folder = %s\n", m_sRecoveryFolder.c_str() );
 	}
@@ -137,7 +140,7 @@ int Configuration::Load()
 	for( int n = 0; n < nPluginPathCount; n++ )
 	{
 		::sprintf( pszDllPath, "Path_%d", n );
-		std::string		sQuotationPluginPath = oIniFile.getStringValue( std::string("Plugin"), std::string(pszDllPath), nErrCode );
+		std::string		sQuotationPluginPath = sFolder + oIniFile.getStringValue( std::string("Plugin"), std::string(pszDllPath), nErrCode );
 		if( 0 != nErrCode )	{
 			::printf( "Configuration::Load() : missing node (Plugin::Path_%d)\n", n );
 			return -4;

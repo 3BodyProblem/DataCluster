@@ -48,88 +48,6 @@ public:
 
 
 ///< -------------------------- 数据访问插件导出接口 ----------------------------------
-
-
-/**
- * @brief					初始化数据采集模块
- * @param[in]				pIDataHandle				行情功能回调
- * @return					==0							初始化成功
-							!=							出错
- */
-typedef int					(__stdcall *T_Func_Activate)( I_QuotationCallBack* pIDataHandle );
-
-/**
- * @brief					释放数据采集模块
- */
-typedef void				(__stdcall *T_Func_Destroy)();
-
-/**
- * @brief					获取模块的当前状态
- * @param[out]				pszStatusDesc				返回出状态描述串
- * @param[in,out]			nStrLen						输入描述串缓存长度，输出描述串有效内容长度
- * @return					返回模块当前状态值
- */
-typedef int					(__stdcall *T_Func_Query)( unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen );
-
-/**
- * @brief					释放数据采集模块
- */
-typedef void				(__stdcall *T_Func_ExecuteUnitTest)();
-
-
-
-
-
-
-
-
-
-//-----------------------------------------------------------------------------------------------------------------------------
-//获取当前行情接口版本
-//参数：无
-//返回：当前版本号
-typedef int  __stdcall tagQUOFun_GetVersion(void);
-//.............................................................................................................................
-//启动行情接口
-//参数：数据、状态、日志回调接口（输入）
-//返回：返回>=0表示成功，<0表示失败，具体错误信息通过回调接口输出
-typedef int  __stdcall tagQUOFun_StartWork(I_QuotationCallBack * lpSpi);
-//.............................................................................................................................
-//停止行情接口
-//参数：无
-//返回：无
-typedef void __stdcall tagQUOFun_EndWork(void);
-//.............................................................................................................................
-//获取行情接口支持的市场信息
-//参数：市场编号数组（输出），市场编号数值数量（输入）
-//输出：返回>=0表示行情接口支持的市场数量，返回<=0表示失败，具体错误信息通过回调接口输出
-typedef int  __stdcall tagQUOFun_GetMarketID(QUO_MARKET_ID * lpOut,unsigned int uiSize);
-//.............................................................................................................................
-//获取指定市场的市场信息
-//参数：市场编号（输入），当个市场信息（输出）
-//返回：返回>=0表示成功，返回<0表示失败
-typedef int  __stdcall tagQUOFun_GetMarketInfo(QUO_MARKET_ID eMarketID,tagQUO_MarketInfo * lpOut);
-//.............................................................................................................................
-//获取指定市场参考数据（静态数据或码表数据）
-//参数：市场编号（输入），起始序号（输入），参考数据数组指针（输出），参考数据数组支持的数量（输入），如果要获取全市场的参考数据，请分配市场信息中的商品数量作为参数传入
-//返回：返回>=0表示参考数据实际的数量，返回<0表示失败，具体错误信息通过回调接口输出
-typedef int  __stdcall tagQUOFun_GetAllReferenceData(QUO_MARKET_ID eMarketID,unsigned int uiOffset,tagQUO_ReferenceData * lpOut,unsigned int uiSize);
-//.............................................................................................................................
-//获取指定市场指定商品的参考数据（静态数据或码表数据）
-//参数：市场编号（输入），商品代码（输入），单个商品参考数据（输出）
-//返回：返回>=0表示成功，返回<0表示失败
-typedef int  __stdcall tagQUOFun_GetReferenceData(QUO_MARKET_ID eMarketID,const char * szCode,tagQUO_ReferenceData * lpOut);
-//.............................................................................................................................
-//获取指定市场快照数据
-//参数：市场编号（输入），起始序号（输入），快照数据数组指针（输出），快照数据数组支持的数量（出入），如果要获取全市场的快照数据，请分配市场信息中的商品数量作为参数传入
-//返回：返回>=0表示快照数据实际的数量，返回<0表示失败，具体错误信息通过回调接口输出
-typedef int  __stdcall tagQUOFun_GetAllSnapData(QUO_MARKET_ID eMarketID,unsigned int uiOffset,tagQUO_SnapData * lpOut,unsigned int uiSize);
-//.............................................................................................................................
-//获取指定市场指定商品的快照数据
-//参数：市场编号（输入），商品代码（输入），单个商品快照数据（输出）
-//返回：返回>=0表示成功，返回<0表示失败
-typedef int  __stdcall tagQUOFun_GetSnapData(QUO_MARKET_ID eMarketID,const char * szCode,tagQUO_SnapData * lpOut);
-//.............................................................................................................................
 /*
 【调用说明】
 
@@ -156,10 +74,84 @@ typedef int  __stdcall tagQUOFun_GetSnapData(QUO_MARKET_ID eMarketID,const char 
 */
 
 
+/**
+ * @brief					获取当前行情接口版本
+ */
+typedef int					(__stdcall *tagQUOFun_GetVersionNo)();
 
+/**
+ * @brief					初始化数据采集模块
+ * @param[in]				pIDataHandle				行情功能回调
+ * @return					==0							初始化成功
+							!=							出错
+ */
+typedef int					(__stdcall *tagQUOFun_StartWork)( I_QuotationCallBack* pIDataHandle );
 
+/**
+ * @brief					释放数据采集模块
+ */
+typedef void				(__stdcall *tagQUOFun_EndWork)();
 
+/**
+ * @brief					获取行情接口支持的市场信息
+ * @param[out]				lpOut						市场编号数组
+ * @param[in]				uiSize						市场编号数值数量
+ * @return					输出：返回>=0表示行情接口支持的市场数量，返回<0表示失败，具体错误信息通过回调接口输出
+ */
+typedef int					(__stdcall *tagQUOFun_GetMarketID)( QUO_MARKET_ID * lpOut, unsigned int uiSize );
 
+/**
+ * @brief					获取指定市场的市场信息
+ * @param[in]				eMarketID					市场编号
+ * @param[out]				lpOut						当个市场信息
+ * @return					返回>=0表示成功，返回<0表示失败
+ */
+typedef int					(__stdcall *tagQUOFun_GetMarketInfo)( QUO_MARKET_ID eMarketID, tagQUO_MarketInfo* lpOut );
+
+/**
+ * @brief					获取指定市场参考数据（静态数据或码表数据）
+ * @param[in]				eMarketID					市场编号
+ * @param[in]				uiOffset					起始序号
+ * @param[out]				lpOut						参考数据数组指针
+ * @param[in]				uiSize						参考数据数组支持的数量
+ * @return					返回>=0表示参考数据实际的数量，返回<0表示失败，具体错误信息通过回调接口输出
+ * @note					如果要获取全市场的参考数据，请分配市场信息中的商品数量作为参数传入
+ */
+typedef int					(__stdcall *tagQUOFun_GetAllReferenceData)( QUO_MARKET_ID eMarketID, unsigned int uiOffset, tagQUO_ReferenceData* lpOut, unsigned int uiSize );
+
+/**
+ * @brief					获取指定市场参考数据（静态数据或码表数据）
+ * @param[in]				eMarketID					市场编号
+ * @param[in]				szCode						商品代码
+ * @param[out]				lpOut						单个商品参考数据
+ * @return					返回>=0表示成功，返回<0表示失败
+ */
+typedef int					(__stdcall *tagQUOFun_GetReferenceData)( QUO_MARKET_ID eMarketID, const char* szCode, tagQUO_ReferenceData* lpOut );
+
+/**
+ * @brief					获取指定市场参考数据（静态数据或码表数据）
+ * @param[in]				eMarketID					市场编号
+ * @param[in]				uiOffset					起始序号
+ * @param[out]				lpOut						快照数据数组指针
+ * @param[in]				uiSize						快照数据数组支持的数量
+ * @return					返回>=0表示参考数据实际的数量，返回<0表示失败，具体错误信息通过回调接口输出
+ * @note					如果要获取全市场的快照数据，请分配市场信息中的商品数量作为参数传入
+ */
+typedef int					(__stdcall *tagQUOFun_GetAllSnapData)( QUO_MARKET_ID eMarketID, unsigned int uiOffset, tagQUO_SnapData* lpOut, unsigned int uiSize );
+
+/**
+ * @brief					获取指定市场参考数据（静态数据或码表数据）
+ * @param[in]				eMarketID					市场编号
+ * @param[in]				szCode						商品代码
+ * @param[out]				lpOut						单个商品快照数据
+ * @return					返回>=0表示成功，返回<0表示失败
+ */
+typedef int					(__stdcall *tagQUOFun_GetSnapData)( QUO_MARKET_ID eMarketID, const char* szCode, tagQUO_SnapData* lpOut );
+
+/**
+ * @brief					释放数据采集模块
+ */
+typedef void				(__stdcall *T_Func_ExecuteUnitTest)();
 
 
 

@@ -54,12 +54,11 @@ int DataCollector::Initialize( I_DataHandle* pIDataCallBack, std::string sDllPat
 
 	DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Initialize() : Initializing DataCollector [%s] ......", sDllPath.c_str() );
 
-	std::string		sModulePath = GetModulePath(NULL) + sDllPath;
-	int				nErrorCode = m_oDllPlugin.LoadDll( sModulePath );
+	int				nErrorCode = m_oDllPlugin.LoadDll( sDllPath );
 
 	if( 0 != nErrorCode )
 	{
-		DataIOEngine::GetEngineObj().WriteError( "DataCollector::Initialize() : failed 2 load data collector [%s], errorcode=%d", sModulePath.c_str(), nErrorCode );
+		DataIOEngine::GetEngineObj().WriteError( "DataCollector::Initialize() : failed 2 load data collector [%s], errorcode=%d", sDllPath.c_str(), nErrorCode );
 		return nErrorCode;
 	}
 
@@ -73,14 +72,14 @@ int DataCollector::Initialize( I_DataHandle* pIDataCallBack, std::string sDllPat
 
 	if( NULL == m_pFuncInitialize || NULL == m_pFuncRelease || NULL == m_pFuncRecoverQuotation || NULL == m_pFuncGetStatus || NULL == m_pFuncGetMarketID || NULL == m_pFuncHaltQuotation || NULL == m_pFuncIsProxy )
 	{
-		DataIOEngine::GetEngineObj().WriteError( "DataCollector::Initialize() : invalid fuction pointer(NULL) : %s", sModulePath.c_str() );
+		DataIOEngine::GetEngineObj().WriteError( "DataCollector::Initialize() : invalid fuction pointer(NULL) : %s", sDllPath.c_str() );
 		Release();
 		return -10;
 	}
 
 	if( 0 != (nErrorCode = m_pFuncInitialize( pIDataCallBack )) )
 	{
-		DataIOEngine::GetEngineObj().WriteError( "DataCollector::Initialize() : failed 2 initialize data collector [%s], errorcode=%d", sModulePath.c_str(), nErrorCode );
+		DataIOEngine::GetEngineObj().WriteError( "DataCollector::Initialize() : failed 2 initialize data collector [%s], errorcode=%d", sDllPath.c_str(), nErrorCode );
 		Release();
 		return nErrorCode;
 	}
@@ -88,7 +87,7 @@ int DataCollector::Initialize( I_DataHandle* pIDataCallBack, std::string sDllPat
 	m_nMarketID = m_pFuncGetMarketID();
 	m_bIsProxyPlugin = m_pFuncIsProxy();
 
-	DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Initialize() : DataCollector [%s] is Initialized! ......", sModulePath.c_str() );
+	DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Initialize() : DataCollector [%s] is Initialized! ......", sDllPath.c_str() );
 
 	return 0;
 }

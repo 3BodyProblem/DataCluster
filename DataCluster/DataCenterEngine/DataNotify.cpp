@@ -249,7 +249,7 @@ void QuotationNotify::NotifyMessage()
 			return;
 		}
 
-		m_pQuotationCallBack->OnQuotation( nMarketID, nMsgID, pszDataBlock, nDataSize );
+		m_pQuotationCallBack->OnQuotation( (QUO_MARKET_ID)nMarketID, nMsgID, pszDataBlock, nDataSize );
 	}
 }
 

@@ -10,19 +10,53 @@
 
 extern "C"
 {
-	__declspec(dllexport) int __stdcall		Activate( I_QuotationCallBack* pIDataHandle )
+	__declspec(dllexport) int __stdcall		GetVersionNo()
+	{
+		unsigned int	nMajor = 1;
+		unsigned int	nRelease = 1;
+		unsigned int	nBuild = 1;
+
+		return 1000000 * nMajor + 100000 * nRelease + 1000 * nBuild;
+	}
+
+	__declspec(dllexport) int __stdcall		StartWork( I_QuotationCallBack* pIDataHandle )
 	{
 		return DataIOEngine::GetEngineObj().Initialize( pIDataHandle );
 	}
 
-	__declspec(dllexport) void __stdcall	Destroy()
+	__declspec(dllexport) void __stdcall	EndWork()
 	{
 		DataIOEngine::GetEngineObj().Release();
 	}
 
-	__declspec(dllexport) int __stdcall		Query( unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen )
+	__declspec(dllexport) int  __stdcall	GetMarketID( QUO_MARKET_ID* lpOut,unsigned int uiSize )
 	{
-		return DataIOEngine::GetEngineObj().OnQuery( nMessageID, pDataPtr, nDataLen );
+		return 0;
+	}
+
+	__declspec(dllexport) int  __stdcall	GetMarketInfo( QUO_MARKET_ID eMarketID, tagQUO_MarketInfo* lpOut )
+	{
+		return 0;
+	}
+
+	__declspec(dllexport) int  __stdcall	GetAllReferenceData( QUO_MARKET_ID eMarketID, unsigned int uiOffset, tagQUO_ReferenceData* lpOut, unsigned int uiSize )
+	{
+		return 0;
+	}
+
+	__declspec(dllexport) int  __stdcall	GetReferenceData( QUO_MARKET_ID eMarketID, const char* szCode, tagQUO_ReferenceData* lpOut )
+	{
+		return 0;
+	}
+
+	__declspec(dllexport) int  __stdcall	GetAllSnapData( QUO_MARKET_ID eMarketID, unsigned int uiOffset, tagQUO_SnapData* lpOut, unsigned int uiSize )
+	{
+		return 0;
+	}
+
+	__declspec(dllexport) int  __stdcall	GetSnapData( QUO_MARKET_ID eMarketID, const char* szCode, tagQUO_SnapData* lpOut )
+	{
+		return 0;
 	}
 
 	__declspec(dllexport) void __stdcall	ExecuteUnitTest()
@@ -58,7 +92,7 @@ extern "C"
 		{
 			Global_bInit = true;
 
-			if( 0 != Activate( &Global_CBAdaptor ) )
+			if( 0 != StartWork( &Global_CBAdaptor ) )
 			{
 				return NULL;
 			}

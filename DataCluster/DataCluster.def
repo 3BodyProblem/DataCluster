@@ -1,7 +1,13 @@
 EXPORTS
-	Activate
-	Destroy
-	Query
+	GetVersionNo
+	StartWork
+	EndWork
+	GetMarketID
+	GetMarketInfo
+	GetAllReferenceData
+	GetReferenceData
+	GetAllSnapData
+	GetSnapData
 	ExecuteUnitTest
 	GetDllVersion
 	CreateQuoteApi
