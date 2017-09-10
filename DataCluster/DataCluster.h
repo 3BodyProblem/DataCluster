@@ -40,7 +40,7 @@ extern "C"
 	 * @param[in]							uiSize						市场编号数值数量
 	 * @return								输出：返回>=0表示行情接口支持的市场数量，返回<0表示失败，具体错误信息通过回调接口输出
 	 */
-	__declspec(dllexport) int  __stdcall	GetMarketID( QUO_MARKET_ID* lpOut,unsigned int uiSize );
+	__declspec(dllexport) int  __stdcall	GetMarketID( QUO_MARKET_ID* lpOut, unsigned int uiSize );
 
 	/**
 	 * @brief								获取指定市场的市场信息

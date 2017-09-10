@@ -4,8 +4,73 @@
 #include <functional>
 #include "DataCluster.h"
 #include "UnitTest/UnitTest.h"
+#include "Infrastructure/Lock.h"
 #include "DataCenterEngine/DataCenterEngine.h"
 #include "QuoteClientApi.h"
+
+
+/**
+ * @class			RecordsFilter
+ * @brief			全量数据记录集部分提取类
+ */
+class RecordsFilter
+{
+public:
+	static const unsigned int	MAX_BUF_SIZE = 1024*1024*20;
+	RecordsFilter()
+		: m_pBuff( NULL )
+	{}
+
+	~RecordsFilter()
+	{
+		if( NULL != m_pBuff ) {
+			delete [] m_pBuff;
+			m_pBuff = NULL;
+		}
+	}
+
+	int	Initialize() {
+		if( NULL == m_pBuff ) {
+			m_pBuff = new char[MAX_BUF_SIZE];
+		}
+
+		if( NULL != m_pBuff ) {
+			return 0;
+		}
+
+		return -1;
+	}
+
+	int	ExtraRecords( unsigned int nMessageID, unsigned int nMessageSize, unsigned int uiOffset, char* lpOut, unsigned int uiSize )
+	{
+		unsigned int			nCopySize = 0;
+		unsigned int			nItemNumber = 0;
+		CriticalLock			lock( m_oLock );
+
+		if( DataIOEngine::GetEngineObj().OnQuery( nMessageID, m_pBuff, MAX_BUF_SIZE ) <= 0 )
+		{
+			return -1;
+		}
+
+		for( unsigned int nOffset = 0; nOffset < MAX_BUF_SIZE && nOffset < uiSize; nOffset += nMessageSize, nItemNumber++ )
+		{
+			if( nItemNumber >= uiOffset )
+			{
+				::memcpy( lpOut + (nItemNumber-uiOffset)*nMessageSize, m_pBuff + nOffset, nMessageSize );
+				nCopySize += nMessageSize;
+			}
+		}
+
+		return 0;
+	}
+
+private:
+	char*						m_pBuff;						///< 数据缓存
+	CriticalObject				m_oLock;						///< 锁
+};
+
+
+static RecordsFilter		objRecordsFilter;
 
 
 extern "C"
@@ -21,6 +86,12 @@ extern "C"
 
 	__declspec(dllexport) int __stdcall		StartWork( I_QuotationCallBack* pIDataHandle )
 	{
+		if( objRecordsFilter.Initialize() < 0 )
+		{
+			::printf( "%s\n", "DataIOEngine::Initialize() : cannot initialize RecordsFilter class." );
+			return -1;
+		}
+
 		return DataIOEngine::GetEngineObj().Initialize( pIDataHandle );
 	}
 
@@ -29,34 +100,54 @@ extern "C"
 		DataIOEngine::GetEngineObj().Release();
 	}
 
-	__declspec(dllexport) int  __stdcall	GetMarketID( QUO_MARKET_ID* lpOut,unsigned int uiSize )
+	__declspec(dllexport) int  __stdcall	GetMarketID( QUO_MARKET_ID* lpOut, unsigned int uiSize )
 	{
 		return 0;
 	}
 
 	__declspec(dllexport) int  __stdcall	GetMarketInfo( QUO_MARKET_ID eMarketID, tagQUO_MarketInfo* lpOut )
 	{
+		T_Inner_MarketInfo		tagMarketinfo = { 0 };
+
+		if( QUO_MARKET_UNKNOW == eMarketID || NULL == lpOut )
+		{
+			return -1;
+		}
+
+		if( DataIOEngine::GetEngineObj().OnQuery( eMarketID*100+1, (char*)&tagMarketinfo, sizeof(T_Inner_MarketInfo) ) <= 0 )
+		{
+			return -2;
+		}
+
+		::memcpy( lpOut, &(tagMarketinfo.objData), sizeof(tagQUO_MarketInfo) );
+
 		return 0;
 	}
 
 	__declspec(dllexport) int  __stdcall	GetAllReferenceData( QUO_MARKET_ID eMarketID, unsigned int uiOffset, tagQUO_ReferenceData* lpOut, unsigned int uiSize )
 	{
-		return 0;
+		return objRecordsFilter.ExtraRecords( eMarketID*100+2, sizeof(tagQUO_ReferenceData), uiOffset, (char*)lpOut, uiSize );
 	}
 
 	__declspec(dllexport) int  __stdcall	GetReferenceData( QUO_MARKET_ID eMarketID, const char* szCode, tagQUO_ReferenceData* lpOut )
 	{
-		return 0;
+		::memset( lpOut, 0, sizeof(tagQUO_ReferenceData) );
+		::strcpy( (char*)lpOut, szCode );
+
+		return DataIOEngine::GetEngineObj().OnQuery( eMarketID*100+2, (char*)lpOut, sizeof(tagQUO_ReferenceData) );
 	}
 
 	__declspec(dllexport) int  __stdcall	GetAllSnapData( QUO_MARKET_ID eMarketID, unsigned int uiOffset, tagQUO_SnapData* lpOut, unsigned int uiSize )
 	{
-		return 0;
+		return objRecordsFilter.ExtraRecords( eMarketID*100+3, sizeof(tagQUO_SnapData), uiOffset, (char*)lpOut, uiSize );
 	}
 
 	__declspec(dllexport) int  __stdcall	GetSnapData( QUO_MARKET_ID eMarketID, const char* szCode, tagQUO_SnapData* lpOut )
 	{
-		return 0;
+		::memset( lpOut, 0, sizeof(tagQUO_SnapData) );
+		::strcpy( (char*)lpOut, szCode );
+
+		return DataIOEngine::GetEngineObj().OnQuery( eMarketID*100+3, (char*)lpOut, sizeof(tagQUO_SnapData) );
 	}
 
 	__declspec(dllexport) void __stdcall	ExecuteUnitTest()

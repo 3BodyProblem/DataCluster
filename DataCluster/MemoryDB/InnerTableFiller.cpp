@@ -92,6 +92,7 @@ struct MappingDLFuture_Kind2QuoCategory : public InnerRecord { MappingDLFuture_K
 				pBigTable->objData.mKindRecord[nIndex].cOptionType = pKind->OptionType;
 				pBigTable->objData.mKindRecord[nIndex].uiLotSize = pKind->LotSize;
 				pBigTable->objData.mKindRecord[nIndex].uiContractMult = pKind->ContractMult;
+				pBigTable->objData.mKindRecord[nIndex].dPriceTick = pKind->PriceTick;
 			}
 		}
 	}
@@ -214,6 +215,7 @@ struct MappingSHFuture_Kind2QuoCategory : public InnerRecord { MappingSHFuture_K
 				pBigTable->objData.mKindRecord[nIndex].cOptionType = pKind->OptionType;
 				pBigTable->objData.mKindRecord[nIndex].uiLotSize = pKind->LotSize;
 				pBigTable->objData.mKindRecord[nIndex].uiContractMult = pKind->ContractMult;
+				pBigTable->objData.mKindRecord[nIndex].dPriceTick = pKind->PriceTick;
 			}
 		}
 	}
@@ -336,6 +338,7 @@ struct MappingZZFuture_Kind2QuoCategory : public InnerRecord { MappingZZFuture_K
 				pBigTable->objData.mKindRecord[nIndex].cOptionType = pKind->OptionType;
 				pBigTable->objData.mKindRecord[nIndex].uiLotSize = pKind->LotSize;
 				pBigTable->objData.mKindRecord[nIndex].uiContractMult = pKind->ContractMult;
+				pBigTable->objData.mKindRecord[nIndex].dPriceTick = pKind->PriceTick;
 			}
 		}
 	}
@@ -458,6 +461,7 @@ struct MappingDLOption_Kind2QuoCategory : public InnerRecord { MappingDLOption_K
 				pBigTable->objData.mKindRecord[nIndex].cOptionType = pKind->OptionType;
 				pBigTable->objData.mKindRecord[nIndex].uiLotSize = pKind->LotSize;
 				pBigTable->objData.mKindRecord[nIndex].uiContractMult = pKind->ContractMult;
+				pBigTable->objData.mKindRecord[nIndex].dPriceTick = pKind->PriceTick;
 			}
 		}
 	}
@@ -581,6 +585,7 @@ struct MappingSHOption_Kind2QuoCategory : public InnerRecord { MappingSHOption_K
 				pBigTable->objData.mKindRecord[nIndex].cOptionType = pKind->OptionType;
 				pBigTable->objData.mKindRecord[nIndex].uiLotSize = pKind->LotSize;
 				pBigTable->objData.mKindRecord[nIndex].uiContractMult = pKind->ContractMult;
+				pBigTable->objData.mKindRecord[nIndex].dPriceTick = pKind->PriceTick;
 			}
 		}
 	}
@@ -704,6 +709,7 @@ struct MappingZZOption_Kind2QuoCategory : public InnerRecord { MappingZZOption_K
 				pBigTable->objData.mKindRecord[nIndex].cOptionType = pKind->OptionType;
 				pBigTable->objData.mKindRecord[nIndex].uiLotSize = pKind->LotSize;
 				pBigTable->objData.mKindRecord[nIndex].uiContractMult = pKind->ContractMult;
+				pBigTable->objData.mKindRecord[nIndex].dPriceTick = pKind->PriceTick;
 			}
 		}
 	}
@@ -828,6 +834,7 @@ struct MappingCFFFuture_Kind2QuoCategory : public InnerRecord { MappingCFFFuture
 				pBigTable->objData.mKindRecord[nIndex].uiLotSize = pKind->LotSize;
 				pBigTable->objData.mKindRecord[nIndex].uiContractMult = pKind->ContractMult;
 				pBigTable->objData.mKindRecord[nIndex].uiContractUnit = pKind->ContractUnit;
+				pBigTable->objData.mKindRecord[nIndex].dPriceTick = pKind->PriceTick;
 			}
 		}
 	}
@@ -1071,6 +1078,7 @@ struct MappingSHL1Option_Kind2QuoCategory : public InnerRecord { MappingSHL1Opti
 				pBigTable->objData.mKindRecord[nIndex].cOptionType = pKind->OptionType;
 				pBigTable->objData.mKindRecord[nIndex].uiLotSize = pKind->LotSize;
 				pBigTable->objData.mKindRecord[nIndex].uiContractUnit = pKind->ContractUnit;
+				pBigTable->objData.mKindRecord[nIndex].dPriceTick = pKind->PriceTick;
 			}
 		}
 	}
