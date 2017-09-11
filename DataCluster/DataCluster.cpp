@@ -16,7 +16,7 @@
 class RecordsFilter
 {
 public:
-	static const unsigned int	MAX_BUF_SIZE = 1024*1024*20;
+	static const unsigned int	MAX_BUF_SIZE = 1024*1024*50;
 	RecordsFilter()
 		: m_pBuff( NULL )
 	{}
@@ -29,6 +29,11 @@ public:
 		}
 	}
 
+	/**
+	 * @brief				初始化提取对象
+	 * @return				==0					初始化成功
+							!=0					出错
+	 */
 	int	Initialize() {
 		if( NULL == m_pBuff ) {
 			m_pBuff = new char[MAX_BUF_SIZE];
@@ -41,6 +46,15 @@ public:
 		return -1;
 	}
 
+	/**
+	 * @brief				将查询出的全部数据表内容进行部分提取到输出缓存
+	 * @param[in]			nMessageID			消息ID
+	 * @param[in]			nMessageSize		消息长度
+	 * @param[in]			uiOffset			从第n条记录开始提取直到最后一条
+	 * @param[out]			lpOut				提取结果输出缓存
+	 * @param[in]			uiSize				缓存长度
+	 * @return				返回结果的长度
+	 */
 	int	ExtraRecords( unsigned int nMessageID, unsigned int nMessageSize, unsigned int uiOffset, char* lpOut, unsigned int uiSize )
 	{
 		unsigned int			nCopySize = 0;
