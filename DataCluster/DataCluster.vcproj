@@ -62,7 +62,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="gtestd.lib"
-				OutputFile="D:\QYClient\QuoteModule\QuoteClientApi.dll"
+				OutputFile="D:\ServiceManager\srvunit\DataCluster\$(ProjectName).dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../libs/gtest/library_vc9/Debug/"
 				ModuleDefinitionFile="DataCluster.def"

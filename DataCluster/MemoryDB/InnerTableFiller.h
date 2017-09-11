@@ -6,11 +6,20 @@
 #include "../Protocal/DataCluster_Protocal.h"
 
 
+#pragma pack(1)
 typedef struct													///< 名称代码表信息
 {
 	char						szCode[QUO_MAX_CODE];			///< 商品代码
 	tagQUO_MarketInfo			objData;
-} T_Inner_MarketInfo;
+}	T_Inner_MarketInfo;
+#pragma pack()
+
+
+typedef union {
+	T_Inner_MarketInfo		MarketData_1;
+	tagQUO_ReferenceData	ReferenceData_2;
+	tagQUO_SnapData			SnapData_3;
+}	T_BIGTABLE_RECORD;											///< 大表数据结构联合体
 
 
 /**
@@ -62,11 +71,7 @@ protected:
 	unsigned int				m_nMessageLength;		///< 消息长度
 	unsigned int				m_nBigTableID;			///< 数据大表的ID
 protected:
-	union BigTableRecord {
-		T_Inner_MarketInfo		MarketData_1;
-		tagQUO_ReferenceData	ReferenceData_2;
-		tagQUO_SnapData			SnapData_3;
-	}							m_objUnionData;			///< 大表数据结构联合体
+	T_BIGTABLE_RECORD			m_objUnionData;			///< 大表数据结构联合体
 };
 
 

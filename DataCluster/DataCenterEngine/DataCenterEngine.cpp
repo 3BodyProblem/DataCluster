@@ -8,7 +8,7 @@
 
 
 DataIOEngine::DataIOEngine()
- : SimpleTask( "DataIOEngine::Thread" ), m_pQuotationCallBack( NULL )
+: SimpleTask( "DataIOEngine::Thread" ), m_pQuotationCallBack( NULL )
 {
 }
 
@@ -180,8 +180,9 @@ int DataIOEngine::OnData( unsigned int nDataID, char* pData, unsigned int nDataL
 		return -1;
 	}
 
+	unsigned int			nBigTableID = pRecord->GetBigTableID();
 	///< 只有Code有内容填充，其他字段都为空, 所以再从内存查询一把，取得其他字段的内容
-	nAffectNum = m_oDatabaseIO.QueryRecord( pRecord->GetBigTableID(), pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), nSerialNo );
+	nAffectNum = m_oDatabaseIO.QueryRecord( nBigTableID, pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), nSerialNo );
 	if( nAffectNum < 0 )
 	{
 		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::UpdateRecord() : error occur in UpdateRecord(), MessageID=%d", nDataID );
@@ -195,22 +196,22 @@ int DataIOEngine::OnData( unsigned int nDataID, char* pData, unsigned int nDataL
 	else
 	{
 		pRecord->FillMessage2BigTableRecord( pData );
-		nAffectNum = m_oDatabaseIO.UpdateRecord( pRecord->GetBigTableID(), pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), nSerialNo );
+		nAffectNum = m_oDatabaseIO.UpdateRecord( nBigTableID, pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), nSerialNo );
 	}
 
-	m_oQuoNotify.PutMessage( pRecord->GetBigTableID()/100, pRecord->GetBigTableID(), pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth() );
+	m_oQuoNotify.PutMessage( nBigTableID/100, nBigTableID, pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth() );
 
 	return nAffectNum;
 }
 
 void DataIOEngine::OnLog( unsigned char nLogLevel, const char* pszFormat, ... )
 {
-    va_list		valist;
-    char		pszLogBuf[8000] = { 0 };
+	va_list		valist;
+	char		pszLogBuf[8000] = { 0 };
 
-    va_start( valist, pszFormat );
-    _vsnprintf( pszLogBuf, sizeof(pszLogBuf)-1, pszFormat, valist );
-    va_end( valist );
+	va_start( valist, pszFormat );
+	_vsnprintf( pszLogBuf, sizeof(pszLogBuf)-1, pszFormat, valist );
+	va_end( valist );
 
 	switch( nLogLevel )	///< 日志类型[0=信息、1=警告日志、2=错误日志、3=详细日志]
 	{

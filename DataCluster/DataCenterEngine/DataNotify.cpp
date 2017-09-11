@@ -58,18 +58,19 @@ int PackagesLoopBuffer::PushBlock( unsigned int nMarketID, unsigned int nDataID,
 	int	nFreeSize = (m_nFirstRecord + m_nMaxPkgBufSize - m_nLastRecord - 1) % m_nMaxPkgBufSize;
 
 	///< 考虑msgid+msglen+message空间占用条件
-	int	nMsgLen = nDataSize + 3*sizeof(unsigned short);
+	int	nMsgLen = nDataSize + sizeof(tagMsgHead);
 	if( nMsgLen > nFreeSize )
 	{
 		return -2;	///< 空间不足
 	}
 
 	///< 构建新的数据块
-	char				pszDataBlock[2048] = { 0 };
-	*((unsigned short*)pszDataBlock) = nMarketID;
-	*((unsigned short*)pszDataBlock+sizeof(unsigned short)) = nDataID;
-	*((unsigned short*)(pszDataBlock+sizeof(unsigned int))) = nDataSize;
-	::memcpy( pszDataBlock+sizeof(unsigned short)*3, pData, nDataSize );
+	char				pszDataBlock[sizeof(T_BIGTABLE_RECORD)+128] = { 0 };
+	tagMsgHead*			pMsgHead = (tagMsgHead*)pszDataBlock;
+	pMsgHead->MkID = nMarketID;
+	pMsgHead->MsgID = nDataID;
+	pMsgHead->MsgLen = nDataSize;
+	::memcpy( pszDataBlock+sizeof(tagMsgHead), pData, nDataSize );
 
 	int				nConsecutiveFreeSize = m_nMaxPkgBufSize - m_nLastRecord;
 	if( nConsecutiveFreeSize >= nMsgLen )
@@ -239,7 +240,7 @@ void QuotationNotify::NotifyMessage()
 	{
 		unsigned int	nMarketID = 0;
 		unsigned int	nMsgID = 0;
-		char			pszDataBlock[1024] = { 0 };
+		char			pszDataBlock[sizeof(T_BIGTABLE_RECORD)+128] = { 0 };
 		int				nDataSize = m_oDataBuffer.GetBlock( pszDataBlock, sizeof(pszDataBlock), nMsgID, nMarketID );
 
 		if( nDataSize <= 0 )
