@@ -127,7 +127,7 @@ void MDataIO::inner_CheckData()
 }
 
 
-
+///< ------------------------------------------------------------------------------
 
 
 MStreamWrite::MStreamWrite(char* pszinbuf, int ninbytes)
@@ -264,6 +264,9 @@ void	MStreamWrite::PutMsg(unsigned int ntype, char* pStruct, int nStructSize)
 }
 
 
+///< ------------------------------------------------------------------------------
+
+
 MDataIO				g_oDataIO;
 
 
@@ -285,7 +288,7 @@ int STDCALL	MDataClient::Init()
 {
 	if( NULL == m_pQueryBuffer )
 	{
-		m_pQueryBuffer = new char[1024*1024*10];
+		m_pQueryBuffer = new char[1024*1024*30];
 	}
 
 	if (!Global_bInit)
@@ -300,6 +303,105 @@ int STDCALL	MDataClient::Init()
 		if( 0 != StartWork( &Global_CBAdaptor ) )
 		{
 			return -2;
+		}
+
+		///< --------- build kind table ---------------
+		{///< 商品期货(上海/郑州/大连)
+		std::map<int,XDFAPI_MarketKindInfo>&	refKindTable = m_mapMarketKind[XDF_CNF];
+		strncpy( refKindTable[0].KindName, "指数保留", 8 );
+		refKindTable[0].PriceRate = 0;
+		refKindTable[0].LotSize = 0;
+		refKindTable[0].Serial = refKindTable.size() - 1;
+		refKindTable[0].WareCount = 0;
+		strncpy( refKindTable[1].KindName, "郑州期指", 8 );
+		refKindTable[1].PriceRate = 2;
+		refKindTable[1].LotSize = 100;
+		refKindTable[1].Serial = refKindTable.size() - 1;
+		refKindTable[1].WareCount = 0;
+		strncpy( refKindTable[2].KindName, "大连期指", 8 );
+		refKindTable[2].PriceRate = 2;
+		refKindTable[2].LotSize = 100;
+		refKindTable[2].Serial = refKindTable.size() - 1;
+		refKindTable[2].WareCount = 0;
+		strncpy( refKindTable[3].KindName, "上海期指", 8 );
+		refKindTable[3].PriceRate = 2;
+		refKindTable[3].LotSize = 100;
+		refKindTable[3].Serial = refKindTable.size() - 1;
+		refKindTable[3].WareCount = 0;
+		strncpy( refKindTable[4].KindName, "郑州合约", 8 );
+		refKindTable[4].PriceRate = 2;
+		refKindTable[4].LotSize = 100;
+		refKindTable[4].Serial = refKindTable.size() - 1;
+		refKindTable[4].WareCount = 0;
+		strncpy( refKindTable[5].KindName, "大连合约", 8 );
+		refKindTable[5].PriceRate = 2;
+		refKindTable[5].LotSize = 100;
+		refKindTable[5].Serial = refKindTable.size() - 1;
+		refKindTable[5].WareCount = 0;
+		strncpy( refKindTable[6].KindName, "上海合约", 8 );
+		refKindTable[6].PriceRate = 2;
+		refKindTable[6].LotSize = 100;
+		refKindTable[6].Serial = refKindTable.size() - 1;
+		refKindTable[6].WareCount = 0;
+		strncpy( refKindTable[7].KindName, "能源合约", 8 );
+		refKindTable[7].PriceRate = 2;
+		refKindTable[7].LotSize = 100;
+		refKindTable[7].Serial = refKindTable.size() - 1;
+		refKindTable[7].WareCount = 0;
+		}
+		{///< 商品期货和商品期权(上海/郑州/大连)
+		std::map<int,XDFAPI_MarketKindInfo>&	refKindTable = m_mapMarketKind[XDF_CNFOPT];
+		strncpy( refKindTable[0].KindName, "指数保留", 8 );
+		refKindTable[0].PriceRate = 0;
+		refKindTable[0].LotSize = 0;
+		refKindTable[0].Serial = refKindTable.size() - 1;
+		refKindTable[0].WareCount = 0;
+		strncpy( refKindTable[1].KindName, "郑州期权", 8 );
+		refKindTable[1].PriceRate = 2;
+		refKindTable[1].LotSize = 100;
+		refKindTable[1].Serial = refKindTable.size() - 1;
+		refKindTable[1].WareCount = 0;
+		strncpy( refKindTable[2].KindName, "大连期权", 8 );
+		refKindTable[2].PriceRate = 2;
+		refKindTable[2].LotSize = 100;
+		refKindTable[2].Serial = refKindTable.size() - 1;
+		refKindTable[2].WareCount = 0;
+		strncpy( refKindTable[3].KindName, "上海期权", 8 );
+		refKindTable[3].PriceRate = 2;
+		refKindTable[3].LotSize = 100;
+		refKindTable[3].Serial = refKindTable.size() - 1;
+		refKindTable[3].WareCount = 0;
+		strncpy( refKindTable[4].KindName, "能源期权", 8 );
+		refKindTable[4].PriceRate = 2;
+		refKindTable[4].LotSize = 100;
+		refKindTable[4].Serial = refKindTable.size() - 1;
+		refKindTable[4].WareCount = 0;
+		}
+		{///< 中金期货
+		std::map<int,XDFAPI_MarketKindInfo>&	refKindTable = m_mapMarketKind[XDF_CF];
+		strncpy( refKindTable[0].KindName, "股指期货", 8 );
+		refKindTable[0].PriceRate = 2;
+		refKindTable[0].LotSize = 1;
+		refKindTable[0].Serial = refKindTable.size() - 1;
+		refKindTable[0].WareCount = 0;
+		strncpy( refKindTable[0].KindName, "国债期货", 8 );
+		refKindTable[0].PriceRate = 3;
+		refKindTable[0].LotSize = 1;
+		refKindTable[0].Serial = refKindTable.size() - 1;
+		refKindTable[0].WareCount = 0;
+		}
+		{///< 中金期权
+		std::map<int,XDFAPI_MarketKindInfo>&	refKindTable = m_mapMarketKind[XDF_ZJOPT];
+		strncpy( refKindTable[0].KindName, "股指期权", 8 );
+		refKindTable[0].PriceRate = 2;
+		refKindTable[0].LotSize = 1;
+		refKindTable[0].Serial = refKindTable.size() - 1;
+		refKindTable[0].WareCount = 0;
+		strncpy( refKindTable[0].KindName, "国债期权", 8 );
+		refKindTable[0].PriceRate = 3;
+		refKindTable[0].LotSize = 1;
+		refKindTable[0].Serial = refKindTable.size() - 1;
+		refKindTable[0].WareCount = 0;
 		}
 	}
 
@@ -337,7 +439,7 @@ int	 STDCALL		MDataClient::GetMarketInfo( unsigned char cMarket, char* pszInBuf,
 	int							nInnerMkID = DataCollectorPool::MkIDCast( cMarket );
 	unsigned __int64			nSerialNo = 0;
 	XDFAPI_MarketKindHead		oHead = { 0 };
-	tagQUO_MarketInfo			tagMkInfo;
+	T_Inner_MarketInfo			tagMkInfo;
 	MStreamWrite				oMSW( pszInBuf, nInBytes );
 	DatabaseAdaptor&			refDatabase = DataIOEngine::GetEngineObj().GetDatabaseObj();
 
@@ -346,19 +448,19 @@ int	 STDCALL		MDataClient::GetMarketInfo( unsigned char cMarket, char* pszInBuf,
 		return -1;
 	}
 
-	if( refDatabase.QueryRecord( (nInnerMkID*100+1), (char*)&tagMkInfo, sizeof(tagQUO_MarketInfo), nSerialNo ) <= 0 )
+	if( refDatabase.QueryRecord( (nInnerMkID*100+1), (char*)&tagMkInfo, sizeof(T_Inner_MarketInfo), nSerialNo ) <= 0 )
 	{
 		return -2;
 	}
 
-	::memset( &tagMkInfo, 0, sizeof(tagQUO_MarketInfo) );
-	oHead.WareCount = tagMkInfo.uiWareCount;
-	oHead.KindCount = tagMkInfo.uiKindCount;
+	::memset( &oHead, 0, sizeof(XDFAPI_MarketKindHead) );
+	oHead.WareCount = tagMkInfo.objData.uiWareCount;
+//	oHead.KindCount = tagMkInfo.objData.uiKindCount;
 	oMSW.PutSingleMsg( 100, (char*)&oHead, sizeof(XDFAPI_MarketKindHead) );
 
-	for( int n = 0; n < tagMkInfo.uiKindCount; n++ )
+	for( int n = 0; n < tagMkInfo.objData.uiKindCount; n++ )
 	{
-		tagQUO_KindInfo&		tagCategory = tagMkInfo.mKindRecord[n];
+		tagQUO_KindInfo&		tagCategory = tagMkInfo.objData.mKindRecord[n];
 		XDFAPI_MarketKindInfo	oInfo = { 0 };
 
 		oInfo.Serial = n;

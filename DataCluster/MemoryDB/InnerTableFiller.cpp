@@ -2,63 +2,6 @@
 #include "../DataCenterEngine/DataCenterEngine.h"
 
 
-InnerRecord::InnerRecord( unsigned int nMsgID, unsigned int nMsgLen, unsigned int nBigTableID )
- : m_nMessageID( nMsgID ), m_nMessageLength( nMsgLen ), m_nBigTableID( nBigTableID )
-{
-}
-
-unsigned int InnerRecord::GetBigTableID()
-{
-	return m_nBigTableID;
-}
-
-unsigned int InnerRecord::GetMessageID()
-{
-	return m_nMessageID;
-}
-
-unsigned int InnerRecord::GetMessageLength()
-{
-	return m_nMessageLength;
-}
-
-char* InnerRecord::GetBigTableRecordPtr()
-{
-	switch( GetBigTableID() % 100 )
-	{
-	case 1:
-		return (char*)&(m_objUnionData.MarketData_1);
-	case 2:
-		return (char*)&(m_objUnionData.ReferenceData_2);
-	case 3:
-		return (char*)&(m_objUnionData.SnapData_3);
-	default:
-		return NULL;
-	}
-
-	return NULL;
-}
-
-unsigned int InnerRecord::GetBigTableWidth()
-{
-	switch( GetBigTableID() % 100 )
-	{
-	case 1:
-		return sizeof( m_objUnionData.MarketData_1 );
-	case 2:
-		return sizeof( m_objUnionData.ReferenceData_2 );
-	case 3:
-		return sizeof( m_objUnionData.SnapData_3 );
-	default:
-		return 0;
-	}
-
-	return 0;
-}
-
-
-///< -----------------------------------------------------------------------------
-
 ///< 大连商品期货
 struct MappingDLFuture_MkInfo2QuoMarketInfo : public InnerRecord { MappingDLFuture_MkInfo2QuoMarketInfo() : InnerRecord( 100, sizeof(tagDLFutureMarketInfo_LF100), QUO_MARKET_DCE*100+1 ) {}
 	void	FillMessage2BigTableRecord(  char* pMessagePtr )	{
@@ -1289,16 +1232,8 @@ struct MappingSZL1_BuySell2QuoSnapData : public InnerRecord { MappingSZL1_BuySel
 
 
 ///< -----------------------------------------------------------------------------
-
-
 const unsigned int TableFillerRegister::s_nRegisterTableSize = 2048;
 std::vector<InnerRecord*> TableFillerRegister::s_vctRegisterTable;
-
-
-TableFillerRegister::TableFillerRegister()
-{
-	s_vctRegisterTable.resize( s_nRegisterTableSize );		///< 预留2048个messageid映射器地址
-}
 
 int TableFillerRegister::Initialize()
 {
@@ -1398,33 +1333,22 @@ int TableFillerRegister::Initialize()
 	return 0;
 }
 
-TableFillerRegister&	TableFillerRegister::GetRegister()
-{
-	static TableFillerRegister		obj;
-
-	return obj;
-}
-
 int TableFillerRegister::Register( InnerRecord& refRecordFiller )
 {
 	unsigned int			nMessageID = refRecordFiller.GetMessageID();
 	unsigned int			nPos = nMessageID % s_nRegisterTableSize;
 	InnerRecord*			pInnerRecord = s_vctRegisterTable[nPos];
 
-	if( NULL != pInnerRecord )
-	{
+	if( NULL != pInnerRecord )	{
 		DataIOEngine::GetEngineObj().WriteWarning( "TableFillerRegister::Register() : filler has existed in register table, msgid(%d)", nMessageID );
 		return -1;
 	}
 
 	s_vctRegisterTable[nPos] = &refRecordFiller;
-	DataIOEngine::GetEngineObj().WriteInfo( "TableFillerRegister::Register() : Building Mapping Table..., MessageID(%u-->%u), Size(%u-->%u)"
-											, nMessageID, refRecordFiller.GetBigTableID(), refRecordFiller.GetMessageLength(), refRecordFiller.GetBigTableWidth() );
+	DataIOEngine::GetEngineObj().WriteInfo( "TableFillerRegister::Register() : Building Mapping Table..., MessageID(%u-->%u), Size(%u-->%u)", nMessageID, refRecordFiller.GetBigTableID(), refRecordFiller.GetMessageLength(), refRecordFiller.GetBigTableWidth() );
 
-	if( nMessageID == 0 || refRecordFiller.GetBigTableID() == 0 || refRecordFiller.GetMessageLength() == 0 || refRecordFiller.GetBigTableWidth() == 0 )
-	{
-		DataIOEngine::GetEngineObj().WriteWarning( "TableFillerRegister::Register() : invalid parameter : MessageID(%u-->%u), Size(%u-->%u)"
-													, nMessageID, refRecordFiller.GetBigTableID(), refRecordFiller.GetMessageLength(), refRecordFiller.GetBigTableWidth() );
+	if( nMessageID == 0 || refRecordFiller.GetBigTableID() == 0 || refRecordFiller.GetMessageLength() == 0 || refRecordFiller.GetBigTableWidth() == 0 )	{
+		DataIOEngine::GetEngineObj().WriteWarning( "TableFillerRegister::Register() : invalid parameter : MessageID(%u-->%u), Size(%u-->%u)", nMessageID, refRecordFiller.GetBigTableID(), refRecordFiller.GetMessageLength(), refRecordFiller.GetBigTableWidth() );
 		return -2;
 	}
 
@@ -1436,36 +1360,20 @@ InnerRecord* TableFillerRegister::PrepareNewTableBlock( unsigned int nMessageID,
 	unsigned int			nPos = nMessageID % s_nRegisterTableSize;
 	InnerRecord*			pInnerRecord = s_vctRegisterTable[nPos];
 
-	if( NULL == pMsgPtr || nMsgLen < 20 )
-	{
-		DataIOEngine::GetEngineObj().WriteWarning( "TableFillerRegister::PrepareNewTableBlock() : invalid parameters, MessageID(%d), MessagePtr(%x), MessageLength(%d)", nMessageID, pMsgPtr, nMsgLen );
-
+	if( NULL == pMsgPtr || nMsgLen < 20 || NULL == pInnerRecord )	{
+		DataIOEngine::GetEngineObj().WriteWarning( "TableFillerRegister::PrepareNewTableBlock() : invalid parameters, MessageID(%d), MessagePtr(%x), MessageLength(%d), MemoryBlockPtr(%x)", nMessageID, pMsgPtr, nMsgLen, pInnerRecord );
 		return NULL;
 	}
 
-	if( NULL != pInnerRecord )
-	{
-		if( pInnerRecord->GetMessageID() != nMessageID || pInnerRecord->GetMessageLength() != nMsgLen )
-		{
-			DataIOEngine::GetEngineObj().WriteWarning( "TableFillerRegister::PrepareNewTableBlock() : invalid parameters, MessageID(%d!=%d), MessageLength(%d!=%d)"
-													, nMessageID, pInnerRecord->GetMessageID(), nMsgLen, pInnerRecord->GetMessageLength() );
-			return NULL;
-		}
-
-		::memset( pInnerRecord->GetBigTableRecordPtr(), 0, pInnerRecord->GetBigTableWidth() );	///< 先清一把，腾出空间
-		::memcpy( pInnerRecord->GetBigTableRecordPtr(), pMsgPtr, 20 );							///< 再把Code先copy进去
-
-		return pInnerRecord;
+	if( pInnerRecord->GetMessageID() != nMessageID || pInnerRecord->GetMessageLength() != nMsgLen )	{
+		DataIOEngine::GetEngineObj().WriteWarning( "TableFillerRegister::PrepareNewTableBlock() : invalid parameters, MessageID(%d!=%d), MessageLength(%d!=%d)", nMessageID, pInnerRecord->GetMessageID(), nMsgLen, pInnerRecord->GetMessageLength() );
+		return NULL;
 	}
 
-	DataIOEngine::GetEngineObj().WriteWarning( "TableFillerRegister::PrepareNewTableBlock() : Invalid MessageID(%d), MessageLength(%d)", nMessageID, nMsgLen );
-
-	return NULL;
+	::memset( pInnerRecord->GetBigTableRecordPtr(), 0, pInnerRecord->GetBigTableWidth() );	///< 先清一把，腾出空间
+	::memcpy( pInnerRecord->GetBigTableRecordPtr(), pMsgPtr, 20 );							///< 再把Code先copy进去
+	return pInnerRecord;
 }
-
-
-
-
 
 
 

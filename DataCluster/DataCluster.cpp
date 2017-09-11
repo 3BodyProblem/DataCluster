@@ -184,7 +184,7 @@ extern "C"
 		return pszBuf;
 	}
 
-///< ---------------------------------------------------------------------------------------
+///< ------------------------ 以下为兼容老版的接口 ----------------------------------------------------
 	MPrimeClient				Global_PrimeClient;
 	bool						Global_bInit = false;
 	MDataClient					Global_Client;

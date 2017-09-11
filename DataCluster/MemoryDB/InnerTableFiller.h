@@ -32,32 +32,64 @@ class InnerRecord
 {
 friend class TableFillerRegister;
 public:
-	InnerRecord( unsigned int nMsgID, unsigned int nMsgLen, unsigned int nBigTableID );
+	InnerRecord( unsigned int nMsgID, unsigned int nMsgLen, unsigned int nBigTableID )
+		 : m_nMessageID( nMsgID ), m_nMessageLength( nMsgLen ), m_nBigTableID( nBigTableID )
+	{}
 
 	/**
 	 * @brief					获取消息记录的ID号
 	 */
-	unsigned int				GetMessageID();
+	unsigned int				GetMessageID()	{
+		return m_nMessageID;
+	}
 
 	/**
 	 * @brief					获取消息记录结构长度
 	 */
-	unsigned int				GetMessageLength();
+	unsigned int				GetMessageLength()	{
+		return m_nMessageLength;
+	}
 
 	/**
 	 * @brief					获取大表ID
 	 */
-	unsigned int				GetBigTableID();
+	unsigned int				GetBigTableID()	{
+		return m_nBigTableID;
+	}
 
 	/**
 	 * @brief					获取大表的数据结构宽度
 	 */
-	unsigned int				GetBigTableWidth();
+	unsigned int				GetBigTableWidth()	{
+		switch( GetBigTableID() % 100 )
+		{
+		case 1:
+			return sizeof( m_objUnionData.MarketData_1 );
+		case 2:
+			return sizeof( m_objUnionData.ReferenceData_2 );
+		case 3:
+			return sizeof( m_objUnionData.SnapData_3 );
+		}
+
+		return 0;
+	}
 
 	/**
 	 * @brief					获取可写的大表记录结构地址
 	 */
-	char*						GetBigTableRecordPtr();
+	char*						GetBigTableRecordPtr()	{
+		switch( GetBigTableID() % 100 )
+		{
+		case 1:
+			return (char*)&(m_objUnionData.MarketData_1);
+		case 2:
+			return (char*)&(m_objUnionData.ReferenceData_2);
+		case 3:
+			return (char*)&(m_objUnionData.SnapData_3);
+		}
+
+		return NULL;
+	}
 
 public:
 	/**
@@ -87,13 +119,20 @@ protected:
 class TableFillerRegister
 {
 private:
-	TableFillerRegister();
+	TableFillerRegister()
+	{
+		s_vctRegisterTable.resize( s_nRegisterTableSize );		///< 预留2048个messageid映射器地址
+	}
 
 public:
 	/**
 	 * @brief					获取单键引用
 	 */
-	static TableFillerRegister&	GetRegister();
+	static TableFillerRegister&	GetRegister()
+	{
+		static TableFillerRegister		obj;
+		return obj;
+	}
 
 	/**
 	 * @brief					初始化

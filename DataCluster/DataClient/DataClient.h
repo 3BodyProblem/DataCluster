@@ -2,6 +2,7 @@
 #define _DATACLIENT_DEFINE_H
 
 
+#include <map>
 #include "../Interface.h"
 #include "../QuoteClientApi.h"
 #include "../Infrastructure/Lock.h"
@@ -77,6 +78,7 @@ private:
 };
 
 
+typedef std::map<int,std::map<int,XDFAPI_MarketKindInfo>>	T_KIND_MAP;		///< [市场ID,[序号,类别信息]]
 extern MDataIO				g_oDataIO;
 
 
@@ -127,6 +129,7 @@ public:
 private:
 	CriticalObject		m_oLock;						///< 锁
 	char*				m_pQueryBuffer;
+	T_KIND_MAP			m_mapMarketKind;				///< 各市场的类别信息
 };
 
 
