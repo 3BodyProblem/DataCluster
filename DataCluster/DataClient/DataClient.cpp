@@ -5,6 +5,8 @@
 #include <math.h>
 #include <string>
 #include <algorithm>
+#include "Winsock2.h"
+#pragma comment( lib, "Ws2_32.lib" )
 
 
 #define MAX_DATABUF_COUNT	81920000
@@ -22,7 +24,20 @@ MDataIO::~MDataIO()
 
 int		MDataIO::Instance()
 {
+	WSADATA					oWSAData = { 0 };
+	WORD					wVerRequested = { 0 };
+	int						nErrorCode = 0;							///< ´íÎó±àºÅ
+
 	Release();
+
+	wVerRequested = MAKEWORD( 2, 1 );
+	nErrorCode = WSAStartup( wVerRequested, &oWSAData );
+	if( 0 != nErrorCode )
+	{
+		DWORD dw = ::GetLastError();
+		::printf( "main() : failed 2 initialize WSAStartup(), errorcode=%d \n", nErrorCode );
+		return -1;
+	}
 
 	int  iret = m_PushBuffer.Instance(MAX_DATABUF_COUNT);
 	if (iret <0)
