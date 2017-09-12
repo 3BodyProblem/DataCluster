@@ -89,7 +89,8 @@ enum QUO_MARKET_ID
 
 enum QUO_MARKET_STATUS											///< 市场状态
 {
-	QUO_STATUS_INIT = 0,										///< 初始化状态（初始化状态不能请求和推送任何数据，调用者应该等到初始化结束）
+	QUO_STATUS_NONE = 0,										///< 未知状态
+	QUO_STATUS_INIT,											///< 初始化状态（初始化状态不能请求和推送任何数据，调用者应该等到初始化结束）
 	QUO_STATUS_NORMAL,											///< 正常状态
 };
 

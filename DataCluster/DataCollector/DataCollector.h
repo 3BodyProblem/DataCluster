@@ -8,12 +8,14 @@
 #include "Interface.h"
 #include "../Infrastructure/Dll.h"
 #include "../Infrastructure/Lock.h"
+#include "../Protocal/DataCluster_Protocal.h"
 
 
 /**
  * @class				CollectorStatus
  * @brief				当前行情会话的状态
  * @detail				服务框架需要通过这个判断（组合初始化策略实例）来判断是否需要重新初始化等动作
+ * @note				状态变化的时候，会通知回调接口
  * @author				barry
  */
 class CollectorStatus
@@ -26,9 +28,15 @@ public:
 
 	bool					Set( enum E_SS_Status eNewStatus );
 
+	void					SetMkID( unsigned int nMkID );
+
+	unsigned int			GetMkID();
+
 private:
 	mutable CriticalObject	m_oCSLock;
+	enum QUO_MARKET_STATUS	m_eMkStatus;		///< 市场状态
 	enum E_SS_Status		m_eStatus;			///< 当前行情逻辑状态，用于判断当前该做什么操作了
+	unsigned int			m_nMarketID;		///< 数据采集器对应的市场ID
 };
 
 
@@ -96,12 +104,11 @@ public:///< 数据采集模块事件定义
 	 */
 	bool					IsAlive();
 
-private:
-	CollectorStatus			m_oCollectorStatus;				///< 数据采集模块的状态
-	unsigned int			m_nMarketID;					///< 数据采集器对应的市场ID
+protected:
 	bool					m_bActivated;					///< 是否已经激活
 	bool					m_bIsProxyPlugin;				///< 是否为传输代理插件
-private:
+	CollectorStatus			m_oCollectorStatus;				///< 数据采集模块的状态
+protected:
 	Dll						m_oDllPlugin;					///< 插件加载类
 	T_Func_Initialize		m_pFuncInitialize;				///< 数据采集器初始化接口
 	T_Func_Release			m_pFuncRelease;					///< 数据采集器释放接口

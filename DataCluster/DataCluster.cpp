@@ -195,12 +195,12 @@ extern "C"
 	{
 		if (!Global_bInit)
 		{
-			Global_bInit = true;
-
-			if( 0 != StartWork( &Global_CBAdaptor ) )
+			if( Global_Client.Init() < 0 )
 			{
 				return NULL;
 			}
+
+			Global_bInit = true;
 		}
 
 		return &Global_Client;
@@ -232,9 +232,9 @@ extern "C"
 
 /*	char			szDll[255];
 	int				nMarketID;
-	int				nSleep;
-	char			cMarketChn[64];
-	char			cAddress[128];*/
+	int				nSleep;*/
+//	char			cMarketChn[64];
+//	char			cAddress[128];
 		}
 
 /*

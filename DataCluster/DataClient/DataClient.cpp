@@ -2,7 +2,9 @@
 #include "../DataCluster.h"
 #include "../DataCenterEngine/DataCenterEngine.h"
 #include "../DataCluster.h"
-
+#include <math.h>
+#include <string>
+#include <algorithm>
 
 
 #define MAX_DATABUF_COUNT	81920000
@@ -284,6 +286,23 @@ MDataClient::~MDataClient()
 	}
 }
 
+int MDataClient::GetRate( int nMarketID, unsigned int nKind )
+{
+	T_KIND_MAP::iterator it = m_mapMarketKind.find( nMarketID );
+
+	if( it != m_mapMarketKind.end() )
+	{
+		if( it->second.size() <= nKind )
+		{
+			return -1;
+		}
+
+		return ::pow( (double)10, it->second[nKind].PriceRate );
+	}
+
+	return -2;
+}
+
 int STDCALL	MDataClient::Init()
 {
 	if( NULL == m_pQueryBuffer )
@@ -305,7 +324,6 @@ int STDCALL	MDataClient::Init()
 			return -2;
 		}
 
-		///< --------- build kind table ---------------
 		{///< 商品期货(上海/郑州/大连)
 		std::map<int,XDFAPI_MarketKindInfo>&	refKindTable = m_mapMarketKind[XDF_CNF];
 		strncpy( refKindTable[0].KindName, "指数保留", 8 );
@@ -384,11 +402,11 @@ int STDCALL	MDataClient::Init()
 		refKindTable[0].LotSize = 1;
 		refKindTable[0].Serial = refKindTable.size() - 1;
 		refKindTable[0].WareCount = 0;
-		strncpy( refKindTable[0].KindName, "国债期货", 8 );
-		refKindTable[0].PriceRate = 3;
-		refKindTable[0].LotSize = 1;
-		refKindTable[0].Serial = refKindTable.size() - 1;
-		refKindTable[0].WareCount = 0;
+		strncpy( refKindTable[1].KindName, "国债期货", 8 );
+		refKindTable[1].PriceRate = 3;
+		refKindTable[1].LotSize = 1;
+		refKindTable[1].Serial = refKindTable.size() - 1;
+		refKindTable[1].WareCount = 0;
 		}
 		{///< 中金期权
 		std::map<int,XDFAPI_MarketKindInfo>&	refKindTable = m_mapMarketKind[XDF_ZJOPT];
@@ -397,11 +415,213 @@ int STDCALL	MDataClient::Init()
 		refKindTable[0].LotSize = 1;
 		refKindTable[0].Serial = refKindTable.size() - 1;
 		refKindTable[0].WareCount = 0;
-		strncpy( refKindTable[0].KindName, "国债期权", 8 );
+		strncpy( refKindTable[1].KindName, "国债期权", 8 );
+		refKindTable[1].PriceRate = 3;
+		refKindTable[1].LotSize = 1;
+		refKindTable[1].Serial = refKindTable.size() - 1;
+		refKindTable[1].WareCount = 0;
+		}
+		{///< 上证期权
+		std::map<int,XDFAPI_MarketKindInfo>&	refKindTable = m_mapMarketKind[XDF_SHOPT];
+		strncpy( refKindTable[0].KindName, "保留指数", 8 );
 		refKindTable[0].PriceRate = 3;
 		refKindTable[0].LotSize = 1;
 		refKindTable[0].Serial = refKindTable.size() - 1;
 		refKindTable[0].WareCount = 0;
+		strncpy( refKindTable[1].KindName, "个股期权", 8 );
+		refKindTable[1].PriceRate = 3;
+		refKindTable[1].LotSize = 1;
+		refKindTable[1].Serial = refKindTable.size() - 1;
+		refKindTable[1].WareCount = 0;
+		strncpy( refKindTable[2].KindName, "ETF期权", 8 );
+		refKindTable[2].PriceRate = 4;
+		refKindTable[2].LotSize = 1;
+		refKindTable[2].Serial = refKindTable.size() - 1;
+		refKindTable[2].WareCount = 0;
+		}
+		{///< 深圳期权
+		std::map<int,XDFAPI_MarketKindInfo>&	refKindTable = m_mapMarketKind[XDF_SZOPT];
+		strncpy( refKindTable[0].KindName, "保留指数", 8 );
+		refKindTable[0].PriceRate = 3;
+		refKindTable[0].LotSize = 1;
+		refKindTable[0].Serial = refKindTable.size() - 1;
+		refKindTable[0].WareCount = 0;
+		strncpy( refKindTable[1].KindName, "个股期权", 8 );
+		refKindTable[1].PriceRate = 3;
+		refKindTable[1].LotSize = 1;
+		refKindTable[1].Serial = refKindTable.size() - 1;
+		refKindTable[1].WareCount = 0;
+		strncpy( refKindTable[2].KindName, "ETF期权", 8 );
+		refKindTable[2].PriceRate = 4;
+		refKindTable[2].LotSize = 1;
+		refKindTable[2].Serial = refKindTable.size() - 1;
+		refKindTable[2].WareCount = 0;
+		}
+		{///< 上证L1
+		std::map<int,XDFAPI_MarketKindInfo>&	refKindTable = m_mapMarketKind[XDF_SH];
+		strncpy( refKindTable[0].KindName, "上证指数", 8 );
+		refKindTable[0].PriceRate = 2;
+		refKindTable[0].LotSize = 1;
+		refKindTable[0].Serial = refKindTable.size() - 1;
+		refKindTable[0].WareCount = 0;
+		strncpy( refKindTable[1].KindName, "上证Ａ股 ", 8 );
+		refKindTable[1].PriceRate = 2;
+		refKindTable[1].LotSize = 100;
+		refKindTable[1].Serial = refKindTable.size() - 1;
+		refKindTable[1].WareCount = 0;
+		strncpy( refKindTable[2].KindName, "上证Ｂ股", 8 );
+		refKindTable[2].PriceRate = 3;
+		refKindTable[2].LotSize = 100;
+		refKindTable[2].Serial = refKindTable.size() - 1;
+		refKindTable[2].WareCount = 0;
+		strncpy( refKindTable[3].KindName, "上证基金", 8 );
+		refKindTable[3].PriceRate = 3;
+		refKindTable[3].LotSize = 100;
+		refKindTable[3].Serial = refKindTable.size() - 1;
+		refKindTable[3].WareCount = 0;
+		strncpy( refKindTable[4].KindName, "上证债券", 8 );
+		refKindTable[4].PriceRate = 2;
+		refKindTable[4].LotSize = 10;
+		refKindTable[4].Serial = refKindTable.size() - 1;
+		refKindTable[4].WareCount = 0;
+		strncpy( refKindTable[5].KindName, "上证转债", 8 );
+		refKindTable[5].PriceRate = 2;
+		refKindTable[5].LotSize = 10;
+		refKindTable[5].Serial = refKindTable.size() - 1;
+		refKindTable[5].WareCount = 0;
+		strncpy( refKindTable[6].KindName, "上证回购", 8 );
+		refKindTable[6].PriceRate = 3;
+		refKindTable[6].LotSize = 100;
+		refKindTable[6].Serial = refKindTable.size() - 1;
+		refKindTable[6].WareCount = 0;
+		strncpy( refKindTable[7].KindName, "上证ETF", 8 );
+		refKindTable[7].PriceRate = 3;
+		refKindTable[7].LotSize = 100;
+		refKindTable[7].Serial = refKindTable.size() - 1;
+		refKindTable[7].WareCount = 0;
+		strncpy( refKindTable[8].KindName, "基金通", 8 );
+		refKindTable[8].PriceRate = 4;
+		refKindTable[8].LotSize = 100;
+		refKindTable[8].Serial = refKindTable.size() - 1;
+		refKindTable[8].WareCount = 0;
+		strncpy( refKindTable[9].KindName, "上证权证", 8 );
+		refKindTable[9].PriceRate = 3;
+		refKindTable[9].LotSize = 100;
+		refKindTable[9].Serial = refKindTable.size() - 1;
+		refKindTable[9].WareCount = 0;
+		strncpy( refKindTable[10].KindName, "上证其它", 8 );
+		refKindTable[10].PriceRate = 3;
+		refKindTable[10].LotSize = 100;
+		refKindTable[10].Serial = refKindTable.size() - 1;
+		refKindTable[10].WareCount = 0;
+		strncpy( refKindTable[11].KindName, "开放基金", 8 );
+		refKindTable[11].PriceRate = 4;
+		refKindTable[11].LotSize = 100;
+		refKindTable[11].Serial = refKindTable.size() - 1;
+		refKindTable[11].WareCount = 0;
+		strncpy( refKindTable[12].KindName, "风险警示", 8 );
+		refKindTable[12].PriceRate = 3;
+		refKindTable[12].LotSize = 100;
+		refKindTable[12].Serial = refKindTable.size() - 1;
+		refKindTable[12].WareCount = 0;
+		strncpy( refKindTable[13].KindName, "上证退市", 8 );
+		refKindTable[13].PriceRate = 3;
+		refKindTable[13].LotSize = 100;
+		refKindTable[13].Serial = refKindTable.size() - 1;
+		refKindTable[13].WareCount = 0;
+		strncpy( refKindTable[14].KindName, "附加指数", 8 );
+		refKindTable[14].PriceRate = 2;
+		refKindTable[14].LotSize = 100;
+		refKindTable[14].Serial = refKindTable.size() - 1;
+		refKindTable[14].WareCount = 0;
+		}
+		{///< 深证L1
+		std::map<int,XDFAPI_MarketKindInfo>&	refKindTable = m_mapMarketKind[XDF_SZ];
+		strncpy( refKindTable[0].KindName, "深证指数", 8 );
+		refKindTable[0].PriceRate = 2;
+		refKindTable[0].LotSize = 1;
+		refKindTable[0].Serial = refKindTable.size() - 1;
+		refKindTable[0].WareCount = 0;
+		strncpy( refKindTable[1].KindName, "深证Ａ股 ", 8 );
+		refKindTable[1].PriceRate = 2;
+		refKindTable[1].LotSize = 100;
+		refKindTable[1].Serial = refKindTable.size() - 1;
+		refKindTable[1].WareCount = 0;
+		strncpy( refKindTable[2].KindName, "深证Ｂ股", 8 );
+		refKindTable[2].PriceRate = 2;
+		refKindTable[2].LotSize = 100;
+		refKindTable[2].Serial = refKindTable.size() - 1;
+		refKindTable[2].WareCount = 0;
+		strncpy( refKindTable[3].KindName, "深证基金", 8 );
+		refKindTable[3].PriceRate = 3;
+		refKindTable[3].LotSize = 100;
+		refKindTable[3].Serial = refKindTable.size() - 1;
+		refKindTable[3].WareCount = 0;
+		strncpy( refKindTable[4].KindName, "深证债券", 8 );
+		refKindTable[4].PriceRate = 3;
+		refKindTable[4].LotSize = 10;
+		refKindTable[4].Serial = refKindTable.size() - 1;
+		refKindTable[4].WareCount = 0;
+		strncpy( refKindTable[5].KindName, "深证转债", 8 );
+		refKindTable[5].PriceRate = 3;
+		refKindTable[5].LotSize = 10;
+		refKindTable[5].Serial = refKindTable.size() - 1;
+		refKindTable[5].WareCount = 0;
+		strncpy( refKindTable[6].KindName, "深证回购", 8 );
+		refKindTable[6].PriceRate = 3;
+		refKindTable[6].LotSize = 10;
+		refKindTable[6].Serial = refKindTable.size() - 1;
+		refKindTable[6].WareCount = 0;
+		strncpy( refKindTable[7].KindName, "深证ETF", 8 );
+		refKindTable[7].PriceRate = 3;
+		refKindTable[7].LotSize = 100;
+		refKindTable[7].Serial = refKindTable.size() - 1;
+		refKindTable[7].WareCount = 0;
+		strncpy( refKindTable[8].KindName, "中小板块", 8 );
+		refKindTable[8].PriceRate = 2;
+		refKindTable[8].LotSize = 100;
+		refKindTable[8].Serial = refKindTable.size() - 1;
+		refKindTable[8].WareCount = 0;
+		strncpy( refKindTable[9].KindName, "创业板块", 8 );
+		refKindTable[9].PriceRate = 2;
+		refKindTable[9].LotSize = 100;
+		refKindTable[9].Serial = refKindTable.size() - 1;
+		refKindTable[9].WareCount = 0;
+		strncpy( refKindTable[10].KindName, "Ｂ转Ｈ股", 8 );
+		refKindTable[10].PriceRate = 3;
+		refKindTable[10].LotSize = 1;
+		refKindTable[10].Serial = refKindTable.size() - 1;
+		refKindTable[10].WareCount = 0;
+		strncpy( refKindTable[11].KindName, "股份转让", 8 );
+		refKindTable[11].PriceRate = 3;
+		refKindTable[11].LotSize = 100;
+		refKindTable[11].Serial = refKindTable.size() - 1;
+		refKindTable[11].WareCount = 0;
+		strncpy( refKindTable[12].KindName, "深证优先", 8 );
+		refKindTable[12].PriceRate = 3;
+		refKindTable[12].LotSize = 100;
+		refKindTable[12].Serial = refKindTable.size() - 1;
+		refKindTable[12].WareCount = 0;
+		strncpy( refKindTable[13].KindName, "LOF基金", 8 );
+		refKindTable[13].PriceRate = 3;
+		refKindTable[13].LotSize = 100;
+		refKindTable[13].Serial = refKindTable.size() - 1;
+		refKindTable[13].WareCount = 0;
+		strncpy( refKindTable[14].KindName, "非LOF", 8 );
+		refKindTable[14].PriceRate = 3;
+		refKindTable[14].LotSize = 100;
+		refKindTable[14].Serial = refKindTable.size() - 1;
+		refKindTable[14].WareCount = 0;
+		strncpy( refKindTable[13].KindName, "深证其它", 8 );
+		refKindTable[13].PriceRate = 3;
+		refKindTable[13].LotSize = 100;
+		refKindTable[13].Serial = refKindTable.size() - 1;
+		refKindTable[13].WareCount = 0;
+		strncpy( refKindTable[14].KindName, "深证退市", 8 );
+		refKindTable[14].PriceRate = 2;
+		refKindTable[14].LotSize = 100;
+		refKindTable[14].Serial = refKindTable.size() - 1;
+		refKindTable[14].WareCount = 0;
 		}
 	}
 
@@ -475,6 +695,219 @@ int	 STDCALL		MDataClient::GetMarketInfo( unsigned char cMarket, char* pszInBuf,
 
 	return oMSW.GetOffset();
 }
+
+int CastKindID4SHL1( char* pszCode )
+{
+	if( (pszCode[0] == '0' && pszCode[1] == '0' && pszCode[2] == '0') || pszCode[3] == '0' || pszCode[3] == '1' || pszCode[3] == '2' || pszCode[3] == '3' || pszCode[3] == '4' || pszCode[3] == '7' || pszCode[3] == '8' || pszCode[9] == '9' )
+		return 0;	///< 上证指数 
+
+	if( pszCode[0] == '6' )
+		return 1;	///< 上证Ａ股 
+
+	if( pszCode[0] == '9' && pszCode[1] == '0' )
+		return 2;	///< 上证Ｂ股
+
+	if( pszCode[0] == '5' && pszCode[1] == '0' )
+		return 3;	///< 上证基金 
+
+	if( (pszCode[0] == '0' && (pszCode[1] == '0' || pszCode[1] == '1' || pszCode[1] == '2' )) || (pszCode[0] == '1' && pszCode[1] == '2') || (pszCode[0] == '1' && pszCode[1] == '3' && (pszCode[2] == '0' || pszCode[2] == '5' || pszCode[2] == '6')) )
+		return 4;	///< 上证债券
+
+	if( pszCode[0] == '1' && (pszCode[1] == '0' || pszCode[1] == '1' || (pszCode[1] == '0' && pszCode[2] == '5')) )
+		return 5;	///< 上证转债	
+
+	if( (pszCode[0] == '2' && pszCode[1] == '0' && (pszCode[2] == '1' || pszCode[2] == '2' || pszCode[2] == '3' || pszCode[2] == '4')) || (pszCode[0] == '1' && pszCode[1] == '0' && pszCode[2] == '6') )
+		return 6;	///< 上证回购
+
+	if( pszCode[0] == '5' && pszCode[1] == '1' && (pszCode[2] == '0' || pszCode[2] == '1' || pszCode[2] == '2' || pszCode[2] == '3' || pszCode[2] == '8') )
+		return 7;	///< 上证ETF
+
+	if( (pszCode[0] == '5' && pszCode[1] == '1' && pszCode[2] == '9') || (pszCode[0] == '5' && pszCode[1] == '2' && pszCode[2] == '1') || (pszCode[0] == '5' && pszCode[1] == '2' && pszCode[2] == '2') || (pszCode[0] == '5' && pszCode[1] == '2' && pszCode[2] == '3') )
+		return 8;	///< 基金通
+
+	if( pszCode[0] == '5' && pszCode[1] == '8' )
+		return 9;	///< 上证权证
+
+	return 10;	///< 上证其它
+}
+
+int CastKindID4SZL1( const char* pszCode )
+{
+	if( pszCode[0]=='3' && pszCode[1]=='9' && pszCode[2]=='9' )
+	{
+		return 0;	///< 指数
+	}
+	else if( pszCode[0]=='0' && pszCode[1]=='0' && pszCode[2] == '2' )
+	{
+		return 8;	///< 中小板块
+	}
+	else if( pszCode[0]=='0' && pszCode[1]=='0' && pszCode[2] == '3' )
+	{
+		return 8;	///< 中小板块
+	}
+	else if( pszCode[0]=='0' && pszCode[1]=='0' && pszCode[2] == '4' )
+	{
+		return 8;	///< 中小板块
+	}
+	else if( pszCode[0]=='0' && pszCode[1]=='0' && (pszCode[2]=='0' || pszCode[2]=='1' || pszCode[2]=='5' || pszCode[2]=='6' || pszCode[2]=='7' || pszCode[2]=='8' || pszCode[2]=='9') )
+	{
+		return 1;	///< A股
+	}
+	else if( pszCode[0]=='2' && pszCode[1]=='0' )
+	{
+		return 2;	///< B股
+	}
+	else if( pszCode[0]=='1' && pszCode[1]=='5' && pszCode[2]=='1' )
+	{
+		return 3;	///< 基金
+	}
+	else if( pszCode[0]=='1' && pszCode[1]=='7' )
+	{
+		return 3;	///< 基金
+	}
+	else if( pszCode[0]=='1' && pszCode[1]=='8' )
+	{
+		return 3;	///< 基金
+	}
+	else if( pszCode[0]=='1' && pszCode[1]=='0' )
+	{
+		return 4;	///< 债券
+	}
+	else if( pszCode[0]=='1' && pszCode[1]=='1' )
+	{
+		return 4;	///< 债券
+	}
+	else if( pszCode[0]=='1' && pszCode[1]=='2' )
+	{
+		return 5;	///< 转债
+	}
+	else if( pszCode[0]=='1' && pszCode[1]=='3' )										///< 国债回购
+	{
+		return 6;	///< 回购
+	}
+	else if( pszCode[0]=='1' && pszCode[1]=='5' && pszCode[2]=='9' && pszCode[3]=='9' )		///< ETF
+	{
+		return 7;	///< ETF
+	}
+	else if( pszCode[0]=='2' && pszCode[1]=='9' )										///< B股转H股
+	{
+		return 10;	///< B转H股
+	}
+	else if( pszCode[0]=='3' && pszCode[1]=='0' )										///< 创业板块
+	{
+		return 9;	///< 创业板块
+	}
+	else if( pszCode[0]=='1' && pszCode[1]=='5' )
+	{
+		return 11;	///< LOF基金
+	}
+	else if( pszCode[0]=='1' && pszCode[1]=='6' )
+	{
+		return 11;	///< LOF基金
+	}
+/*	else if( Code[0]=='3' && Code[1]=='7' )										///< 创业板增发
+	{
+		return 9;	///< 创业板块
+	}
+	else if( Code[0]=='3' && Code[1]=='8' )										///< 创业板权证
+	{
+		return 9;	///< 创业板块
+	}*/
+	else
+	{
+		return 13;	///< 其它
+	}
+}
+
+int	CastKindID4CFF( char* pszCode )
+{
+	if( pszCode[0] == 'T' || pszCode[1] == 'F' )
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+int	CastKindID4CFFOPT( char* pszCode )
+{
+	if( pszCode[0] == 'T' || pszCode[1] == 'F' )
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+int	CastKindID4CNF( unsigned int nMkID, char* pszCode )
+{
+	if( nMkID == QUO_MARKET_CZCE )
+	{
+		return 4;
+	}
+	else if( nMkID == QUO_MARKET_DCE )
+	{
+		return 5;
+	}
+	else if( nMkID == QUO_MARKET_SHFE )
+	{
+		return 6;
+	}
+	else
+	{
+		return 7;
+	}
+}
+
+int CastKindID4SHOPT( char* pszCode )
+{
+	if( ::memcmp( pszCode, "1000", 4 ) == 0 )
+	{
+		return 2;
+	}
+	else
+	{
+		return 1;
+	}
+}
+
+int CastKindID4SZOPT( char* pszCode )
+{
+	if( ::memcmp( pszCode, "9000", 4 ) == 0 )
+	{
+		return 2;
+	}
+	else
+	{
+		return 1;
+	}
+}
+
+int	CastKindID4CNFOPT( unsigned int nMkID, char* pszCode )
+{
+	if( nMkID == QUO_MARKET_CZCEOPT )
+	{
+		return 1;
+	}
+	else if( nMkID == QUO_MARKET_DCEOPT )
+	{
+		return 2;
+	}
+	else if( nMkID == QUO_MARKET_SHFEOPT )
+	{
+		return 3;
+	}
+
+	return 0;
+}
+
+
+T_KIND_MAP		MDataClient::m_mapMarketKind;
+
 
 int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, int nInBytes, int& nCount )
 {
@@ -571,16 +1004,23 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 				tagShL1Name.Market = XDF_SH;
 				memcpy( tagShL1Name.Code, pRefData->szCode, 6 );
 				memcpy( tagShL1Name.Name, pRefData->szName, 8 );
-				tagShL1Name.SecKind = pRefData->uiKindID;
+				if( XDF_SZ == cMarket )
+				{
+					tagShL1Name.SecKind = CastKindID4SZL1( pRefData->szCode );
+				}
+				else
+				{
+					tagShL1Name.SecKind = CastKindID4SHL1( pRefData->szCode );
+				}
 			}
 			else if( XDF_CF == cMarket )//中金期货
 			{
 				pRefData = (tagQUO_ReferenceData*)(m_pQueryBuffer + nOffset);
 
 				pData = (char*)&tagZJQHName;
+				tagCnfName.SecKind = CastKindID4CFF( pRefData->szCode );
 				tagZJQHName.Market = XDF_CF;
 				memcpy( tagZJQHName.Code, pRefData->szCode, 6 );
-				tagZJQHName.SecKind = pRefData->uiKindID;
 				tagZJQHName.ContractMult = tagMkInfo.mKindRecord[pRefData->uiKindID].uiContractMult;	///< 合约乘数
 				//tagZJQHName.ExFlag = pRefData->ExFlag;			///< 最后交易日标记,0x01表示是最后交易日只对普通合约有效；其他值暂未定义
 				strncpy(tagZJQHName.Name, pRefData->szName, 8);
@@ -593,7 +1033,7 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 
 				pData = (char*)&tagCnfName;
 				tagCnfName.Market = XDF_CNF;
-				tagCnfName.SecKind = pRefData->uiKindID;
+				tagCnfName.SecKind = CastKindID4CNF( nInnerMkID, NULL );
 				memcpy( tagCnfName.Code,pRefData->szCode, 20 );
 				memcpy( tagCnfName.Name, pRefData->szName, 40 );
 				tagCnfName.LotFactor = tagMkInfo.mKindRecord[pRefData->uiKindID].uiLotFactor;
@@ -606,7 +1046,7 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 				tagSHOPTName.Market = XDF_SHOPT;
 				memcpy(tagSHOPTName.Code, pRefData->szCode, 8);
 				memcpy(tagSHOPTName.Name, pRefData->szName,20);
-				tagSHOPTName.SecKind = pRefData->uiKindID;
+				tagSHOPTName.SecKind = CastKindID4SHOPT( pRefData->szCode );
 				memcpy(tagSHOPTName.ContractID, pRefData->szContractID, 19);
 				tagSHOPTName.OptionType = tagMkInfo.mKindRecord[pRefData->uiKindID].cOptionType;
 				tagSHOPTName.CallOrPut = pRefData->cCallOrPut;
@@ -623,7 +1063,7 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 				//tagSHOPTName.DownLimit;//当日期权跌停价格(精确到厘) //[*放大倍数]
 				tagSHOPTName.LotSize = tagMkInfo.mKindRecord[pRefData->uiKindID].uiLotSize;//一手等于几张合约
 				tagSHOPTName.ContractUnit = tagMkInfo.mKindRecord[pRefData->uiKindID].uiContractUnit;//合约单位(经过除权除息调整后的合约单位，一定为整数)
-				tagSHOPTName.XqPrice = pRefData->dExercisePrice;//行权价格(精确到厘) //[*放大倍数] 
+				tagSHOPTName.XqPrice = pRefData->dExercisePrice * GetRate( XDF_SHOPT, tagSHOPTName.SecKind ) + 0.5;//行权价格(精确到厘) //[*放大倍数] 
 				tagSHOPTName.StartDate = pRefData->uiStartDate;//首个交易日(YYYYMMDD)
 				tagSHOPTName.EndDate = pRefData->uiEndDate;//最后交易日(YYYYMMDD)
 				tagSHOPTName.XqDate = pRefData->uiExerciseDate;//行权日(YYYYMMDD)
@@ -648,7 +1088,7 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 				pData = (char*)&tagZJOPTName;
 				tagZJOPTName.Market = XDF_ZJOPT;
 				memcpy(tagZJOPTName.Code, pRefData->szCode, 32);
-				tagZJOPTName.SecKind = pRefData->uiKindID;
+				tagZJOPTName.SecKind = CastKindID4CFFOPT( pRefData->szCode );
 				tagZJOPTName.ContractMult = tagMkInfo.mKindRecord[pRefData->uiKindID].uiContractMult;	//合约乘数
 				tagZJOPTName.ContractUnit = tagMkInfo.mKindRecord[pRefData->uiKindID].uiContractUnit;	//合约单位
 				tagZJOPTName.StartDate = pRefData->uiStartDate;		//首个交易日(YYYYMMDD)
@@ -665,26 +1105,26 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 
 				pData = (char*)&tagSZOPTName;
 				tagSZOPTName.Market = XDF_SZOPT;
-				tagSZOPTName.SecKind = pRefData->uiKindID;
+				tagSZOPTName.SecKind = CastKindID4SZOPT( pRefData->szCode );
 				memcpy(tagSZOPTName.Code, pRefData->szCode, 8);
 				memcpy(tagSZOPTName.Name, pRefData->szName,20);
 				memcpy(tagSZOPTName.ContractID, tagMkInfo.mKindRecord[pRefData->uiKindID].szUnderlyingCode, 20);
-				tagSHOPTName.OptionType = tagMkInfo.mKindRecord[pRefData->uiKindID].cOptionType;
-				tagSHOPTName.CallOrPut = pRefData->cCallOrPut;
-				//tagSHOPTName.PreClosePx = pRefData->C;//合约昨收(如遇除权除息则为调整后的收盘价格)(精确到厘)//[*放大倍数]
-				//tagSHOPTName.PreSettlePx = pRefData->;//合约昨结//[*放大倍数]
-				//tagSHOPTName.LeavesQty = pRefData->;//未平仓合约数 = 昨持仓 单位是(张)
-				memcpy(tagSHOPTName.UnderlyingCode, tagMkInfo.mKindRecord[pRefData->uiKindID].szUnderlyingCode, 6);
-				//tagSHOPTName.UpLimit = pRefData->;//当日期权涨停价格(精确到厘) //[*放大倍数]
-				//tagSHOPTName.DownLimit;//当日期权跌停价格(精确到厘) //[*放大倍数]
-				tagSHOPTName.LotSize = tagMkInfo.mKindRecord[pRefData->uiKindID].uiLotSize;//一手等于几张合约
-				tagSHOPTName.ContractUnit = tagMkInfo.mKindRecord[pRefData->uiKindID].uiContractUnit;//合约单位(经过除权除息调整后的合约单位，一定为整数)
-				tagSHOPTName.XqPrice = pRefData->dExercisePrice;//行权价格(精确到厘) //[*放大倍数] 
-				tagSHOPTName.StartDate = pRefData->uiStartDate;//首个交易日(YYYYMMDD)
-				tagSHOPTName.EndDate = pRefData->uiEndDate;//最后交易日(YYYYMMDD)
-				tagSHOPTName.XqDate = pRefData->uiExerciseDate;//行权日(YYYYMMDD)
-				tagSHOPTName.DeliveryDate = pRefData->uiDeliveryDate;//交割日(YYYYMMDD)
-				tagSHOPTName.ExpireDate = pRefData->uiExpireDate;//到期日(YYYYMMDD)
+				tagSZOPTName.OptionType = tagMkInfo.mKindRecord[pRefData->uiKindID].cOptionType;
+				tagSZOPTName.CallOrPut = pRefData->cCallOrPut;
+				//tagSZOPTName.PreClosePx = pRefData->C;//合约昨收(如遇除权除息则为调整后的收盘价格)(精确到厘)//[*放大倍数]
+				//tagSZOPTName.PreSettlePx = pRefData->;//合约昨结//[*放大倍数]
+				//tagSZOPTName.LeavesQty = pRefData->;//未平仓合约数 = 昨持仓 单位是(张)
+				memcpy(tagSZOPTName.UnderlyingCode, tagMkInfo.mKindRecord[pRefData->uiKindID].szUnderlyingCode, 6);
+				//tagSZOPTName.UpLimit = pRefData->;//当日期权涨停价格(精确到厘) //[*放大倍数]
+				//tagSZOPTName.DownLimit;//当日期权跌停价格(精确到厘) //[*放大倍数]
+				tagSZOPTName.LotSize = tagMkInfo.mKindRecord[pRefData->uiKindID].uiLotSize;//一手等于几张合约
+				tagSZOPTName.ContractUnit = tagMkInfo.mKindRecord[pRefData->uiKindID].uiContractUnit;//合约单位(经过除权除息调整后的合约单位，一定为整数)
+				tagSZOPTName.XqPrice = pRefData->dExercisePrice * GetRate( XDF_SZOPT, tagSZOPTName.SecKind ) + 0.5;//行权价格(精确到厘) //[*放大倍数] 
+				tagSZOPTName.StartDate = pRefData->uiStartDate;//首个交易日(YYYYMMDD)
+				tagSZOPTName.EndDate = pRefData->uiEndDate;//最后交易日(YYYYMMDD)
+				tagSZOPTName.XqDate = pRefData->uiExerciseDate;//行权日(YYYYMMDD)
+				tagSZOPTName.DeliveryDate = pRefData->uiDeliveryDate;//交割日(YYYYMMDD)
+				tagSZOPTName.ExpireDate = pRefData->uiExpireDate;//到期日(YYYYMMDD)
 				//tagSHOPTName.MarginUnit = pNameTb->MarginUnit;//单位保证金(精确到分)//[*放大100]
 			}
 			else if( XDF_CNFOPT == cMarket )//商品期货和商品期权(上海/郑州/大连)
@@ -693,22 +1133,22 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 
 				pData = (char*)&tagCnfOPTName;
 				tagCnfOPTName.Market = XDF_CNFOPT;
-				tagCnfOPTName.SecKind = pRefData->uiKindID;
+				tagCnfOPTName.SecKind = CastKindID4CNFOPT( nInnerMkID, NULL );
 				memcpy(tagCnfOPTName.Code,pRefData->szCode, 20);
 				memcpy(tagCnfOPTName.Name, pRefData->szName, 40);
 				tagCnfOPTName.LotFactor = tagMkInfo.mKindRecord[pRefData->uiKindID].uiLotFactor;
-				//tagSHOPTName.LeavesQty = pRefData->;//未平仓合约数 = 昨持仓 单位是(张)
-				memcpy(tagSHOPTName.UnderlyingCode, tagMkInfo.mKindRecord[pRefData->uiKindID].szUnderlyingCode, 6);
+				//tagCnfOPTName.LeavesQty = pRefData->;//未平仓合约数 = 昨持仓 单位是(张)
+				memcpy(tagCnfOPTName.UnderlyingCode, tagMkInfo.mKindRecord[pRefData->uiKindID].szUnderlyingCode, 6);
 				//pTable->PriceLimitType = pNameTb->PriceLimitType;
-				//tagSHOPTName.UpLimit = pRefData->;//当日期权涨停价格(精确到厘) //[*放大倍数]
-				//tagSHOPTName.DownLimit;//当日期权跌停价格(精确到厘) //[*放大倍数]
-				tagSHOPTName.LotSize = tagMkInfo.mKindRecord[pRefData->uiKindID].uiLotSize;//一手等于几张合约
-				tagSHOPTName.ContractUnit = tagMkInfo.mKindRecord[pRefData->uiKindID].uiContractUnit;//合约单位(经过除权除息调整后的合约单位，一定为整数)
-				tagSHOPTName.XqPrice = pRefData->dExercisePrice;//行权价格(精确到厘) //[*放大倍数] 
-				tagSHOPTName.StartDate = pRefData->uiStartDate;//首个交易日(YYYYMMDD)
-				tagSHOPTName.EndDate = pRefData->uiEndDate;//最后交易日(YYYYMMDD)
-				tagSHOPTName.XqDate = pRefData->uiExerciseDate;//行权日(YYYYMMDD)
-				tagSHOPTName.DeliveryDate = pRefData->uiDeliveryDate;//交割日(YYYYMMDD)
+				//tagCnfOPTName.UpLimit = pRefData->;//当日期权涨停价格(精确到厘) //[*放大倍数]
+				//tagCnfOPTName.DownLimit;//当日期权跌停价格(精确到厘) //[*放大倍数]
+				tagCnfOPTName.LotSize = tagMkInfo.mKindRecord[pRefData->uiKindID].uiLotSize;//一手等于几张合约
+				tagCnfOPTName.ContractMult = tagMkInfo.mKindRecord[pRefData->uiKindID].uiContractMult;//合约单位(经过除权除息调整后的合约单位，一定为整数)
+				tagCnfOPTName.XqPrice = pRefData->dExercisePrice * GetRate( XDF_CNFOPT, tagCnfOPTName.SecKind ) + 0.5;//行权价格(精确到厘) //[*放大倍数] 
+				tagCnfOPTName.StartDate = pRefData->uiStartDate;//首个交易日(YYYYMMDD)
+				tagCnfOPTName.EndDate = pRefData->uiEndDate;//最后交易日(YYYYMMDD)
+				tagCnfOPTName.XqDate = pRefData->uiExerciseDate;//行权日(YYYYMMDD)
+				tagCnfOPTName.DeliveryDate = pRefData->uiDeliveryDate;//交割日(YYYYMMDD)
 	//			tagSHOPTName.TypePeriodIndx = pNameTb->TypePeriodIndx;
 	//			tagSHOPTName.EarlyNightFlag = pNameTb->EarlyNightFlag;
 			}
@@ -827,11 +1267,20 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 				pData = (char*)&tagSHL1Stock;
 
 				memcpy(tagSHL1Stock.Code, pSnapData->szCode,6);
-				tagSHL1Stock.High = pSnapData->dHighPx;
-				tagSHL1Stock.Open = pSnapData->dOpenPx;
-				tagSHL1Stock.Low = pSnapData->dLowPx;
-				tagSHL1Stock.PreClose = pSnapData->dPreClosePx;
-				tagSHL1Stock.Now = pSnapData->dNowPx;
+				int		nKind = 0;
+				if( XDF_SH == cMarket )
+				{
+					nKind = CastKindID4SHL1( tagSHL1Stock.Code );
+				}
+				else
+				{
+					nKind = CastKindID4SZL1( tagSHL1Stock.Code );
+				}
+				tagSHL1Stock.High = pSnapData->dHighPx * GetRate( cMarket, nKind  ) + 0.5;
+				tagSHL1Stock.Open = pSnapData->dOpenPx * GetRate( cMarket, nKind  ) + 0.5;
+				tagSHL1Stock.Low = pSnapData->dLowPx * GetRate( cMarket, nKind  ) + 0.5;
+				tagSHL1Stock.PreClose = pSnapData->dPreClosePx * GetRate( cMarket, nKind  ) + 0.5;
+				tagSHL1Stock.Now = pSnapData->dNowPx * GetRate( cMarket, nKind  ) + 0.5;
 				tagSHL1Stock.Amount = pSnapData->dAmount;
 				tagSHL1Stock.Volume = pSnapData->ui64Volume;
 				//tagSHL1Stock.Records = pSnapData->Records;
@@ -841,9 +1290,9 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 
 				for (int i=0; i<5; i++)
 				{
-					tagSHL1Stock.Buy[i].Price = pSnapData->mBid[i].dVPrice;
+					tagSHL1Stock.Buy[i].Price = pSnapData->mBid[i].dVPrice * GetRate( cMarket, nKind  ) + 0.5;
 					tagSHL1Stock.Buy[i].Volume = pSnapData->mBid[i].ui64Volume;
-					tagSHL1Stock.Sell[i].Price = pSnapData->mAsk[i].dVPrice;
+					tagSHL1Stock.Sell[i].Price = pSnapData->mAsk[i].dVPrice * GetRate( cMarket, nKind  ) + 0.5;
 					tagSHL1Stock.Sell[i].Volume = pSnapData->mAsk[i].ui64Volume;
 				}
 			}
@@ -854,16 +1303,17 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 
 				//tagCFFStock.DataTimeStamp = pSnapData->DataTimeStamp;
 				memcpy(tagCFFStock.Code, pSnapData->szCode,6);
-				tagCFFStock.High = pSnapData->dHighPx;						//最高价格[* 放大倍数]
-				tagCFFStock.Open = pSnapData->dOpenPx;						//开盘价格[* 放大倍数]
-				tagCFFStock.Low = pSnapData->dLowPx;						//最低价格[* 放大倍数]
-				tagCFFStock.PreClose = pSnapData->dPreClosePx;				//昨收价格[* 放大倍数]
-				tagCFFStock.PreSettlePrice = pSnapData->dPreSettlePx;	//昨日结算价格[* 放大倍数]
-				tagCFFStock.Now = pSnapData->dNowPx;                    //最新价格[* 放大倍数]
-				tagCFFStock.Close = pSnapData->dClosePx;                  //今日收盘价格[* 放大倍数]
-				tagCFFStock.SettlePrice	= pSnapData->dSettlePx;      //今日结算价格[* 放大倍数]
-				tagCFFStock.UpperPrice = pSnapData->dUpperLimitPx;         //涨停价格[* 放大倍数]
-				tagCFFStock.LowerPrice = pSnapData->dLowerLimitPx;         //跌停价格[* 放大倍数]
+				int		nKind = CastKindID4CFF( tagCFFStock.Code );
+				tagCFFStock.High = pSnapData->dHighPx * GetRate( cMarket, nKind  ) + 0.5;						//最高价格[* 放大倍数]
+				tagCFFStock.Open = pSnapData->dOpenPx * GetRate( cMarket, nKind  ) + 0.5;						//开盘价格[* 放大倍数]
+				tagCFFStock.Low = pSnapData->dLowPx * GetRate( cMarket, nKind  ) + 0.5;						//最低价格[* 放大倍数]
+				tagCFFStock.PreClose = pSnapData->dPreClosePx * GetRate( cMarket, nKind  ) + 0.5;				//昨收价格[* 放大倍数]
+				tagCFFStock.PreSettlePrice = pSnapData->dPreSettlePx * GetRate( cMarket, nKind  ) + 0.5;	//昨日结算价格[* 放大倍数]
+				tagCFFStock.Now = pSnapData->dNowPx * GetRate( cMarket, nKind  ) + 0.5;                    //最新价格[* 放大倍数]
+				tagCFFStock.Close = pSnapData->dClosePx * GetRate( cMarket, nKind  ) + 0.5;                  //今日收盘价格[* 放大倍数]
+				tagCFFStock.SettlePrice	= pSnapData->dSettlePx * GetRate( cMarket, nKind  ) + 0.5;      //今日结算价格[* 放大倍数]
+				tagCFFStock.UpperPrice = pSnapData->dUpperLimitPx * GetRate( cMarket, nKind  ) + 0.5;         //涨停价格[* 放大倍数]
+				tagCFFStock.LowerPrice = pSnapData->dLowerLimitPx * GetRate( cMarket, nKind  ) + 0.5;         //跌停价格[* 放大倍数]
 				tagCFFStock.Amount = pSnapData->dAmount;             //总成交金额[元]
 				tagCFFStock.Volume = pSnapData->ui64Volume;             //总成交量[股]
 				tagCFFStock.PreOpenInterest = pSnapData->ui64PreOpenInterest; //昨日持仓量[股]
@@ -871,9 +1321,9 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 
 				for (int i=0; i<5; i++)
 				{
-					tagCFFStock.Buy[i].Price = pSnapData->mBid[i].dVPrice;
+					tagCFFStock.Buy[i].Price = pSnapData->mBid[i].dVPrice * GetRate( cMarket, nKind  ) + 0.5;
 					tagCFFStock.Buy[i].Volume = pSnapData->mBid[i].ui64Volume;
-					tagCFFStock.Sell[i].Price = pSnapData->mAsk[i].dVPrice;
+					tagCFFStock.Sell[i].Price = pSnapData->mAsk[i].dVPrice * GetRate( cMarket, nKind  ) + 0.5;
 					tagCFFStock.Sell[i].Volume = pSnapData->mAsk[i].ui64Volume;
 				}
 			}
@@ -885,16 +1335,17 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 				//tagCNFStock.Date = pSnapData->Date;
 				//tagCNFStock.DataTimeStamp = pSnapData->DataTimeStamp;
 				memcpy(tagCNFStock.Code, pSnapData->szCode,20);
-				tagCNFStock.High = pSnapData->dHighPx;						//最高价格[* 放大倍数]
-				tagCNFStock.Open = pSnapData->dOpenPx;						//开盘价格[* 放大倍数]
-				tagCNFStock.Low = pSnapData->dLowPx;						//最低价格[* 放大倍数]
-				tagCNFStock.PreClose = pSnapData->dPreClosePx;				//昨收价格[* 放大倍数]
-				tagCNFStock.PreSettlePrice = pSnapData->dPreSettlePx;	//昨日结算价格[* 放大倍数]
-				tagCNFStock.Now = pSnapData->dNowPx;                    //最新价格[* 放大倍数]
-				tagCNFStock.Close = pSnapData->dClosePx;                  //今日收盘价格[* 放大倍数]
-				tagCNFStock.SettlePrice	 = pSnapData->dSettlePx;        //今日结算价格[* 放大倍数]
-				tagCNFStock.UpperPrice	 = pSnapData->dUpperLimitPx;         //涨停价格[* 放大倍数]
-				tagCNFStock.LowerPrice	 = pSnapData->dLowerLimitPx;         //跌停价格[* 放大倍数]
+				int		nKind = CastKindID4CNF( nInnerMkID, tagCNFStock.Code );
+				tagCNFStock.High = pSnapData->dHighPx * GetRate( cMarket, nKind  ) + 0.5;						//最高价格[* 放大倍数]
+				tagCNFStock.Open = pSnapData->dOpenPx * GetRate( cMarket, nKind  ) + 0.5;						//开盘价格[* 放大倍数]
+				tagCNFStock.Low = pSnapData->dLowPx * GetRate( cMarket, nKind  ) + 0.5;						//最低价格[* 放大倍数]
+				tagCNFStock.PreClose = pSnapData->dPreClosePx * GetRate( cMarket, nKind  ) + 0.5;				//昨收价格[* 放大倍数]
+				tagCNFStock.PreSettlePrice = pSnapData->dPreSettlePx * GetRate( cMarket, nKind  ) + 0.5;	//昨日结算价格[* 放大倍数]
+				tagCNFStock.Now = pSnapData->dNowPx * GetRate( cMarket, nKind  ) + 0.5;                    //最新价格[* 放大倍数]
+				tagCNFStock.Close = pSnapData->dClosePx * GetRate( cMarket, nKind  ) + 0.5;                  //今日收盘价格[* 放大倍数]
+				tagCNFStock.SettlePrice	 = pSnapData->dSettlePx * GetRate( cMarket, nKind  ) + 0.5;        //今日结算价格[* 放大倍数]
+				tagCNFStock.UpperPrice	 = pSnapData->dUpperLimitPx * GetRate( cMarket, nKind  ) + 0.5;         //涨停价格[* 放大倍数]
+				tagCNFStock.LowerPrice	 = pSnapData->dLowerLimitPx * GetRate( cMarket, nKind  ) + 0.5;         //跌停价格[* 放大倍数]
 				tagCNFStock.Amount		 = pSnapData->dAmount;             //总成交金额[元]
 				tagCNFStock.Volume		 = pSnapData->ui64Volume;             //总成交量[股]
 				tagCNFStock.PreOpenInterest = pSnapData->ui64PreOpenInterest; //昨日持仓量[股]
@@ -902,9 +1353,9 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 
 				for (int i=0; i<5; i++)
 				{
-					tagCNFStock.Buy[i].Price = pSnapData->mBid[i].dVPrice;
+					tagCNFStock.Buy[i].Price = pSnapData->mBid[i].dVPrice * GetRate( cMarket, nKind  ) + 0.5;
 					tagCNFStock.Buy[i].Volume = pSnapData->mBid[i].ui64Volume;
-					tagCNFStock.Sell[i].Price = pSnapData->mAsk[i].dVPrice;
+					tagCNFStock.Sell[i].Price = pSnapData->mAsk[i].dVPrice * GetRate( cMarket, nKind  ) + 0.5;
 					tagCNFStock.Sell[i].Volume = pSnapData->mAsk[i].ui64Volume;
 				}
 			}
@@ -914,13 +1365,14 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 				pData = (char*)&tagSHOPTStock;
 
 				memcpy(tagSHOPTStock.Code, pSnapData->szCode,8);
+				int		nKind = CastKindID4SHOPT( tagSHOPTStock.Code );
 				//tagSHOPTStock.Time = pSnapData->DataTimeStamp;
-				tagSHOPTStock.PreSettlePx = pSnapData->dPreSettlePx;
-				tagSHOPTStock.SettlePrice = pSnapData->dSettlePx;
-				tagSHOPTStock.OpenPx = pSnapData->dOpenPx;
-				tagSHOPTStock.HighPx = pSnapData->dHighPx;
-				tagSHOPTStock.LowPx = pSnapData->dLowPx;
-				tagSHOPTStock.Now = pSnapData->dNowPx;
+				tagSHOPTStock.PreSettlePx = pSnapData->dPreSettlePx * GetRate( cMarket, nKind  ) + 0.5;
+				tagSHOPTStock.SettlePrice = pSnapData->dSettlePx * GetRate( cMarket, nKind  ) + 0.5;
+				tagSHOPTStock.OpenPx = pSnapData->dOpenPx * GetRate( cMarket, nKind  ) + 0.5;
+				tagSHOPTStock.HighPx = pSnapData->dHighPx * GetRate( cMarket, nKind  ) + 0.5;
+				tagSHOPTStock.LowPx = pSnapData->dLowPx * GetRate( cMarket, nKind  ) + 0.5;
+				tagSHOPTStock.Now = pSnapData->dNowPx * GetRate( cMarket, nKind  ) + 0.5;
 				tagSHOPTStock.Volume = pSnapData->ui64Volume;
 				tagSHOPTStock.Amount = pSnapData->dAmount;
 				memcpy(tagSHOPTStock.TradingPhaseCode, pSnapData->szTradingPhaseCode,4);
@@ -929,9 +1381,9 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 				tagSHOPTStock.Position = pSnapData->ui64OpenInterest;
 				for (int i=0; i<5; i++)
 				{
-					tagSHOPTStock.Buy[i].Price = pSnapData->mBid[i].dVPrice;
+					tagSHOPTStock.Buy[i].Price = pSnapData->mBid[i].dVPrice * GetRate( cMarket, nKind  ) + 0.5;
 					tagSHOPTStock.Buy[i].Volume = pSnapData->mBid[i].ui64Volume;
-					tagSHOPTStock.Sell[i].Price = pSnapData->mAsk[i].dVPrice;
+					tagSHOPTStock.Sell[i].Price = pSnapData->mAsk[i].dVPrice * GetRate( cMarket, nKind  ) + 0.5;
 					tagSHOPTStock.Sell[i].Volume = pSnapData->mAsk[i].ui64Volume;
 				}
 			}
@@ -942,17 +1394,18 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 
 				//tagZJOPTStock.DataTimeStamp = pSnapData->DataTimeStamp;
 				memcpy(tagZJOPTStock.Code, pSnapData->szCode,32);
-				tagZJOPTStock.High = pSnapData->dHighPx;						//最高价格[* 放大倍数]
-				tagZJOPTStock.Open = pSnapData->dOpenPx;						//开盘价格[* 放大倍数]
-				tagZJOPTStock.Low = pSnapData->dLowPx;						//最低价格[* 放大倍数]
-				tagZJOPTStock.PreClose = pSnapData->dPreClosePx;				//昨收价格[* 放大倍数]
-				tagZJOPTStock.PreSettlePrice = pSnapData->dPreSettlePx;	//昨日结算价格[* 放大倍数]
+				int		nKind = CastKindID4CFFOPT( tagZJOPTStock.Code );
+				tagZJOPTStock.High = pSnapData->dHighPx * GetRate( cMarket, nKind  ) + 0.5;						//最高价格[* 放大倍数]
+				tagZJOPTStock.Open = pSnapData->dOpenPx * GetRate( cMarket, nKind  ) + 0.5;						//开盘价格[* 放大倍数]
+				tagZJOPTStock.Low = pSnapData->dLowPx * GetRate( cMarket, nKind  ) + 0.5;						//最低价格[* 放大倍数]
+				tagZJOPTStock.PreClose = pSnapData->dPreClosePx * GetRate( cMarket, nKind  ) + 0.5;				//昨收价格[* 放大倍数]
+				tagZJOPTStock.PreSettlePrice = pSnapData->dPreSettlePx * GetRate( cMarket, nKind  ) + 0.5;	//昨日结算价格[* 放大倍数]
 				
-				tagZJOPTStock.Now = pSnapData->dNowPx;                    //最新价格[* 放大倍数]
-				tagZJOPTStock.Close	= pSnapData->dClosePx;                  //今日收盘价格[* 放大倍数]
-				tagZJOPTStock.SettlePrice = pSnapData->dSettlePx;        //今日结算价格[* 放大倍数]
-				tagZJOPTStock.UpperPrice = pSnapData->dUpperLimitPx;         //涨停价格[* 放大倍数]
-				tagZJOPTStock.LowerPrice = pSnapData->dLowerLimitPx;         //跌停价格[* 放大倍数]
+				tagZJOPTStock.Now = pSnapData->dNowPx * GetRate( cMarket, nKind  ) + 0.5;                    //最新价格[* 放大倍数]
+				tagZJOPTStock.Close	= pSnapData->dClosePx * GetRate( cMarket, nKind  ) + 0.5;                  //今日收盘价格[* 放大倍数]
+				tagZJOPTStock.SettlePrice = pSnapData->dSettlePx * GetRate( cMarket, nKind  ) + 0.5;        //今日结算价格[* 放大倍数]
+				tagZJOPTStock.UpperPrice = pSnapData->dUpperLimitPx * GetRate( cMarket, nKind  ) + 0.5;         //涨停价格[* 放大倍数]
+				tagZJOPTStock.LowerPrice = pSnapData->dLowerLimitPx * GetRate( cMarket, nKind  ) + 0.5;         //跌停价格[* 放大倍数]
 				tagZJOPTStock.Amount = pSnapData->dAmount;             //总成交金额[元]
 				tagZJOPTStock.Volume = pSnapData->ui64Volume;             //总成交量[股]
 				tagZJOPTStock.PreOpenInterest = pSnapData->ui64PreOpenInterest; //昨日持仓量[股]
@@ -960,9 +1413,9 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 
 				for (int i=0; i<5; i++)
 				{
-					tagZJOPTStock.Buy[i].Price = pSnapData->mBid[i].dVPrice;
+					tagZJOPTStock.Buy[i].Price = pSnapData->mBid[i].dVPrice * GetRate( cMarket, nKind  ) + 0.5;
 					tagZJOPTStock.Buy[i].Volume = pSnapData->mBid[i].ui64Volume;
-					tagZJOPTStock.Sell[i].Price = pSnapData->mAsk[i].dVPrice;
+					tagZJOPTStock.Sell[i].Price = pSnapData->mAsk[i].dVPrice * GetRate( cMarket, nKind  ) + 0.5;
 					tagZJOPTStock.Sell[i].Volume = pSnapData->mAsk[i].ui64Volume;
 				}
 			}
@@ -972,22 +1425,23 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 				pData = (char*)&tagSZOPTStock;
 
 				memcpy(tagSZOPTStock.Code, pSnapData->szCode,8);
+				int		nKind = CastKindID4SZOPT( tagSZOPTStock.Code );
 				//tagSZOPTStock.Time = pSnapData->DataTimeStamp;
-				tagSZOPTStock.PreSettlePx = pSnapData->dPreSettlePx;
-				tagSZOPTStock.SettlePrice = pSnapData->dSettlePx;
-				tagSZOPTStock.OpenPx = pSnapData->dOpenPx;
-				tagSZOPTStock.HighPx = pSnapData->dHighPx;
-				tagSZOPTStock.LowPx = pSnapData->dLowPx;
-				tagSZOPTStock.Now = pSnapData->dNowPx;
+				tagSZOPTStock.PreSettlePx = pSnapData->dPreSettlePx * GetRate( cMarket, nKind  ) + 0.5;
+				tagSZOPTStock.SettlePrice = pSnapData->dSettlePx * GetRate( cMarket, nKind  ) + 0.5;
+				tagSZOPTStock.OpenPx = pSnapData->dOpenPx * GetRate( cMarket, nKind  ) + 0.5;
+				tagSZOPTStock.HighPx = pSnapData->dHighPx * GetRate( cMarket, nKind  ) + 0.5;
+				tagSZOPTStock.LowPx = pSnapData->dLowPx * GetRate( cMarket, nKind  ) + 0.5;
+				tagSZOPTStock.Now = pSnapData->dNowPx * GetRate( cMarket, nKind  ) + 0.5;
 				tagSZOPTStock.Volume = pSnapData->ui64Volume;
 				tagSZOPTStock.Amount = pSnapData->dAmount;
 				memcpy(tagSZOPTStock.TradingPhaseCode, pSnapData->szTradingPhaseCode,4);
 				tagSZOPTStock.Position = pSnapData->ui64OpenInterest;
 				for (int i=0; i<5; i++)
 				{
-					tagSZOPTStock.Buy[i].Price = pSnapData->mBid[i].dVPrice;
+					tagSZOPTStock.Buy[i].Price = pSnapData->mBid[i].dVPrice * GetRate( cMarket, nKind  ) + 0.5;
 					tagSZOPTStock.Buy[i].Volume = pSnapData->mBid[i].ui64Volume;
-					tagSZOPTStock.Sell[i].Price = pSnapData->mAsk[i].dVPrice;
+					tagSZOPTStock.Sell[i].Price = pSnapData->mAsk[i].dVPrice * GetRate( cMarket, nKind  ) + 0.5;
 					tagSZOPTStock.Sell[i].Volume = pSnapData->mAsk[i].ui64Volume;
 				}
 			}
@@ -999,16 +1453,17 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 				//tagCNFOPTStock.Date = pSnapData->Date;
 				//tagCNFOPTStock.DataTimeStamp = pSnapData->DataTimeStamp;
 				memcpy(tagCNFOPTStock.Code, pSnapData->szCode,20);
-				tagCNFOPTStock.High = pSnapData->dHighPx;						//最高价格[* 放大倍数]
-				tagCNFOPTStock.Open = pSnapData->dOpenPx;						//开盘价格[* 放大倍数]
-				tagCNFOPTStock.Low = pSnapData->dLowPx;						//最低价格[* 放大倍数]
-				tagCNFOPTStock.PreClose = pSnapData->dPreClosePx;				//昨收价格[* 放大倍数]
-				tagCNFOPTStock.PreSettlePrice = pSnapData->dPreSettlePx;	//昨日结算价格[* 放大倍数]
-				tagCNFOPTStock.Now = pSnapData->dNowPx;                    //最新价格[* 放大倍数]
-				tagCNFOPTStock.Close = pSnapData->dClosePx;                  //今日收盘价格[* 放大倍数]
-				tagCNFOPTStock.SettlePrice = pSnapData->dSettlePx;        //今日结算价格[* 放大倍数]
-				tagCNFOPTStock.UpperPrice = pSnapData->dUpperLimitPx;         //涨停价格[* 放大倍数]
-				tagCNFOPTStock.LowerPrice = pSnapData->dLowerLimitPx;         //跌停价格[* 放大倍数]
+				int		nKind = CastKindID4CNFOPT( nInnerMkID, tagCNFStock.Code );
+				tagCNFOPTStock.High = pSnapData->dHighPx * GetRate( cMarket, nKind  ) + 0.5;						//最高价格[* 放大倍数]
+				tagCNFOPTStock.Open = pSnapData->dOpenPx * GetRate( cMarket, nKind  ) + 0.5;						//开盘价格[* 放大倍数]
+				tagCNFOPTStock.Low = pSnapData->dLowPx * GetRate( cMarket, nKind  ) + 0.5;						//最低价格[* 放大倍数]
+				tagCNFOPTStock.PreClose = pSnapData->dPreClosePx * GetRate( cMarket, nKind  ) + 0.5;				//昨收价格[* 放大倍数]
+				tagCNFOPTStock.PreSettlePrice = pSnapData->dPreSettlePx * GetRate( cMarket, nKind  ) + 0.5;	//昨日结算价格[* 放大倍数]
+				tagCNFOPTStock.Now = pSnapData->dNowPx * GetRate( cMarket, nKind  ) + 0.5;                    //最新价格[* 放大倍数]
+				tagCNFOPTStock.Close = pSnapData->dClosePx * GetRate( cMarket, nKind  ) + 0.5;                  //今日收盘价格[* 放大倍数]
+				tagCNFOPTStock.SettlePrice = pSnapData->dSettlePx * GetRate( cMarket, nKind  ) + 0.5;        //今日结算价格[* 放大倍数]
+				tagCNFOPTStock.UpperPrice = pSnapData->dUpperLimitPx * GetRate( cMarket, nKind  ) + 0.5;         //涨停价格[* 放大倍数]
+				tagCNFOPTStock.LowerPrice = pSnapData->dLowerLimitPx * GetRate( cMarket, nKind  ) + 0.5;         //跌停价格[* 放大倍数]
 				tagCNFOPTStock.Amount = pSnapData->dAmount;             //总成交金额[元]
 				tagCNFOPTStock.Volume = pSnapData->ui64Volume;             //总成交量[股]
 				tagCNFOPTStock.PreOpenInterest = pSnapData->ui64PreOpenInterest; //昨日持仓量[股]
@@ -1016,9 +1471,9 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 
 				for (int i=0; i<5; i++)
 				{
-					tagCNFOPTStock.Buy[i].Price = pSnapData->mBid[i].dVPrice;
+					tagCNFOPTStock.Buy[i].Price = pSnapData->mBid[i].dVPrice * GetRate( cMarket, nKind  ) + 0.5;
 					tagCNFOPTStock.Buy[i].Volume = pSnapData->mBid[i].ui64Volume;
-					tagCNFOPTStock.Sell[i].Price = pSnapData->mAsk[i].dVPrice;
+					tagCNFOPTStock.Sell[i].Price = pSnapData->mAsk[i].dVPrice * GetRate( cMarket, nKind  ) + 0.5;
 					tagCNFOPTStock.Sell[i].Volume = pSnapData->mAsk[i].ui64Volume;
 				}
 			}
@@ -1188,11 +1643,20 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 			tagQUO_SnapData*			pData = (tagQUO_SnapData*)pDataPtr;
 
 			memcpy(tagData.Code, pData->szCode,6);
-			tagData.High = pData->dHighPx;
-			tagData.Open = pData->dOpenPx;
-			tagData.Low = pData->dLowPx;
-			tagData.PreClose = pData->dPreClosePx;
-			tagData.Now = pData->dNowPx;
+			int		nKind = 0;
+			if( XDF_SH == nOldMkID )
+			{
+				nKind = CastKindID4SHL1( tagData.Code );
+			}
+			else
+			{
+				nKind = CastKindID4SZL1( tagData.Code );
+			}
+			tagData.High = pData->dHighPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
+			tagData.Open = pData->dOpenPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
+			tagData.Low = pData->dLowPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
+			tagData.PreClose = pData->dPreClosePx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
+			tagData.Now = pData->dNowPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
 			tagData.Amount = pData->dAmount;
 			tagData.Volume = pData->ui64Volume;
 			//tagSHL1Stock.Records = pData->Records;
@@ -1202,9 +1666,9 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 
 			for (int i=0; i<5; i++)
 			{
-				tagData.Buy[i].Price = pData->mBid[i].dVPrice;
+				tagData.Buy[i].Price = pData->mBid[i].dVPrice * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
 				tagData.Buy[i].Volume = pData->mBid[i].ui64Volume;
-				tagData.Sell[i].Price = pData->mAsk[i].dVPrice;
+				tagData.Sell[i].Price = pData->mAsk[i].dVPrice * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
 				tagData.Sell[i].Volume = pData->mAsk[i].ui64Volume;
 			}
 
@@ -1232,16 +1696,17 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 
 			//tagCFFStock.DataTimeStamp = pSnapData->DataTimeStamp;
 			memcpy(tagData.Code, pData->szCode,6);
-			tagData.High = pData->dHighPx;						//最高价格[* 放大倍数]
-			tagData.Open = pData->dOpenPx;						//开盘价格[* 放大倍数]
-			tagData.Low = pData->dLowPx;						//最低价格[* 放大倍数]
-			tagData.PreClose = pData->dPreClosePx;				//昨收价格[* 放大倍数]
-			tagData.PreSettlePrice = pData->dPreSettlePx;	//昨日结算价格[* 放大倍数]
-			tagData.Now = pData->dNowPx;                    //最新价格[* 放大倍数]
+			int		nKind = CastKindID4CFF( tagData.Code );
+			tagData.High = pData->dHighPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;						//最高价格[* 放大倍数]
+			tagData.Open = pData->dOpenPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;						//开盘价格[* 放大倍数]
+			tagData.Low = pData->dLowPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;						//最低价格[* 放大倍数]
+			tagData.PreClose = pData->dPreClosePx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;				//昨收价格[* 放大倍数]
+			tagData.PreSettlePrice = pData->dPreSettlePx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;	//昨日结算价格[* 放大倍数]
+			tagData.Now = pData->dNowPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;                    //最新价格[* 放大倍数]
 			tagData.Close = pData->dClosePx;                  //今日收盘价格[* 放大倍数]
-			tagData.SettlePrice	= pData->dSettlePx;      //今日结算价格[* 放大倍数]
-			tagData.UpperPrice = pData->dUpperLimitPx;         //涨停价格[* 放大倍数]
-			tagData.LowerPrice = pData->dLowerLimitPx;         //跌停价格[* 放大倍数]
+			tagData.SettlePrice	= pData->dSettlePx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;      //今日结算价格[* 放大倍数]
+			tagData.UpperPrice = pData->dUpperLimitPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;         //涨停价格[* 放大倍数]
+			tagData.LowerPrice = pData->dLowerLimitPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;         //跌停价格[* 放大倍数]
 			tagData.Amount = pData->dAmount;             //总成交金额[元]
 			tagData.Volume = pData->ui64Volume;             //总成交量[股]
 			tagData.PreOpenInterest = pData->ui64PreOpenInterest; //昨日持仓量[股]
@@ -1249,9 +1714,9 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 
 			for (int i=0; i<5; i++)
 			{
-				tagData.Buy[i].Price = pData->mBid[i].dVPrice;
+				tagData.Buy[i].Price = pData->mBid[i].dVPrice * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
 				tagData.Buy[i].Volume = pData->mBid[i].ui64Volume;
-				tagData.Sell[i].Price = pData->mAsk[i].dVPrice;
+				tagData.Sell[i].Price = pData->mAsk[i].dVPrice * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
 				tagData.Sell[i].Volume = pData->mAsk[i].ui64Volume;
 			}
 
@@ -1280,16 +1745,17 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 			//tagData.Date = pData->Date;
 			//tagData.DataTimeStamp = pData->DataTimeStamp;
 			memcpy(tagData.Code, pData->szCode,20);
-			tagData.High = pData->dHighPx;						//最高价格[* 放大倍数]
-			tagData.Open = pData->dOpenPx;						//开盘价格[* 放大倍数]
-			tagData.Low = pData->dLowPx;						//最低价格[* 放大倍数]
-			tagData.PreClose = pData->dPreClosePx;				//昨收价格[* 放大倍数]
-			tagData.PreSettlePrice = pData->dPreSettlePx;	//昨日结算价格[* 放大倍数]
-			tagData.Now = pData->dNowPx;                    //最新价格[* 放大倍数]
-			tagData.Close = pData->dClosePx;                  //今日收盘价格[* 放大倍数]
-			tagData.SettlePrice	 = pData->dSettlePx;        //今日结算价格[* 放大倍数]
-			tagData.UpperPrice	 = pData->dUpperLimitPx;         //涨停价格[* 放大倍数]
-			tagData.LowerPrice	 = pData->dLowerLimitPx;         //跌停价格[* 放大倍数]
+			int		nKind = CastKindID4CNF( eMarketID, tagData.Code );
+			tagData.High = pData->dHighPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;						//最高价格[* 放大倍数]
+			tagData.Open = pData->dOpenPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;						//开盘价格[* 放大倍数]
+			tagData.Low = pData->dLowPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;						//最低价格[* 放大倍数]
+			tagData.PreClose = pData->dPreClosePx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;				//昨收价格[* 放大倍数]
+			tagData.PreSettlePrice = pData->dPreSettlePx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;	//昨日结算价格[* 放大倍数]
+			tagData.Now = pData->dNowPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;                    //最新价格[* 放大倍数]
+			tagData.Close = pData->dClosePx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;                  //今日收盘价格[* 放大倍数]
+			tagData.SettlePrice	 = pData->dSettlePx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;        //今日结算价格[* 放大倍数]
+			tagData.UpperPrice	 = pData->dUpperLimitPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;         //涨停价格[* 放大倍数]
+			tagData.LowerPrice	 = pData->dLowerLimitPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;         //跌停价格[* 放大倍数]
 			tagData.Amount		 = pData->dAmount;             //总成交金额[元]
 			tagData.Volume		 = pData->ui64Volume;             //总成交量[股]
 			tagData.PreOpenInterest = pData->ui64PreOpenInterest; //昨日持仓量[股]
@@ -1297,9 +1763,9 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 
 			for (int i=0; i<5; i++)
 			{
-				tagData.Buy[i].Price = pData->mBid[i].dVPrice;
+				tagData.Buy[i].Price = pData->mBid[i].dVPrice * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
 				tagData.Buy[i].Volume = pData->mBid[i].ui64Volume;
-				tagData.Sell[i].Price = pData->mAsk[i].dVPrice;
+				tagData.Sell[i].Price = pData->mAsk[i].dVPrice * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
 				tagData.Sell[i].Volume = pData->mAsk[i].ui64Volume;
 			}
 
@@ -1325,13 +1791,14 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 			tagQUO_SnapData*			pData = (tagQUO_SnapData*)pDataPtr;
 
 			memcpy(tagData.Code, pData->szCode,8);
+			int		nKind = CastKindID4SHOPT( tagData.Code );
 			//tagData.Time = pData->DataTimeStamp;
-			tagData.PreSettlePx = pData->dPreSettlePx;
-			tagData.SettlePrice = pData->dSettlePx;
-			tagData.OpenPx = pData->dOpenPx;
-			tagData.HighPx = pData->dHighPx;
-			tagData.LowPx = pData->dLowPx;
-			tagData.Now = pData->dNowPx;
+			tagData.PreSettlePx = pData->dPreSettlePx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
+			tagData.SettlePrice = pData->dSettlePx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
+			tagData.OpenPx = pData->dOpenPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
+			tagData.HighPx = pData->dHighPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
+			tagData.LowPx = pData->dLowPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
+			tagData.Now = pData->dNowPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
 			tagData.Volume = pData->ui64Volume;
 			tagData.Amount = pData->dAmount;
 			memcpy(tagData.TradingPhaseCode, pData->szTradingPhaseCode,4);
@@ -1340,9 +1807,9 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 			tagData.Position = pData->ui64OpenInterest;
 			for (int i=0; i<5; i++)
 			{
-				tagData.Buy[i].Price = pData->mBid[i].dVPrice;
+				tagData.Buy[i].Price = pData->mBid[i].dVPrice * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
 				tagData.Buy[i].Volume = pData->mBid[i].ui64Volume;
-				tagData.Sell[i].Price = pData->mAsk[i].dVPrice;
+				tagData.Sell[i].Price = pData->mAsk[i].dVPrice * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
 				tagData.Sell[i].Volume = pData->mAsk[i].ui64Volume;
 			}
 
@@ -1370,17 +1837,18 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 
 			//tagData.DataTimeStamp = pData->DataTimeStamp;
 			memcpy(tagData.Code, pData->szCode,32);
-			tagData.High = pData->dHighPx;						//最高价格[* 放大倍数]
-			tagData.Open = pData->dOpenPx;						//开盘价格[* 放大倍数]
-			tagData.Low = pData->dLowPx;						//最低价格[* 放大倍数]
-			tagData.PreClose = pData->dPreClosePx;				//昨收价格[* 放大倍数]
-			tagData.PreSettlePrice = pData->dPreSettlePx;	//昨日结算价格[* 放大倍数]
+			int		nKind = CastKindID4CFFOPT( tagData.Code );
+			tagData.High = pData->dHighPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;						//最高价格[* 放大倍数]
+			tagData.Open = pData->dOpenPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;						//开盘价格[* 放大倍数]
+			tagData.Low = pData->dLowPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;						//最低价格[* 放大倍数]
+			tagData.PreClose = pData->dPreClosePx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;				//昨收价格[* 放大倍数]
+			tagData.PreSettlePrice = pData->dPreSettlePx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;	//昨日结算价格[* 放大倍数]
 			
-			tagData.Now = pData->dNowPx;                    //最新价格[* 放大倍数]
-			tagData.Close	= pData->dClosePx;                  //今日收盘价格[* 放大倍数]
-			tagData.SettlePrice = pData->dSettlePx;        //今日结算价格[* 放大倍数]
-			tagData.UpperPrice = pData->dUpperLimitPx;         //涨停价格[* 放大倍数]
-			tagData.LowerPrice = pData->dLowerLimitPx;         //跌停价格[* 放大倍数]
+			tagData.Now = pData->dNowPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;                    //最新价格[* 放大倍数]
+			tagData.Close	= pData->dClosePx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;                  //今日收盘价格[* 放大倍数]
+			tagData.SettlePrice = pData->dSettlePx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;        //今日结算价格[* 放大倍数]
+			tagData.UpperPrice = pData->dUpperLimitPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;         //涨停价格[* 放大倍数]
+			tagData.LowerPrice = pData->dLowerLimitPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;         //跌停价格[* 放大倍数]
 			tagData.Amount = pData->dAmount;             //总成交金额[元]
 			tagData.Volume = pData->ui64Volume;             //总成交量[股]
 			tagData.PreOpenInterest = pData->ui64PreOpenInterest; //昨日持仓量[股]
@@ -1388,9 +1856,9 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 
 			for (int i=0; i<5; i++)
 			{
-				tagData.Buy[i].Price = pData->mBid[i].dVPrice;
+				tagData.Buy[i].Price = pData->mBid[i].dVPrice * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
 				tagData.Buy[i].Volume = pData->mBid[i].ui64Volume;
-				tagData.Sell[i].Price = pData->mAsk[i].dVPrice;
+				tagData.Sell[i].Price = pData->mAsk[i].dVPrice * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
 				tagData.Sell[i].Volume = pData->mAsk[i].ui64Volume;
 			}
 
@@ -1417,22 +1885,23 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 			tagQUO_SnapData*			pData = (tagQUO_SnapData*)pDataPtr;
 
 			memcpy(tagData.Code, pData->szCode,8);
+			int		nKind = CastKindID4SZOPT( tagData.Code );
 			//tagData.Time = pData->DataTimeStamp;
-			tagData.PreSettlePx = pData->dPreSettlePx;
-			tagData.SettlePrice = pData->dSettlePx;
-			tagData.OpenPx = pData->dOpenPx;
-			tagData.HighPx = pData->dHighPx;
-			tagData.LowPx = pData->dLowPx;
-			tagData.Now = pData->dNowPx;
+			tagData.PreSettlePx = pData->dPreSettlePx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
+			tagData.SettlePrice = pData->dSettlePx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
+			tagData.OpenPx = pData->dOpenPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
+			tagData.HighPx = pData->dHighPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
+			tagData.LowPx = pData->dLowPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
+			tagData.Now = pData->dNowPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
 			tagData.Volume = pData->ui64Volume;
 			tagData.Amount = pData->dAmount;
 			memcpy(tagData.TradingPhaseCode, pData->szTradingPhaseCode,4);
 			tagData.Position = pData->ui64OpenInterest;
 			for (int i=0; i<5; i++)
 			{
-				tagData.Buy[i].Price = pData->mBid[i].dVPrice;
+				tagData.Buy[i].Price = pData->mBid[i].dVPrice * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
 				tagData.Buy[i].Volume = pData->mBid[i].ui64Volume;
-				tagData.Sell[i].Price = pData->mAsk[i].dVPrice;
+				tagData.Sell[i].Price = pData->mAsk[i].dVPrice * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
 				tagData.Sell[i].Volume = pData->mAsk[i].ui64Volume;
 			}
 
@@ -1461,16 +1930,17 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 			//tagData.Date = pData->Date;
 			//tagData.DataTimeStamp = pData->DataTimeStamp;
 			memcpy(tagData.Code, pData->szCode,20);
-			tagData.High = pData->dHighPx;						//最高价格[* 放大倍数]
-			tagData.Open = pData->dOpenPx;						//开盘价格[* 放大倍数]
-			tagData.Low = pData->dLowPx;						//最低价格[* 放大倍数]
-			tagData.PreClose = pData->dPreClosePx;				//昨收价格[* 放大倍数]
-			tagData.PreSettlePrice = pData->dPreSettlePx;	//昨日结算价格[* 放大倍数]
-			tagData.Now = pData->dNowPx;                    //最新价格[* 放大倍数]
-			tagData.Close = pData->dClosePx;                  //今日收盘价格[* 放大倍数]
-			tagData.SettlePrice = pData->dSettlePx;        //今日结算价格[* 放大倍数]
-			tagData.UpperPrice = pData->dUpperLimitPx;         //涨停价格[* 放大倍数]
-			tagData.LowerPrice = pData->dLowerLimitPx;         //跌停价格[* 放大倍数]
+			int		nKind = CastKindID4CNFOPT( eMarketID, tagData.Code );
+			tagData.High = pData->dHighPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;						//最高价格[* 放大倍数]
+			tagData.Open = pData->dOpenPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;						//开盘价格[* 放大倍数]
+			tagData.Low = pData->dLowPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;						//最低价格[* 放大倍数]
+			tagData.PreClose = pData->dPreClosePx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;				//昨收价格[* 放大倍数]
+			tagData.PreSettlePrice = pData->dPreSettlePx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;	//昨日结算价格[* 放大倍数]
+			tagData.Now = pData->dNowPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;                    //最新价格[* 放大倍数]
+			tagData.Close = pData->dClosePx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;                  //今日收盘价格[* 放大倍数]
+			tagData.SettlePrice = pData->dSettlePx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;        //今日结算价格[* 放大倍数]
+			tagData.UpperPrice = pData->dUpperLimitPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;         //涨停价格[* 放大倍数]
+			tagData.LowerPrice = pData->dLowerLimitPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;         //跌停价格[* 放大倍数]
 			tagData.Amount = pData->dAmount;             //总成交金额[元]
 			tagData.Volume = pData->ui64Volume;             //总成交量[股]
 			tagData.PreOpenInterest = pData->ui64PreOpenInterest; //昨日持仓量[股]
@@ -1478,9 +1948,9 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 
 			for (int i=0; i<5; i++)
 			{
-				tagData.Buy[i].Price = pData->mBid[i].dVPrice;
+				tagData.Buy[i].Price = pData->mBid[i].dVPrice * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
 				tagData.Buy[i].Volume = pData->mBid[i].ui64Volume;
-				tagData.Sell[i].Price = pData->mAsk[i].dVPrice;
+				tagData.Sell[i].Price = pData->mAsk[i].dVPrice * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
 				tagData.Sell[i].Volume = pData->mAsk[i].ui64Volume;
 			}
 
@@ -1500,11 +1970,26 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 	g_oDataIO.PutData( &pkghead, outbuf, oMSW.GetOffset() );
 }
 
-void QuotationAdaptor::OnStatus( QUO_MARKET_ID eMarketID,QUO_MARKET_STATUS eMarketStatus )
+void QuotationAdaptor::OnStatus( QUO_MARKET_ID eMarketID, QUO_MARKET_STATUS eMarketStatus )
 {
 	if( Global_pSpi )
 	{
-		Global_pSpi->XDF_OnRspStatusChanged( eMarketID, 1 );
+		XDFRunStat		eStatus = XRS_None;
+
+		if( QUO_STATUS_INIT == eMarketStatus )
+		{
+			eStatus = XRS_Init; 
+		}
+		else if( QUO_STATUS_NORMAL == eMarketStatus )
+		{
+			eStatus = XRS_Normal;
+		}
+		else
+		{
+			eStatus = XRS_Unknow;
+		}
+
+		Global_pSpi->XDF_OnRspStatusChanged( eMarketID, eStatus );
 	}
 }
 

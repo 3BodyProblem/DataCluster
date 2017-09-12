@@ -1,12 +1,21 @@
 #include "DataCollector.h"
 #include "../QuoteCltDef.h"
-#include "../Protocal/DataCluster_Protocal.h"
 #include "../DataCenterEngine/DataCenterEngine.h"
 
 
 CollectorStatus::CollectorStatus()
-: m_eStatus( ET_SS_UNACTIVE )
+: m_eStatus( ET_SS_UNACTIVE ), m_eMkStatus( QUO_STATUS_NONE ), m_nMarketID( 0 )
 {
+}
+
+void CollectorStatus::SetMkID( unsigned int nMkID )
+{
+	m_nMarketID = nMkID;
+}
+
+unsigned int CollectorStatus::GetMkID()
+{
+	return m_nMarketID;
 }
 
 enum E_SS_Status CollectorStatus::Get() const
@@ -18,7 +27,37 @@ enum E_SS_Status CollectorStatus::Get() const
 
 bool CollectorStatus::Set( enum E_SS_Status eNewStatus )
 {
+	enum QUO_MARKET_STATUS	eNewMkStatus = QUO_STATUS_INIT;
 	CriticalLock			lock( m_oCSLock );
+
+	switch( eNewStatus )
+	{
+	case ET_SS_UNACTIVE:				///< 未激活:	需要对Session调用Initialize()
+	case ET_SS_DISCONNECTED:			///< 断开状态
+		{
+			eNewMkStatus = QUO_STATUS_NONE;
+			break;
+		}
+	case ET_SS_CONNECTED:				///< 连通状态
+	case ET_SS_LOGIN:					///< 登录成功
+	case ET_SS_INITIALIZING:			///< 初始化码表/快照中
+	case ET_SS_INITIALIZED:				///< 初始化完成
+		{
+			eNewMkStatus = QUO_STATUS_INIT;
+			break;
+		}
+	case ET_SS_WORKING:
+		{
+			eNewMkStatus = QUO_STATUS_NORMAL;
+			break;
+		}
+	}
+
+	if( m_eMkStatus != eNewMkStatus && NULL != DataIOEngine::GetEngineObj().GetCallBackPtr() && QUO_MARKET_UNKNOW != m_nMarketID )
+	{
+		DataIOEngine::GetEngineObj().GetCallBackPtr()->OnStatus( (enum QUO_MARKET_ID)m_nMarketID, eNewMkStatus );
+		m_eMkStatus = eNewMkStatus;
+	}
 
 	m_eStatus = eNewStatus;
 
@@ -29,7 +68,7 @@ bool CollectorStatus::Set( enum E_SS_Status eNewStatus )
 DataCollector::DataCollector()
  : m_pFuncInitialize( NULL ), m_pFuncRelease( NULL ), m_pFuncIsProxy( NULL )
  , m_pFuncRecoverQuotation( NULL ), m_pFuncGetStatus( NULL )
- , m_nMarketID( 0 ), m_bActivated( false ), m_bIsProxyPlugin( false )
+ , m_bActivated( false ), m_bIsProxyPlugin( false )
 {
 }
 
@@ -40,7 +79,7 @@ DataCollector::~DataCollector()
 
 unsigned int DataCollector::GetMarketID()
 {
-	return m_nMarketID;
+	return m_oCollectorStatus.GetMkID();
 }
 
 bool DataCollector::IsProxy()
@@ -84,7 +123,7 @@ int DataCollector::Initialize( I_DataHandle* pIDataCallBack, std::string sDllPat
 		return nErrorCode;
 	}
 
-	m_nMarketID = m_pFuncGetMarketID();
+	m_oCollectorStatus.SetMkID( m_pFuncGetMarketID() );
 	m_bIsProxyPlugin = m_pFuncIsProxy();
 
 	DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Initialize() : DataCollector [%s] is Initialized! ......", sDllPath.c_str() );
@@ -96,13 +135,13 @@ void DataCollector::Release()
 {
 	if( NULL != m_pFuncRelease )
 	{
-		DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Release() : releasing DataCollector plugin, MarketID[%u] ......", m_nMarketID );
+		DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Release() : releasing DataCollector plugin, MarketID[%u] ......", m_oCollectorStatus.GetMkID() );
 		m_pFuncHaltQuotation();
 		m_pFuncHaltQuotation = NULL;
 		m_pFuncRelease();
 		m_pFuncRelease = NULL;
 		m_bActivated = false;
-		DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Release() : DataCollector plugin is released, MarketID[%u] ......", m_nMarketID );
+		DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Release() : DataCollector plugin is released, MarketID[%u] ......", m_oCollectorStatus.GetMkID() );
 	}
 
 	m_pFuncGetStatus = NULL;
@@ -148,7 +187,7 @@ int DataCollector::RecoverDataCollector()
 	}
 
 	m_bActivated = true;
-	m_nMarketID = m_pFuncGetMarketID();
+	m_oCollectorStatus.SetMkID( m_pFuncGetMarketID() );
 	DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::RecoverDataCollector() : data collector recovered ......" );
 
 	return nErrorCode;

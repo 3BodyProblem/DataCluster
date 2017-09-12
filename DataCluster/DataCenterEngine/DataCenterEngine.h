@@ -130,6 +130,11 @@ public:
 	 */
 	DatabaseAdaptor&		GetDatabaseObj();
 
+	/**
+	 * @brief				获取回调接口
+	 */
+	I_QuotationCallBack*	GetCallBackPtr();
+
 protected:
 	QuotationNotify			m_oQuoNotify;					///< 行情数据通知回调
 	DatabaseAdaptor			m_oDatabaseIO;					///< 内存数据插件管理

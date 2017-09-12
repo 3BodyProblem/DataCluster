@@ -34,6 +34,11 @@ DataCollectorPool& DataIOEngine::GetCollectorPool()
 	return m_oDataCollectorPool;
 }
 
+I_QuotationCallBack* DataIOEngine::GetCallBackPtr()
+{
+	return m_pQuotationCallBack;
+}
+
 int DataIOEngine::Initialize( I_QuotationCallBack* pIQuotation )
 {
 	int			nErrorCode = 0;
@@ -105,7 +110,7 @@ int DataIOEngine::Execute()
 	{
 		try
 		{
-			SimpleTask::Sleep( 1000*3 );	///< 一秒循环一次
+			SimpleTask::Sleep( 1000*2 );	///< 一秒循环一次
 
 			m_oDataCollectorPool.PreserveAllConnection();
 		}

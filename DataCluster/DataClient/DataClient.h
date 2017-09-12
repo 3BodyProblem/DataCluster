@@ -72,9 +72,6 @@ protected:
 	int				m_nMsgCount;
 	int				m_nOffset;
 	bool			m_bError;
-
-private:
-
 };
 
 
@@ -126,10 +123,13 @@ public:
 	
 	int STDCALL			GetMarketStatus(unsigned char cMarket,int& nStatus, unsigned int& ulTime, __int64 * pI64Send, __int64 * pI64Recv);
 
+public:
+	static int			GetRate( int nMarketID, unsigned int nKind );
+
 private:
 	CriticalObject		m_oLock;						///< 锁
 	char*				m_pQueryBuffer;
-	T_KIND_MAP			m_mapMarketKind;				///< 各市场的类别信息
+	static T_KIND_MAP	m_mapMarketKind;				///< 各市场的类别信息
 };
 
 
@@ -148,7 +148,6 @@ public:
 protected:
 private:
 };
-
 
 
 class QuotationAdaptor : public I_QuotationCallBack
