@@ -82,6 +82,11 @@ unsigned int DataCollector::GetMarketID()
 	return m_oCollectorStatus.GetMkID();
 }
 
+const std::string& DataCollector::GetDllPath()
+{
+	return m_sDllPath;
+}
+
 bool DataCollector::IsProxy()
 {
 	return m_bIsProxyPlugin;
@@ -90,7 +95,7 @@ bool DataCollector::IsProxy()
 int DataCollector::Initialize( I_DataHandle* pIDataCallBack, std::string sDllPath )
 {
 	Release();
-
+	m_sDllPath = sDllPath;
 	DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Initialize() : Initializing DataCollector [%s] ......", sDllPath.c_str() );
 
 	int				nErrorCode = m_oDllPlugin.LoadDll( sDllPath );
@@ -282,9 +287,9 @@ int DataCollectorPool::PreserveAllConnection()
 
 		if( ET_SS_DISCONNECTED == eStatus )			///< 在传输断开的时，需要重新连接
 		{
-			DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : initializing DataCollector plugin ..." );
-
+			DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : initializing DataCollector Plugin [%s] ...", refDataCollector.GetDllPath().c_str() );
 			refDataCollector.HaltDataCollector();	///< 停止插件
+
 			int		nErrorCode = refDataCollector.RecoverDataCollector();
 			if( 0 == nErrorCode )
 			{
@@ -297,10 +302,14 @@ int DataCollectorPool::PreserveAllConnection()
 				DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : failed 2 initialize DataCollector, errorcode=%d", nErrorCode );
 			}
 
-			if( (n+1) == GetCount() )
+			if( nAffectNum == GetCount() )
 			{
 				DataIOEngine::GetEngineObj().WriteInfo( "DataCollectorPool::PreserveAllConnection() : All Connections had been established! Num=[%u] .......!!! ", GetCount() );
 			}
+		}
+		else
+		{
+			nAffectNum++;
 		}
 	}
 

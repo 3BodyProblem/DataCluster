@@ -4,6 +4,7 @@
 #include <exception>
 #include <algorithm>
 #include <functional>
+#include "../DataCluster.h"
 #include "DataCenterEngine.h"
 
 
@@ -134,7 +135,7 @@ int DataIOEngine::OnQuery( unsigned int nDataID, char* pData, unsigned int nData
 	unsigned __int64		nSerialNo = 0;
 	static	const char		s_pszZeroBuff[128] = { 0 };
 
-	if( 0 == strncmp( pData, s_pszZeroBuff, sizeof(s_pszZeroBuff) ) )
+	if( 0 == strncmp( pData, s_pszZeroBuff, min(nDataLen, sizeof(s_pszZeroBuff)) ) )
 	{
 		return m_oDatabaseIO.QueryBatchRecords( nDataID, pData, nDataLen, nSerialNo );
 	}
@@ -146,6 +147,8 @@ int DataIOEngine::OnQuery( unsigned int nDataID, char* pData, unsigned int nData
 
 int DataIOEngine::OnImage( unsigned int nDataID, char* pData, unsigned int nDataLen, bool bLastFlag )
 {
+if( nDataID%100 != 1 && nDataID%100 != 0 )
+	return 0;
 	unsigned __int64		nSerialNo = 0;
 	int						nAffectNum = 0;
 	InnerRecord*			pRecord = TableFillerRegister::GetRegister().PrepareNewTableBlock( nDataID, pData, nDataLen );
@@ -169,7 +172,10 @@ int DataIOEngine::OnImage( unsigned int nDataID, char* pData, unsigned int nData
 		pRecord->FillMessage2BigTableRecord( pData );
 		nAffectNum = m_oDatabaseIO.UpdateRecord( pRecord->GetBigTableID(), pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), nSerialNo );
 	}
-
+{
+tagQUO_MarketInfo	tagMarketInfo;
+int a = GetMarketInfo( (QUO_MARKET_ID)(pRecord->GetBigTableID()/100), &tagMarketInfo );
+}
 	return nAffectNum;
 }
 

@@ -5,8 +5,6 @@
 #include <math.h>
 #include <string>
 #include <algorithm>
-#include "Winsock2.h"
-#pragma comment( lib, "Ws2_32.lib" )
 
 
 #define MAX_DATABUF_COUNT	81920000
@@ -24,20 +22,7 @@ MDataIO::~MDataIO()
 
 int		MDataIO::Instance()
 {
-	WSADATA					oWSAData = { 0 };
-	WORD					wVerRequested = { 0 };
-	int						nErrorCode = 0;							///< 错误编号
-
 	Release();
-
-	wVerRequested = MAKEWORD( 2, 1 );
-	nErrorCode = WSAStartup( wVerRequested, &oWSAData );
-	if( 0 != nErrorCode )
-	{
-		DWORD dw = ::GetLastError();
-		::printf( "main() : failed 2 initialize WSAStartup(), errorcode=%d \n", nErrorCode );
-		return -1;
-	}
 
 	int  iret = m_PushBuffer.Instance(MAX_DATABUF_COUNT);
 	if (iret <0)
@@ -1567,57 +1552,31 @@ MPrimeClient::~MPrimeClient()
 
 int		STDCALL		MPrimeClient::ReqFuncData(int FuncNo, void* wParam, void* lParam)
 {
-/*	if (FuncNo ==100)		//获取某个市场的市场日期和市场时间(参数:uint8*,   XDFAPI_MarketStatusInfo*)
+	if( FuncNo == 100 || FuncNo == 101 )		//获取某个市场的市场日期和市场时间(参数:uint8*,   XDFAPI_MarketStatusInfo*)
 	{
-		uint8_t * pMarket = (uint8_t*)wParam;
+		unsigned char* pMarket = (unsigned char*)wParam;
 		XDFAPI_MarketStatusInfo* pInfo = (XDFAPI_MarketStatusInfo*)lParam;
 		if (pMarket && pInfo)
 		{
-			uint8_t cMarket = *pMarket;
+			unsigned char cMarket = *pMarket;
 			XDFAPI_MarketStatusInfo oInfo;
+			tagQUO_MarketInfo	tagMarketInfo;
+			QUO_MARKET_ID		eMarketID = (QUO_MARKET_ID)DataCollectorPool::MkIDCast( cMarket );
 
-			oInfo.MarketID = cMarket;
-			int iret = Global_DllMgr.GetSimpleMarketInfo(cMarket, &oInfo);
-			if (iret >0)
+			if( GetMarketInfo( eMarketID, &tagMarketInfo ) >= 0 )
 			{
+				oInfo.MarketID = cMarket;
+				oInfo.MarketDate = tagMarketInfo.uiMarketDate;
+				oInfo.MarketTime = tagMarketInfo.uiMarketTime;
+				oInfo.MarketStatus = 1;
+
 				*pInfo = oInfo;
-				return 1;
+				return 0;
 			}
 		}
 	}
-	if (FuncNo ==101)		//获取某个市场的市场日期和市场时间(参数:uint8*,   XDFAPI_MarketStatusInfo*)
-	{
-		uint8_t * pMarket = (uint8_t*)wParam;
-		XDFAPI_MarketStatusInfo* pInfo = (XDFAPI_MarketStatusInfo*)lParam;
-		if (pMarket && pInfo)
-		{
-			uint8_t cMarket = *pMarket;
-			XDFAPI_MarketStatusInfo oInfo;
 
-			oInfo.MarketID = cMarket;
-			int iret = Global_DllMgr.GetQuicksSimpleMarketInfo(cMarket, &oInfo);
-			if (iret >0)
-			{
-				*pInfo = oInfo;
-				return 1;
-			}
-		}
-	}*/
-	/*
-	else if (FuncNo == 101)		//获取 当前｛商品期货和商品期权｝挂载的是14 还是35, 还是(-1) ??( 参数:int*  )
-	{
-		int iret = Global_Option.GetCnfOptMarketID();
-		int* pid = (int*)wParam;
-		if (pid)
-		{
-			*pid = iret;
-		}
-		return 1;
-	}
-	*/
-
-
-	return 0;
+	return -1;
 }
 
 void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen )

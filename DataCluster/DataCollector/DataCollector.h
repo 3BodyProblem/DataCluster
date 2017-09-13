@@ -104,7 +104,13 @@ public:///< 数据采集模块事件定义
 	 */
 	bool					IsAlive();
 
+	/**
+	 * @brief				获取DLL路径
+	 */
+	const std::string&		GetDllPath();
+
 protected:
+	std::string				m_sDllPath;						///< DLL路径信息
 	bool					m_bActivated;					///< 是否已经激活
 	bool					m_bIsProxyPlugin;				///< 是否为传输代理插件
 	CollectorStatus			m_oCollectorStatus;				///< 数据采集模块的状态
