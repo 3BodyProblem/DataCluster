@@ -5,7 +5,7 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "Interface.h"
+#include "../../../DataNode/DataNode/Interface.h"
 #include "../Infrastructure/Dll.h"
 #include "../Infrastructure/Lock.h"
 #include "../Protocal/DataCluster_Protocal.h"

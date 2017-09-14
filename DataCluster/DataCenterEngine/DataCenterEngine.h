@@ -9,7 +9,6 @@
 #include "../Interface.h"
 #include "../Infrastructure/Lock.h"
 #include "../Infrastructure/Thread.h"
-#include "../DataCollector/Interface.h"
 #include "../MemoryDB/MemoryDatabase.h"
 #include "../MemoryDB/InnerTableFiller.h"
 #include "../DataCollector/DataCollector.h"

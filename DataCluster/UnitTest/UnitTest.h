@@ -6,7 +6,7 @@
 
 #include <vector>
 #include "gtest/gtest.h"
-#include "../DataCollector/Interface.h"
+#include "../../../DataNode/DataNode/Interface.h"
 
 
 ///< --------------------- 单元测试类定义 --------------------------------

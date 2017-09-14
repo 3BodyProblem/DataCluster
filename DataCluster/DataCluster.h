@@ -3,10 +3,10 @@
 
 
 #include "Interface.h"
-#include "DataCollector/Interface.h"
 #include "QuoteCltDef.h"
 #include "QuoteClientApi.h"
 #include "DataClient/DataClient.h"
+#include "../../DataNode/DataNode/Interface.h"
 
 
 /**
