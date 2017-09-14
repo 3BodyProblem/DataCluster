@@ -72,6 +72,10 @@ int DataIOEngine::Initialize( I_QuotationCallBack* pIQuotation )
 		return nErrorCode;
 	}
 
+tagDLFutureMarketInfo_LF100	tagMarketInfo = { 0 };
+tagMarketInfo.MarketID = QUO_MARKET_DCE;
+OnImage( 100, (char*)&tagMarketInfo, sizeof(tagDLFutureMarketInfo_LF100), true );
+
 	m_oDatabaseIO.RecoverDatabase();
 	if( 0 >= (nErrorCode = m_oDataCollectorPool.Initialize( this )) )
 	{
