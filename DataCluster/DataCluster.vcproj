@@ -267,11 +267,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\MemoryDB\Interface.cpp"
+				RelativePath="..\..\DataTablesPainter\DataTablesPainter\Interface.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\MemoryDB\Interface.h"
+				RelativePath="..\..\DataTablesPainter\DataTablesPainter\Interface.h"
 				>
 			</File>
 			<File

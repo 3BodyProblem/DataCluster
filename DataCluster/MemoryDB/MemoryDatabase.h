@@ -4,7 +4,7 @@
 
 #include <set>
 #include <map>
-#include "Interface.h"
+#include "../../../DataTablesPainter/DataTablesPainter/Interface.h"
 #include "../Infrastructure/Dll.h"
 #include "../Infrastructure/Lock.h"
 
