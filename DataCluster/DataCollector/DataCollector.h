@@ -57,10 +57,11 @@ public:
 	 * @brief				数据采集模块初始化
 	 * @param[in]			pIDataCallBack				行情回调接口
 	 * @param[in]			sDllPath					数据采集模块的加载路径
+	 * @param[in]			sMkName						市场名称
 	 * @return				==0							成功
 							!=0							错误
 	 */
-	int						Initialize( I_DataHandle* pIDataCallBack, std::string sDllPath );
+	int						Initialize( I_DataHandle* pIDataCallBack, std::string sDllPath, std::string sMkName );
 
 	/**
 	 * @breif				数据采集模块释放退出
@@ -109,7 +110,13 @@ public:///< 数据采集模块事件定义
 	 */
 	const std::string&		GetDllPath();
 
+	/**
+	 * @brief				获取市场名称
+	 */
+	const std::string&		GetMkName();
+
 protected:
+	std::string				m_sMkName;						///< 市场名称
 	std::string				m_sDllPath;						///< DLL路径信息
 	bool					m_bActivated;					///< 是否已经激活
 	bool					m_bIsProxyPlugin;				///< 是否为传输代理插件
@@ -167,6 +174,7 @@ public:
 public:
 	/**
 	 * @brief				根据市场编号取得数据采集模块
+	 * @param[in]			nMkID							旧的市场编号ID
 	 */
 	DataCollector*			GetCollectorByMkID( unsigned int nMkID );
 

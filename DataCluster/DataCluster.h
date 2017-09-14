@@ -101,10 +101,10 @@ extern "C"
 	extern MDataClient						Global_Client;
 	extern QuotationAdaptor					Global_CBAdaptor;
 	extern QuoteClientSpi*					Global_pSpi;
-	__declspec(dllexport) const char*		GetDllVersion( int &nMajorVersion, int &nMinorVersion );
-	__declspec(dllexport) QuoteClientApi*	CreateQuoteApi( const char* pszDebugPath );
-	__declspec(dllexport) QuotePrimeApi*	CreatePrimeApi();
-	__declspec(dllexport) int				GetSettingInfo( tagQuoteSettingInfo* pArrMarket, int nCount );
+	__declspec(dllexport) const char*		__stdcall GetDllVersion( int &nMajorVersion, int &nMinorVersion );
+	__declspec(dllexport) QuoteClientApi*	__stdcall CreateQuoteApi( const char* pszDebugPath );
+	__declspec(dllexport) QuotePrimeApi*	__stdcall CreatePrimeApi();
+	__declspec(dllexport) int				__stdcall GetSettingInfo( tagQuoteSettingInfo* pArrMarket, int nCount );
 }
 
 

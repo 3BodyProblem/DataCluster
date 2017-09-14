@@ -32,9 +32,16 @@ class InnerRecord
 {
 friend class TableFillerRegister;
 public:
-	InnerRecord( unsigned int nMsgID, unsigned int nMsgLen, unsigned int nBigTableID )
-		 : m_nMessageID( nMsgID ), m_nMessageLength( nMsgLen ), m_nBigTableID( nBigTableID )
+	InnerRecord( unsigned int nMsgID, unsigned int nMsgLen, unsigned int nBigTableID, bool bIsSingleton = false )
+		 : m_nMessageID( nMsgID ), m_nMessageLength( nMsgLen ), m_nBigTableID( nBigTableID ), m_bIsSingleton( bIsSingleton )
 	{}
+
+	/**
+	 * @brief					是否为数据表中的唯一记录（主键为空，不赋值）
+	 */
+	bool						IsSingleton()	{
+		return m_bIsSingleton;
+	}
 
 	/**
 	 * @brief					获取消息记录的ID号
@@ -102,6 +109,7 @@ protected:
 	unsigned int				m_nMessageID;			///< 消息ID
 	unsigned int				m_nMessageLength;		///< 消息长度
 	unsigned int				m_nBigTableID;			///< 数据大表的ID
+	bool						m_bIsSingleton;			///< 数据表中的唯一记录（主键为空，不赋值）
 protected:
 	T_BIGTABLE_RECORD			m_objUnionData;			///< 大表数据结构联合体
 };

@@ -20,7 +20,7 @@ public:
 	/**
 	 * @brief							新添dll路径
 	 */
-	void								AddPath( std::string sDllPath );
+	void								AddPath( std::string sDllPath, std::string sQuotationName );
 
 	/**
 	 * @brief							获取配置的路径数量
@@ -34,8 +34,16 @@ public:
 	 */
 	std::string							GetPathByPos( unsigned int nPos );
 
+	/**
+	 * @brief							根据位置索引获取市场名称
+	 * @param[in]						nPos				位置索引
+	 * @return							市场描述
+	 */
+	std::string							GetMkNameByPos( unsigned int nPos );
+
 protected:
 	CriticalObject						m_oLock;						///< 锁
+	std::vector<std::string>			m_vctMarketName;				///< 各市场名称
 };
 
 

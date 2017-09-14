@@ -72,10 +72,6 @@ int DataIOEngine::Initialize( I_QuotationCallBack* pIQuotation )
 		return nErrorCode;
 	}
 
-tagDLFutureMarketInfo_LF100	tagMarketInfo = { 0 };
-tagMarketInfo.MarketID = QUO_MARKET_DCE;
-OnImage( 100, (char*)&tagMarketInfo, sizeof(tagDLFutureMarketInfo_LF100), true );
-
 	m_oDatabaseIO.RecoverDatabase();
 	if( 0 >= (nErrorCode = m_oDataCollectorPool.Initialize( this )) )
 	{
@@ -151,8 +147,6 @@ int DataIOEngine::OnQuery( unsigned int nDataID, char* pData, unsigned int nData
 
 int DataIOEngine::OnImage( unsigned int nDataID, char* pData, unsigned int nDataLen, bool bLastFlag )
 {
-if( nDataID%100 != 1 && nDataID%100 != 0 )
-	return 0;
 	unsigned __int64		nSerialNo = 0;
 	int						nAffectNum = 0;
 	InnerRecord*			pRecord = TableFillerRegister::GetRegister().PrepareNewTableBlock( nDataID, pData, nDataLen );
@@ -176,10 +170,7 @@ if( nDataID%100 != 1 && nDataID%100 != 0 )
 		pRecord->FillMessage2BigTableRecord( pData );
 		nAffectNum = m_oDatabaseIO.UpdateRecord( pRecord->GetBigTableID(), pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), nSerialNo );
 	}
-{
-tagQUO_MarketInfo	tagMarketInfo;
-int a = GetMarketInfo( (QUO_MARKET_ID)(pRecord->GetBigTableID()/100), &tagMarketInfo );
-}
+
 	return nAffectNum;
 }
 

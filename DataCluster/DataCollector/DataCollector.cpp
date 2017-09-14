@@ -87,14 +87,20 @@ const std::string& DataCollector::GetDllPath()
 	return m_sDllPath;
 }
 
+const std::string& DataCollector::GetMkName()
+{
+	return m_sMkName;
+}
+
 bool DataCollector::IsProxy()
 {
 	return m_bIsProxyPlugin;
 }
 
-int DataCollector::Initialize( I_DataHandle* pIDataCallBack, std::string sDllPath )
+int DataCollector::Initialize( I_DataHandle* pIDataCallBack, std::string sDllPath, std::string sMkName )
 {
 	Release();
+	m_sMkName = sMkName;
 	m_sDllPath = sDllPath;
 	DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Initialize() : Initializing DataCollector [%s] ......", sDllPath.c_str() );
 
@@ -260,7 +266,7 @@ int DataCollectorPool::Initialize( I_DataHandle* pIDataCallBack )
 		std::string		sDcDllPath = refDcDllTable.GetPathByPos( n );
 
 		std::vector<DataCollector>::push_back( DataCollector() );
-		if( this->operator []( n ).Initialize( pIDataCallBack, sDcDllPath ) < 0 )
+		if( this->operator []( n ).Initialize( pIDataCallBack, sDcDllPath, refDcDllTable.GetMkNameByPos( n ) ) < 0 )
 		{
 			DataIOEngine::GetEngineObj().WriteError( "DataCollectorPool::Initialize() : failed 2 initialize data collector, %s", sDcDllPath.c_str() );
 			this->operator []( n ).Release();

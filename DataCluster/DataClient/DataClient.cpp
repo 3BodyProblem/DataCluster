@@ -269,6 +269,7 @@ void	MStreamWrite::PutMsg(unsigned int ntype, char* pStruct, int nStructSize)
 ///< ------------------------------------------------------------------------------
 
 
+const unsigned int	MAX_QUERY_BUF_SIZE = 1024*1024*80;
 MDataIO				g_oDataIO;
 
 
@@ -307,7 +308,7 @@ int STDCALL	MDataClient::Init()
 {
 	if( NULL == m_pQueryBuffer )
 	{
-		m_pQueryBuffer = new char[1024*1024*30];
+		m_pQueryBuffer = new char[MAX_QUERY_BUF_SIZE];
 	}
 
 	if (!Global_bInit)
@@ -913,7 +914,7 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 {
 	int							nInnerMkID = DataCollectorPool::MkIDCast( cMarket );
 	unsigned __int64			nSerialNo = 0;
-	tagQUO_MarketInfo			tagMkInfo;
+	T_Inner_MarketInfo			tagMkInfo;
 	CriticalLock				lock( m_oLock );
 	MStreamWrite				oMSW( pszInBuf, nInBytes );
 	DatabaseAdaptor&			refDatabase = DataIOEngine::GetEngineObj().GetDatabaseObj();
@@ -926,13 +927,13 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 		return -1;
 	}
 
-	if( refDatabase.QueryRecord( (nInnerMkID*100+1), (char*)&tagMkInfo, sizeof(tagQUO_MarketInfo), nSerialNo ) <= 0 )
+	::memset( &tagMkInfo, 0, sizeof(T_Inner_MarketInfo) );
+	if( refDatabase.QueryRecord( (nInnerMkID*100+1), (char*)&tagMkInfo, sizeof(T_Inner_MarketInfo), nSerialNo ) <= 0 )
 	{
 		return -2;
 	}
 
-	::memset( &tagMkInfo, 0, sizeof(tagQUO_MarketInfo) );
-	nCount = tagMkInfo.uiWareCount;
+	nCount = tagMkInfo.objData.uiWareCount;
 	if( 0 == pszInBuf || 0 == nInBytes )		///< 通过nCount返回码表个数
 	{
 		return 1;
@@ -981,12 +982,12 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 	for( int i = 0; i < 3; i++ )
 	{
 		tagQUO_ReferenceData*		pRefData = (tagQUO_ReferenceData*)m_pQueryBuffer;
-		if( (nDataSize=refDatabase.QueryBatchRecords( (nInnerMkID*100+2), m_pQueryBuffer, 1024*1024*10, nSerialNo )) <= 0 )
+		if( (nDataSize=refDatabase.QueryBatchRecords( (nInnerMkID*100+2), m_pQueryBuffer, MAX_QUERY_BUF_SIZE, nSerialNo )) <= 0 )
 		{
 			return -4;
 		}
 
-		for( unsigned int nOffset = 0; nOffset < nDataSize; nOffset+=MsgSize )
+		for( unsigned int nOffset = 0; nOffset < nDataSize; nOffset+=sizeof(tagQUO_ReferenceData) )
 		{
 			XDFAPI_NameTableCnf			tagCnfName = { 0 };
 			XDFAPI_NameTableSh			tagShL1Name = { 0 };
@@ -1021,11 +1022,11 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 				tagCnfName.SecKind = CastKindID4CFF( pRefData->szCode );
 				tagZJQHName.Market = XDF_CF;
 				memcpy( tagZJQHName.Code, pRefData->szCode, 6 );
-				tagZJQHName.ContractMult = tagMkInfo.mKindRecord[pRefData->uiKindID].uiContractMult;	///< 合约乘数
+				tagZJQHName.ContractMult = tagMkInfo.objData.mKindRecord[pRefData->uiKindID].uiContractMult;	///< 合约乘数
 				//tagZJQHName.ExFlag = pRefData->ExFlag;			///< 最后交易日标记,0x01表示是最后交易日只对普通合约有效；其他值暂未定义
 				strncpy(tagZJQHName.Name, pRefData->szName, 8);
 				//tagZJQHName->ObjectMId = pRefData->ObjectMId;		///< 标的指数市场编号[参见数据字典-市场编号]，0xFF表示未知
-				strncpy(tagZJQHName.ObjectCode, tagMkInfo.mKindRecord[pRefData->uiKindID].szUnderlyingCode,6);
+				strncpy(tagZJQHName.ObjectCode, tagMkInfo.objData.mKindRecord[pRefData->uiKindID].szUnderlyingCode,6);
 			}
 			else if( XDF_CNF == cMarket )//商品期货(上海/郑州/大连)
 			{
@@ -1034,9 +1035,9 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 				pData = (char*)&tagCnfName;
 				tagCnfName.Market = XDF_CNF;
 				tagCnfName.SecKind = CastKindID4CNF( nInnerMkID, NULL );
-				memcpy( tagCnfName.Code,pRefData->szCode, 20 );
-				memcpy( tagCnfName.Name, pRefData->szName, 40 );
-				tagCnfName.LotFactor = tagMkInfo.mKindRecord[pRefData->uiKindID].uiLotFactor;
+				memcpy( tagCnfName.Code,pRefData->szCode, sizeof(tagCnfName.Code) );
+				memcpy( tagCnfName.Name, pRefData->szName, sizeof(tagCnfName.Name) );
+				tagCnfName.LotFactor = tagMkInfo.objData.mKindRecord[pRefData->uiKindID].uiLotFactor;
 			}
 			else if( XDF_SHOPT == cMarket )//上证期权
 			{
@@ -1048,21 +1049,21 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 				memcpy(tagSHOPTName.Name, pRefData->szName,20);
 				tagSHOPTName.SecKind = CastKindID4SHOPT( pRefData->szCode );
 				memcpy(tagSHOPTName.ContractID, pRefData->szContractID, 19);
-				tagSHOPTName.OptionType = tagMkInfo.mKindRecord[pRefData->uiKindID].cOptionType;
+				tagSHOPTName.OptionType = tagMkInfo.objData.mKindRecord[pRefData->uiKindID].cOptionType;
 				tagSHOPTName.CallOrPut = pRefData->cCallOrPut;
 
 				//tagSHOPTName.PreClosePx = pRefData->C;//合约昨收(如遇除权除息则为调整后的收盘价格)(精确到厘)//[*放大倍数]
 				//tagSHOPTName.PreSettlePx = pRefData->;//合约昨结//[*放大倍数]
 				//tagSHOPTName.LeavesQty = pRefData->;//未平仓合约数 = 昨持仓 单位是(张)
-				memcpy(tagSHOPTName.UnderlyingCode, tagMkInfo.mKindRecord[pRefData->uiKindID].szUnderlyingCode, 6);
+				memcpy(tagSHOPTName.UnderlyingCode, tagMkInfo.objData.mKindRecord[pRefData->uiKindID].szUnderlyingCode, 6);
 				//memcpy(tagSHOPTName.UnderlyingName, pRefData-, 6);//标的证券名称
 				//memcpy(tagSHOPTName.UnderlyingType, pRefData-, 3);//标的证券类型(EBS -ETF, ASH -A股)
 				//tagSHOPTName.UnderlyingClosePx = ;//标的证券的昨收 //[*放大倍数]
 				//tagSHOPTName.PriceLimitType = pRefData-//涨跌幅限制类型(N 有涨跌幅)(R 无涨跌幅)
 				//tagSHOPTName.UpLimit = pRefData->;//当日期权涨停价格(精确到厘) //[*放大倍数]
 				//tagSHOPTName.DownLimit;//当日期权跌停价格(精确到厘) //[*放大倍数]
-				tagSHOPTName.LotSize = tagMkInfo.mKindRecord[pRefData->uiKindID].uiLotSize;//一手等于几张合约
-				tagSHOPTName.ContractUnit = tagMkInfo.mKindRecord[pRefData->uiKindID].uiContractUnit;//合约单位(经过除权除息调整后的合约单位，一定为整数)
+				tagSHOPTName.LotSize = tagMkInfo.objData.mKindRecord[pRefData->uiKindID].uiLotSize;//一手等于几张合约
+				tagSHOPTName.ContractUnit = tagMkInfo.objData.mKindRecord[pRefData->uiKindID].uiContractUnit;//合约单位(经过除权除息调整后的合约单位，一定为整数)
 				tagSHOPTName.XqPrice = pRefData->dExercisePrice * GetRate( XDF_SHOPT, tagSHOPTName.SecKind ) + 0.5;//行权价格(精确到厘) //[*放大倍数] 
 				tagSHOPTName.StartDate = pRefData->uiStartDate;//首个交易日(YYYYMMDD)
 				tagSHOPTName.EndDate = pRefData->uiEndDate;//最后交易日(YYYYMMDD)
@@ -1089,15 +1090,15 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 				tagZJOPTName.Market = XDF_ZJOPT;
 				memcpy(tagZJOPTName.Code, pRefData->szCode, 32);
 				tagZJOPTName.SecKind = CastKindID4CFFOPT( pRefData->szCode );
-				tagZJOPTName.ContractMult = tagMkInfo.mKindRecord[pRefData->uiKindID].uiContractMult;	//合约乘数
-				tagZJOPTName.ContractUnit = tagMkInfo.mKindRecord[pRefData->uiKindID].uiContractUnit;	//合约单位
+				tagZJOPTName.ContractMult = tagMkInfo.objData.mKindRecord[pRefData->uiKindID].uiContractMult;	//合约乘数
+				tagZJOPTName.ContractUnit = tagMkInfo.objData.mKindRecord[pRefData->uiKindID].uiContractUnit;	//合约单位
 				tagZJOPTName.StartDate = pRefData->uiStartDate;		//首个交易日(YYYYMMDD)
 				tagZJOPTName.EndDate = pRefData->uiEndDate;				//最后交易日(YYYYMMDD)
 				tagZJOPTName.XqDate = pRefData->uiExerciseDate;				//行权日(YYYYMMDD)
 				tagZJOPTName.DeliveryDate = pRefData->uiDeliveryDate;	//交割日(YYYYMMDD)
 				tagZJOPTName.ExpireDate = pRefData->uiExpireDate;		//到期日(YYYYMMDD)
 				//pTable->ObjectMId = pNameTb->ObjectMId;
-				strncpy( tagZJOPTName.ObjectCode, tagMkInfo.mKindRecord[pRefData->uiKindID].szUnderlyingCode, 6 );
+				strncpy( tagZJOPTName.ObjectCode, tagMkInfo.objData.mKindRecord[pRefData->uiKindID].szUnderlyingCode, 6 );
 			}
 			else if( XDF_SZOPT == cMarket )//深圳期权
 			{
@@ -1108,17 +1109,17 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 				tagSZOPTName.SecKind = CastKindID4SZOPT( pRefData->szCode );
 				memcpy(tagSZOPTName.Code, pRefData->szCode, 8);
 				memcpy(tagSZOPTName.Name, pRefData->szName,20);
-				memcpy(tagSZOPTName.ContractID, tagMkInfo.mKindRecord[pRefData->uiKindID].szUnderlyingCode, 20);
-				tagSZOPTName.OptionType = tagMkInfo.mKindRecord[pRefData->uiKindID].cOptionType;
+				memcpy(tagSZOPTName.ContractID, tagMkInfo.objData.mKindRecord[pRefData->uiKindID].szUnderlyingCode, 20);
+				tagSZOPTName.OptionType = tagMkInfo.objData.mKindRecord[pRefData->uiKindID].cOptionType;
 				tagSZOPTName.CallOrPut = pRefData->cCallOrPut;
 				//tagSZOPTName.PreClosePx = pRefData->C;//合约昨收(如遇除权除息则为调整后的收盘价格)(精确到厘)//[*放大倍数]
 				//tagSZOPTName.PreSettlePx = pRefData->;//合约昨结//[*放大倍数]
 				//tagSZOPTName.LeavesQty = pRefData->;//未平仓合约数 = 昨持仓 单位是(张)
-				memcpy(tagSZOPTName.UnderlyingCode, tagMkInfo.mKindRecord[pRefData->uiKindID].szUnderlyingCode, 6);
+				memcpy(tagSZOPTName.UnderlyingCode, tagMkInfo.objData.mKindRecord[pRefData->uiKindID].szUnderlyingCode, 6);
 				//tagSZOPTName.UpLimit = pRefData->;//当日期权涨停价格(精确到厘) //[*放大倍数]
 				//tagSZOPTName.DownLimit;//当日期权跌停价格(精确到厘) //[*放大倍数]
-				tagSZOPTName.LotSize = tagMkInfo.mKindRecord[pRefData->uiKindID].uiLotSize;//一手等于几张合约
-				tagSZOPTName.ContractUnit = tagMkInfo.mKindRecord[pRefData->uiKindID].uiContractUnit;//合约单位(经过除权除息调整后的合约单位，一定为整数)
+				tagSZOPTName.LotSize = tagMkInfo.objData.mKindRecord[pRefData->uiKindID].uiLotSize;//一手等于几张合约
+				tagSZOPTName.ContractUnit = tagMkInfo.objData.mKindRecord[pRefData->uiKindID].uiContractUnit;//合约单位(经过除权除息调整后的合约单位，一定为整数)
 				tagSZOPTName.XqPrice = pRefData->dExercisePrice * GetRate( XDF_SZOPT, tagSZOPTName.SecKind ) + 0.5;//行权价格(精确到厘) //[*放大倍数] 
 				tagSZOPTName.StartDate = pRefData->uiStartDate;//首个交易日(YYYYMMDD)
 				tagSZOPTName.EndDate = pRefData->uiEndDate;//最后交易日(YYYYMMDD)
@@ -1136,14 +1137,14 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 				tagCnfOPTName.SecKind = CastKindID4CNFOPT( nInnerMkID, NULL );
 				memcpy(tagCnfOPTName.Code,pRefData->szCode, 20);
 				memcpy(tagCnfOPTName.Name, pRefData->szName, 40);
-				tagCnfOPTName.LotFactor = tagMkInfo.mKindRecord[pRefData->uiKindID].uiLotFactor;
+				tagCnfOPTName.LotFactor = tagMkInfo.objData.mKindRecord[pRefData->uiKindID].uiLotFactor;
 				//tagCnfOPTName.LeavesQty = pRefData->;//未平仓合约数 = 昨持仓 单位是(张)
-				memcpy(tagCnfOPTName.UnderlyingCode, tagMkInfo.mKindRecord[pRefData->uiKindID].szUnderlyingCode, 6);
+				memcpy(tagCnfOPTName.UnderlyingCode, tagMkInfo.objData.mKindRecord[pRefData->uiKindID].szUnderlyingCode, 6);
 				//pTable->PriceLimitType = pNameTb->PriceLimitType;
 				//tagCnfOPTName.UpLimit = pRefData->;//当日期权涨停价格(精确到厘) //[*放大倍数]
 				//tagCnfOPTName.DownLimit;//当日期权跌停价格(精确到厘) //[*放大倍数]
-				tagCnfOPTName.LotSize = tagMkInfo.mKindRecord[pRefData->uiKindID].uiLotSize;//一手等于几张合约
-				tagCnfOPTName.ContractMult = tagMkInfo.mKindRecord[pRefData->uiKindID].uiContractMult;//合约单位(经过除权除息调整后的合约单位，一定为整数)
+				tagCnfOPTName.LotSize = tagMkInfo.objData.mKindRecord[pRefData->uiKindID].uiLotSize;//一手等于几张合约
+				tagCnfOPTName.ContractMult = tagMkInfo.objData.mKindRecord[pRefData->uiKindID].uiContractMult;//合约单位(经过除权除息调整后的合约单位，一定为整数)
 				tagCnfOPTName.XqPrice = pRefData->dExercisePrice * GetRate( XDF_CNFOPT, tagCnfOPTName.SecKind ) + 0.5;//行权价格(精确到厘) //[*放大倍数] 
 				tagCnfOPTName.StartDate = pRefData->uiStartDate;//首个交易日(YYYYMMDD)
 				tagCnfOPTName.EndDate = pRefData->uiEndDate;//最后交易日(YYYYMMDD)
@@ -1183,7 +1184,6 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 {
 	int							nInnerMkID = DataCollectorPool::MkIDCast( cMarket );
 	unsigned __int64			nSerialNo = 0;
-	tagQUO_MarketInfo			tagMkInfo;
 	CriticalLock				lock( m_oLock );
 	MStreamWrite				oMSW( pszInBuf, nInBytes );
 	DatabaseAdaptor&			refDatabase = DataIOEngine::GetEngineObj().GetDatabaseObj();
@@ -1196,12 +1196,6 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 		return -1;
 	}
 
-	if( refDatabase.QueryRecord( (nInnerMkID*100+1), (char*)&tagMkInfo, sizeof(tagQUO_MarketInfo), nSerialNo ) <= 0 )
-	{
-		return -2;
-	}
-
-	::memset( &tagMkInfo, 0, sizeof(tagQUO_MarketInfo) );
 	if( XDF_SH == cMarket || XDF_SZ == cMarket )
 	{
 		MsgType = 22;
@@ -1245,12 +1239,13 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 	for( int i = 0; i < 3; i++ )
 	{
 		tagQUO_SnapData*			pSnapData = (tagQUO_SnapData*)m_pQueryBuffer;
-		if( (nDataSize=refDatabase.QueryBatchRecords( (nInnerMkID*100+3), m_pQueryBuffer, 1024*1024*10, nSerialNo )) <= 0 )
+		nSerialNo = 0;
+		if( (nDataSize=refDatabase.QueryBatchRecords( (nInnerMkID*100+3), m_pQueryBuffer, MAX_QUERY_BUF_SIZE, nSerialNo )) <= 0 )
 		{
 			return -4;
 		}
 
-		for( unsigned int nOffset = 0; nOffset < nDataSize; nOffset+=MsgSize )
+		for( unsigned int nOffset = 0; nOffset < nDataSize; nOffset+=sizeof(tagQUO_SnapData) )
 		{
 			XDFAPI_CNFutOptData			tagCNFOPTStock = { 0 };
 			XDFAPI_SzOptData			tagSZOPTStock = { 0 };
@@ -1598,10 +1593,10 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 		if( nMsgID == 1 )
 		{
 			XDFAPI_MarketStatusInfo		tagData = { 0 };
-			tagQUO_MarketInfo*			pData = (tagQUO_MarketInfo*)pDataPtr;
+			T_Inner_MarketInfo*			pData = (T_Inner_MarketInfo*)pDataPtr;
 
-			tagData.MarketDate = pData->uiMarketDate;
-			tagData.MarketTime = pData->uiMarketTime;
+			tagData.MarketDate = pData->objData.uiMarketDate;
+			tagData.MarketTime = pData->objData.uiMarketTime;
 			tagData.MarketID = XDF_SH;
 			tagData.MarketStatus = 1;
 
@@ -1653,17 +1648,17 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 		if( nMsgID == 1 )
 		{
 			XDFAPI_MarketStatusInfo		tagData = { 0 };
-			tagQUO_MarketInfo*			pData = (tagQUO_MarketInfo*)pDataPtr;
+			T_Inner_MarketInfo*			pData = (T_Inner_MarketInfo*)pDataPtr;
 
-			tagData.MarketDate = pData->uiMarketDate;
-			tagData.MarketTime = pData->uiMarketTime;
+			tagData.MarketDate = pData->objData.uiMarketDate;
+			tagData.MarketTime = pData->objData.uiMarketTime;
 			tagData.MarketID = XDF_CF;
 			tagData.MarketStatus = 1;
 
 			oMSW.PutSingleMsg(1, (char*)&tagData, sizeof(XDFAPI_MarketStatusInfo));
 			
 		}
-		else if( nMsgID == 4 )
+		else if( nMsgID == 3 )
 		{
 			XDFAPI_CffexData			tagData = { 0 };
 			tagQUO_SnapData*			pData = (tagQUO_SnapData*)pDataPtr;
@@ -1701,17 +1696,17 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 		if( nMsgID == 1 )
 		{
 			XDFAPI_MarketStatusInfo		tagData = { 0 };
-			tagQUO_MarketInfo*			pData = (tagQUO_MarketInfo*)pDataPtr;
+			T_Inner_MarketInfo*			pData = (T_Inner_MarketInfo*)pDataPtr;
 
-			tagData.MarketDate = pData->uiMarketDate;
-			tagData.MarketTime = pData->uiMarketTime;
+			tagData.MarketDate = pData->objData.uiMarketDate;
+			tagData.MarketTime = pData->objData.uiMarketTime;
 			tagData.MarketID = XDF_CNF;
 			tagData.MarketStatus = 1;
 
 			oMSW.PutSingleMsg(1, (char*)&tagData, sizeof(XDFAPI_MarketStatusInfo));
 			
 		}
-		else if( nMsgID == 4 )
+		else if( nMsgID == 3 )
 		{
 			XDFAPI_CNFutureData			tagData = { 0 };
 			tagQUO_SnapData*			pData = (tagQUO_SnapData*)pDataPtr;
@@ -1750,16 +1745,16 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 		if( nMsgID == 1 )
 		{
 			XDFAPI_ShOptMarketStatus	tagData = { 0 };
-			tagQUO_MarketInfo*			pData = (tagQUO_MarketInfo*)pDataPtr;
+			T_Inner_MarketInfo*			pData = (T_Inner_MarketInfo*)pDataPtr;
 
-			tagData.MarketDate = pData->uiMarketDate;
-			tagData.MarketTime = pData->uiMarketTime;
+			tagData.MarketDate = pData->objData.uiMarketDate;
+			tagData.MarketTime = pData->objData.uiMarketTime;
 			tagData.TradingPhaseCode[0] = '1';
 
 			oMSW.PutSingleMsg(14, (char*)&tagData, sizeof(XDFAPI_ShOptMarketStatus));
 			
 		}
-		else if( nMsgID == 4 )
+		else if( nMsgID == 3 )
 		{
 			XDFAPI_ShOptData			tagData = { 0 };
 			tagQUO_SnapData*			pData = (tagQUO_SnapData*)pDataPtr;
@@ -1794,17 +1789,17 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 		if( nMsgID == 1 )
 		{
 			XDFAPI_MarketStatusInfo		tagData = { 0 };
-			tagQUO_MarketInfo*			pData = (tagQUO_MarketInfo*)pDataPtr;
+			T_Inner_MarketInfo*			pData = (T_Inner_MarketInfo*)pDataPtr;
 
-			tagData.MarketDate = pData->uiMarketDate;
-			tagData.MarketTime = pData->uiMarketTime;
+			tagData.MarketDate = pData->objData.uiMarketDate;
+			tagData.MarketTime = pData->objData.uiMarketTime;
 			tagData.MarketID = XDF_ZJOPT;
 			tagData.MarketStatus = 1;
 
 			oMSW.PutSingleMsg(1, (char*)&tagData, sizeof(XDFAPI_MarketStatusInfo));
 			
 		}
-		else if( nMsgID == 4 )
+		else if( nMsgID == 3 )
 		{
 			XDFAPI_ZjOptData			tagData = { 0 };
 			tagQUO_SnapData*			pData = (tagQUO_SnapData*)pDataPtr;
@@ -1843,17 +1838,17 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 		if( nMsgID == 1 )
 		{
 			XDFAPI_MarketStatusInfo		tagData = { 0 };
-			tagQUO_MarketInfo*			pData = (tagQUO_MarketInfo*)pDataPtr;
+			T_Inner_MarketInfo*			pData = (T_Inner_MarketInfo*)pDataPtr;
 
-			tagData.MarketDate = pData->uiMarketDate;
-			tagData.MarketTime = pData->uiMarketTime;
+			tagData.MarketDate = pData->objData.uiMarketDate;
+			tagData.MarketTime = pData->objData.uiMarketTime;
 			tagData.MarketID = XDF_SZOPT;
 			tagData.MarketStatus = 1;
 
 			oMSW.PutSingleMsg(1, (char*)&tagData, sizeof(XDFAPI_MarketStatusInfo));
 			
 		}
-		else if( nMsgID == 4 )
+		else if( nMsgID == 3 )
 		{
 			XDFAPI_SzOptData			tagData = { 0 };
 			tagQUO_SnapData*			pData = (tagQUO_SnapData*)pDataPtr;
@@ -1886,17 +1881,17 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 		if( nMsgID == 1 )
 		{
 			XDFAPI_MarketStatusInfo		tagData = { 0 };
-			tagQUO_MarketInfo*			pData = (tagQUO_MarketInfo*)pDataPtr;
+			T_Inner_MarketInfo*			pData = (T_Inner_MarketInfo*)pDataPtr;
 
-			tagData.MarketDate = pData->uiMarketDate;
-			tagData.MarketTime = pData->uiMarketTime;
+			tagData.MarketDate = pData->objData.uiMarketDate;
+			tagData.MarketTime = pData->objData.uiMarketTime;
 			tagData.MarketID = XDF_CNFOPT;
 			tagData.MarketStatus = 1;
 
 			oMSW.PutSingleMsg(1, (char*)&tagData, sizeof(XDFAPI_MarketStatusInfo));
 			
 		}
-		else if( nMsgID == 4 )
+		else if( nMsgID == 3 )
 		{
 			XDFAPI_CNFutOptData			tagData = { 0 };
 			tagQUO_SnapData*			pData = (tagQUO_SnapData*)pDataPtr;
@@ -1949,6 +1944,7 @@ void QuotationAdaptor::OnStatus( QUO_MARKET_ID eMarketID, QUO_MARKET_STATUS eMar
 	if( Global_pSpi )
 	{
 		XDFRunStat		eStatus = XRS_None;
+		unsigned char	cMkID = DataCollectorPool::Cast2OldMkID(eMarketID);
 
 		if( QUO_STATUS_INIT == eMarketStatus )
 		{
@@ -1963,7 +1959,7 @@ void QuotationAdaptor::OnStatus( QUO_MARKET_ID eMarketID, QUO_MARKET_STATUS eMar
 			eStatus = XRS_Unknow;
 		}
 
-		Global_pSpi->XDF_OnRspStatusChanged( eMarketID, eStatus );
+		Global_pSpi->XDF_OnRspStatusChanged( cMkID, eStatus );
 	}
 }
 

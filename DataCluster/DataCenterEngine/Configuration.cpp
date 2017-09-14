@@ -60,12 +60,13 @@ std::string GetModulePath( void* hModule )
 }
 
 
-void DllPathTable::AddPath( std::string sDllPath )
+void DllPathTable::AddPath( std::string sDllPath, std::string sQuotationName )
 {
 	CriticalLock			lock( m_oLock );
 
-	DataIOEngine::GetEngineObj().WriteInfo( "DllPathTable::AddPath() : dll path: %s", sDllPath.c_str() );
+	DataIOEngine::GetEngineObj().WriteInfo( "DllPathTable::AddPath() : %s : dll path: %s", sQuotationName.c_str(), sDllPath.c_str() );
 	std::vector<std::string>::push_back( sDllPath );
+	m_vctMarketName.push_back( sQuotationName );
 }
 
 unsigned int DllPathTable::GetCount()
@@ -73,6 +74,20 @@ unsigned int DllPathTable::GetCount()
 	CriticalLock			lock( m_oLock );
 
 	return std::vector<std::string>::size();
+}
+
+std::string DllPathTable::GetMkNameByPos( unsigned int nPos )
+{
+	CriticalLock			lock( m_oLock );
+	unsigned int			nSize = m_vctMarketName.size();
+
+	if( nPos >= nSize )
+	{
+		DataIOEngine::GetEngineObj().WriteWarning( "DllPathTable::GetMkNameByPos() : invalid dll path table index ( %u >= %u )", nPos, nSize );
+		return "";
+	}
+
+	return m_vctMarketName[nPos];
 }
 
 std::string DllPathTable::GetPathByPos( unsigned int nPos )
@@ -146,7 +161,10 @@ int Configuration::Load()
 			return -4;
 		}
 
-		m_oDCPathTable.AddPath( sQuotationPluginPath );
+		::sprintf( pszDllPath, "Name_%d", n );
+		std::string		sQuotationName = oIniFile.getStringValue( std::string("Plugin"), std::string(pszDllPath), nErrCode );
+
+		m_oDCPathTable.AddPath( sQuotationPluginPath, sQuotationName );
 	}
 
 	m_bLoaded = true;

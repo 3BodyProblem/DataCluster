@@ -171,7 +171,7 @@ extern "C"
 		::printf( "----------------------  [End]  -------------------------\n\n\n" );
 	}
 
-	__declspec(dllexport) const char*		GetDllVersion( int &nMajorVersion, int &nMinorVersion )
+	__declspec(dllexport) const char*		__stdcall GetDllVersion( int &nMajorVersion, int &nMinorVersion )
 	{
 		static int		s_nMajorVer = 1;
 		static int		s_nMinorVer = 1000;
@@ -191,7 +191,7 @@ extern "C"
 	QuotationAdaptor			Global_CBAdaptor;
 	QuoteClientSpi*				Global_pSpi = NULL;
 
-	__declspec(dllexport) QuoteClientApi*	CreateQuoteApi( const char* pszDebugPath )
+	__declspec(dllexport) QuoteClientApi*	__stdcall CreateQuoteApi( const char* pszDebugPath )
 	{
 		if (!Global_bInit)
 		{
@@ -206,12 +206,12 @@ extern "C"
 		return &Global_Client;
 	}
 
-	__declspec(dllexport) QuotePrimeApi* CreatePrimeApi()
+	__declspec(dllexport) QuotePrimeApi* __stdcall CreatePrimeApi()
 	{
 		return &Global_PrimeClient;
 	}
 
-	__declspec(dllexport) int	GetSettingInfo( tagQuoteSettingInfo* pArrMarket, int nCount )
+	__declspec(dllexport) int	__stdcall GetSettingInfo( tagQuoteSettingInfo* pArrMarket, int nCount )
 	{
 		if( 0 != Configuration::GetConfigObj().Load() )
 		{
@@ -223,32 +223,41 @@ extern "C"
 			return -2;
 		}
 
-		DllPathTable&		refDllTable = Configuration::GetConfigObj().GetDCPathTable();
-		int					nDllNum = min( refDllTable.GetCount(), nCount );
-
-		for( int n = 0; n < nDllNum; n++ )
+		int						nReturnNum = 0;
+		DataCollectorPool&		refPool = DataIOEngine::GetEngineObj().GetCollectorPool();
+		for( int nOldMkID = 0; nOldMkID < 64; nOldMkID++ )
 		{
-			::strcpy( pArrMarket[n].cAddress, refDllTable.GetPathByPos( n ).c_str() );
+			DataCollector*		pCollector = refPool.GetCollectorByMkID( nOldMkID );
 
-/*	char			szDll[255];
-	int				nMarketID;
-	int				nSleep;*/
-//	char			cMarketChn[64];
-//	char			cAddress[128];
+			if( NULL != pCollector )
+			{
+				int						nStatus = XRS_None;
+				char					pszStatus[1024] = { 0 };
+				unsigned int			nStatusBufLen = sizeof(pszStatus);
+				enum E_SS_Status		eStatus = pCollector->InquireDataCollectorStatus( pszStatus, nStatusBufLen );
+
+				if( ET_SS_WORKING == eStatus )
+				{
+					nStatus = XRS_Normal;
+				}
+				else if( eStatus >= ET_SS_CONNECTED && eStatus < ET_SS_WORKING )
+				{
+					nStatus = XRS_Init;
+				}
+				else
+				{
+					nStatus = XRS_Unknow;
+				}
+
+				pArrMarket[nReturnNum].cMarketID = nOldMkID;
+				pArrMarket[nReturnNum].nStatus = nStatus;
+				::strcpy( pArrMarket[nReturnNum].cMarketChn, pCollector->GetMkName().c_str() );
+				::strcpy( pArrMarket[nReturnNum].cAddress, pCollector->GetDllPath().c_str() );
+				nReturnNum++;
+			}
 		}
 
-/*
-		tagKeyFileInfo oInfo;
-		for (int i=0; i<ncopycount; i++)
-		{
-		Global_Option.GetKeyFileInfo(i, oInfo);
-		pArrMarket[i].cMarketID = oInfo.nMarketID;
-		strcpy(pArrMarket[i].cMarketChn, oInfo.cMarketChn);
-		strcpy(pArrMarket[i].cAddress, oInfo.cAddress);
-		pArrMarket[i].nStatus = Global_DllMgr.GetMarketStat(oInfo.nMarketID);
-		}*/
-
-		return nDllNum;
+		return nReturnNum;
 	}
 }
 
