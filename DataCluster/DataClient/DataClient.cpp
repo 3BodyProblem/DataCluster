@@ -681,14 +681,15 @@ int	 STDCALL		MDataClient::GetMarketInfo( unsigned char cMarket, char* pszInBuf,
 
 	for( int n = 0; n < tagMkInfo.objData.uiKindCount; n++ )
 	{
-		tagQUO_KindInfo&		tagCategory = tagMkInfo.objData.mKindRecord[n];
 		XDFAPI_MarketKindInfo	oInfo = { 0 };
+		std::map<int,XDFAPI_MarketKindInfo>&	refKindTable = m_mapMarketKind[cMarket];
+		tagQUO_KindInfo&						tagCategory = tagMkInfo.objData.mKindRecord[n];
 
-		oInfo.Serial = n;
-		memcpy(oInfo.KindName, tagCategory.szKindName, 8);
-//		oInfo.WareCount = tagCategory.;
-//		oInfo.PriceRate = tagCategory->;
-		oInfo.LotSize = tagCategory.uiLotSize;
+		oInfo.Serial = n;									///< 序号
+		memcpy(oInfo.KindName, tagCategory.szKindName, 8);	///< 类别的名称
+	//	unsigned short					WareCount;				//该类商品的数量
+		oInfo.PriceRate = refKindTable[n].PriceRate;		///< //该类别中价格放大倍数[10的多少次方]
+		oInfo.LotSize = tagCategory.uiLotSize;				///< 该类别中"手"比率
 		oMSW.PutMsg( 101, (char*)&oInfo, sizeof(oInfo) );
 	}
 
