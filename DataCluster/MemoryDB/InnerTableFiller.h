@@ -102,8 +102,10 @@ public:
 	/**
 	 * @brief					将协议消息结构的数据设置到大表记录
 								每个传输体系里的Message都要实现一个本方法
+	 * @param[in]				pMessagePtr				消息指针
+	 * @param[in]				bNewRecord				是否为新记录
 	 */
-	virtual void				FillMessage2BigTableRecord( char* pMessagePtr ) = 0;
+	virtual void				FillMessage2BigTableRecord( char* pMessagePtr, bool bNewRecord = false ) = 0;
 
 protected:
 	unsigned int				m_nMessageID;			///< 消息ID

@@ -8,6 +8,7 @@
 #include "../../../DataNode/DataNode/Interface.h"
 #include "../Infrastructure/Dll.h"
 #include "../Infrastructure/Lock.h"
+#include "../Infrastructure/Thread.h"
 #include "../Protocal/DataCluster_Protocal.h"
 
 
@@ -47,7 +48,7 @@ private:
  * @date					2017/5/3
  * @author					barry
  */
-class DataCollector
+class DataCollector : public SimpleTask
 {
 public:
 	DataCollector();
@@ -115,6 +116,14 @@ public:///< 数据采集模块事件定义
 	 */
 	const std::string&		GetMkName();
 
+protected:///< 线程任务相关函数
+	/**
+	 * @brief				任务函数(内循环)
+	 * @return				==0							成功
+							!=0							失败
+	 */
+	virtual int				Execute();
+
 protected:
 	std::string				m_sMkName;						///< 市场名称
 	std::string				m_sDllPath;						///< DLL路径信息
@@ -161,10 +170,15 @@ public:
 public:
 	/**
 	 * @brief				维持各加载数据采集器的连接(24hr)
-	 * @return				>=0								成功
-							<0								失败
+	 * @return				true							成功
 	 */
-	int						PreserveAllConnection();
+	bool					PreserveAllConnection();
+
+	/**
+	 * @brief				判断是否已经全部启动可以服务
+	 * @return				true							全部可服务
+	 */
+	bool					IsWorking();
 
 	/**
 	 * @brief				有效数据采集器的数量

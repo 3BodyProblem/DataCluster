@@ -181,27 +181,13 @@ void DataCollector::HaltDataCollector()
 
 int DataCollector::RecoverDataCollector()
 {
-	DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::RecoverDataCollector() : recovering data collector ......" );
-
 	if( NULL == m_pFuncRecoverQuotation )
 	{
 		DataIOEngine::GetEngineObj().WriteError( "DataCollector::RecoverDataCollector() : invalid fuction pointer(NULL)" );
 		return -1;
 	}
 
-	int		nErrorCode = m_pFuncRecoverQuotation();
-
-	if( 0 != nErrorCode )
-	{
-		DataIOEngine::GetEngineObj().WriteError( "DataCollector::RecoverDataCollector() : failed 2 recover quotation" );
-		return nErrorCode;
-	}
-
-	m_bActivated = true;
-	m_oCollectorStatus.SetMkID( m_pFuncGetMarketID() );
-	DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::RecoverDataCollector() : data collector recovered ......" );
-
-	return nErrorCode;
+	return Activate();
 }
 
 enum E_SS_Status DataCollector::InquireDataCollectorStatus( char* pszStatusDesc, unsigned int& nStrLen )
@@ -215,6 +201,26 @@ enum E_SS_Status DataCollector::InquireDataCollectorStatus( char* pszStatusDesc,
 
 	return m_oCollectorStatus.Get();
 }
+
+int DataCollector::Execute()
+{
+	DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Execute() : data collector is recovering ......" );
+
+	int		nErrorCode = m_pFuncRecoverQuotation();
+
+	if( 0 != nErrorCode )
+	{
+		DataIOEngine::GetEngineObj().WriteError( "DataCollector::RecoverDataCollector() : failed 2 recover quotation, errorcode = %d ", nErrorCode );
+		return nErrorCode;
+	}
+
+	m_oCollectorStatus.SetMkID( m_pFuncGetMarketID() );
+	DataIOEngine::GetEngineObj().WriteInfo( "DataCollectorPool::Execute() : DataCollector Recovered Successfully! MarketID[%u] !", GetMarketID() );
+	m_bActivated = true;
+
+	return 0;
+}
+
 
 
 ///< ------------------------------------------------------------------------------------
@@ -279,10 +285,28 @@ int DataCollectorPool::Initialize( I_DataHandle* pIDataCallBack )
 	return GetCount();
 }
 
-int DataCollectorPool::PreserveAllConnection()
+bool DataCollectorPool::IsWorking()
 {
-	int			nAffectNum = 0;
+	unsigned int			nAffectNum = 0;
 
+	for( unsigned int n = 0; n < GetCount(); n++ )
+	{
+		static char			s_pszTmp[2048] = { 0 };
+		unsigned int		nBufLen = sizeof(s_pszTmp);
+		DataCollector&		refDataCollector = this->operator []( n );
+
+		if( true == refDataCollector.IsAlive() )
+		{
+			nAffectNum++;
+			DataIOEngine::GetEngineObj().WriteInfo( "DataCollectorPool::Execute() : DataCollector Recovered Successfully! MarketID[%u] --> Index[%d] !", refDataCollector.GetMarketID(), n );
+		}
+	}
+
+	return GetCount() == nAffectNum;
+}
+
+bool DataCollectorPool::PreserveAllConnection()
+{
 	for( unsigned int n = 0; n < GetCount(); n++ )
 	{
 		CriticalLock		lock( m_oLock );
@@ -291,35 +315,31 @@ int DataCollectorPool::PreserveAllConnection()
 		DataCollector&		refDataCollector = this->operator []( n );
 		enum E_SS_Status	eStatus = refDataCollector.InquireDataCollectorStatus( s_pszTmp, nBufLen );
 
-		if( ET_SS_DISCONNECTED == eStatus )			///< 在传输断开的时，需要重新连接
+		if( ET_SS_DISCONNECTED == eStatus )									///< 在传输断开的时，需要重新连接
 		{
 			DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : initializing DataCollector Plugin [%s] ...", refDataCollector.GetDllPath().c_str() );
-			refDataCollector.HaltDataCollector();	///< 停止插件
+			m_mapMkID2Index[refDataCollector.GetMarketID()] = n;			///< 记录市场ID和位置序号的映射表
+			refDataCollector.HaltDataCollector();							///< 主动停止插件
 
-			int		nErrorCode = refDataCollector.RecoverDataCollector();
-			if( 0 == nErrorCode )
-			{
-				DataIOEngine::GetEngineObj().WriteInfo( "DataCollectorPool::PreserveAllConnection() : DataCollector Recovered Successfully! MarketID[%u] --> Index[%d] !!! ", refDataCollector.GetMarketID(), n );
-				nAffectNum++;
-				m_mapMkID2Index[refDataCollector.GetMarketID()] = n;
-			}
-			else
+			int		nErrorCode = refDataCollector.RecoverDataCollector();	///< 启动行情插件
+			if( 0 != nErrorCode )
 			{
 				DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : failed 2 initialize DataCollector, errorcode=%d", nErrorCode );
 			}
-
-			if( nAffectNum == GetCount() )
-			{
-				DataIOEngine::GetEngineObj().WriteInfo( "DataCollectorPool::PreserveAllConnection() : All Connections had been established! Num=[%u] .......!!! ", GetCount() );
-			}
-		}
-		else
-		{
-			nAffectNum++;
 		}
 	}
 
-	return nAffectNum;
+	for( unsigned int i = 0; i < 60; i++ )
+	{
+		if( true == IsWorking() )
+		{
+			DataIOEngine::GetEngineObj().WriteInfo( "DataCollectorPool::PreserveAllConnection() : All Connections had been established! Num=[%u] .......!!! ", GetCount() );
+			return true;
+		}
+	}
+
+	DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : initialize overtime > 60s" );
+	return false;
 }
 
 unsigned int DataCollectorPool::GetCount()

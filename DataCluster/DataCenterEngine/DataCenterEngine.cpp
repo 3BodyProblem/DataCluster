@@ -162,7 +162,7 @@ int DataIOEngine::OnImage( unsigned int nDataID, char* pData, unsigned int nData
 
 	if( nAffectNum <= 0 )
 	{
-		pRecord->FillMessage2BigTableRecord( pData );
+		pRecord->FillMessage2BigTableRecord( pData, true );
 		nAffectNum = m_oDatabaseIO.NewRecord( pRecord->GetBigTableID(), pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), bLastFlag, nSerialNo );
 	}
 	else
