@@ -1598,7 +1598,7 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 
 			tagData.MarketDate = pData->objData.uiMarketDate;
 			tagData.MarketTime = pData->objData.uiMarketTime;
-			tagData.MarketID = XDF_SH;
+			tagData.MarketID = nOldMkID;
 			tagData.MarketStatus = 1;
 
 			oMSW.PutSingleMsg(1, (char*)&tagData, sizeof(XDFAPI_MarketStatusInfo));
@@ -1653,7 +1653,7 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 
 			tagData.MarketDate = pData->objData.uiMarketDate;
 			tagData.MarketTime = pData->objData.uiMarketTime;
-			tagData.MarketID = XDF_CF;
+			tagData.MarketID = nOldMkID;
 			tagData.MarketStatus = 1;
 
 			oMSW.PutSingleMsg(1, (char*)&tagData, sizeof(XDFAPI_MarketStatusInfo));
@@ -1701,7 +1701,7 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 
 			tagData.MarketDate = pData->objData.uiMarketDate;
 			tagData.MarketTime = pData->objData.uiMarketTime;
-			tagData.MarketID = XDF_CNF;
+			tagData.MarketID = nOldMkID;
 			tagData.MarketStatus = 1;
 
 			oMSW.PutSingleMsg(1, (char*)&tagData, sizeof(XDFAPI_MarketStatusInfo));
@@ -1794,7 +1794,7 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 
 			tagData.MarketDate = pData->objData.uiMarketDate;
 			tagData.MarketTime = pData->objData.uiMarketTime;
-			tagData.MarketID = XDF_ZJOPT;
+			tagData.MarketID = nOldMkID;
 			tagData.MarketStatus = 1;
 
 			oMSW.PutSingleMsg(1, (char*)&tagData, sizeof(XDFAPI_MarketStatusInfo));
@@ -1843,7 +1843,7 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 
 			tagData.MarketDate = pData->objData.uiMarketDate;
 			tagData.MarketTime = pData->objData.uiMarketTime;
-			tagData.MarketID = XDF_SZOPT;
+			tagData.MarketID = nOldMkID;
 			tagData.MarketStatus = 1;
 
 			oMSW.PutSingleMsg(1, (char*)&tagData, sizeof(XDFAPI_MarketStatusInfo));
@@ -1886,7 +1886,7 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 
 			tagData.MarketDate = pData->objData.uiMarketDate;
 			tagData.MarketTime = pData->objData.uiMarketTime;
-			tagData.MarketID = XDF_CNFOPT;
+			tagData.MarketID = nOldMkID;
 			tagData.MarketStatus = 1;
 
 			oMSW.PutSingleMsg(1, (char*)&tagData, sizeof(XDFAPI_MarketStatusInfo));
@@ -1961,6 +1961,10 @@ void QuotationAdaptor::OnStatus( QUO_MARKET_ID eMarketID, QUO_MARKET_STATUS eMar
 		}
 
 		Global_pSpi->XDF_OnRspStatusChanged( cMkID, eStatus );
+
+		char	pszInfo[128] = { 0 };
+		::sprintf( pszInfo, "status changed : mkid = %d, status = %d", cMkID, eStatus );
+		OnLog( 0, pszInfo );
 	}
 }
 

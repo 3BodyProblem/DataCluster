@@ -178,7 +178,7 @@ public:
 	 * @brief				判断是否已经全部启动可以服务
 	 * @return				true							全部可服务
 	 */
-	bool					IsWorking();
+	bool					IsServiceWorking();
 
 	/**
 	 * @brief				有效数据采集器的数量

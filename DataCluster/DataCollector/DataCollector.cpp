@@ -242,8 +242,6 @@ void DataCollectorPool::Release()
 	{
 		this->operator []( n ).Release();
 	}
-
-	m_mapMkID2Index.clear();
 }
 
 int DataCollectorPool::Initialize( I_DataHandle* pIDataCallBack )
@@ -285,7 +283,7 @@ int DataCollectorPool::Initialize( I_DataHandle* pIDataCallBack )
 	return GetCount();
 }
 
-bool DataCollectorPool::IsWorking()
+bool DataCollectorPool::IsServiceWorking()
 {
 	unsigned int			nAffectNum = 0;
 
@@ -298,6 +296,7 @@ bool DataCollectorPool::IsWorking()
 		if( true == refDataCollector.IsAlive() )
 		{
 			nAffectNum++;
+			m_mapMkID2Index[refDataCollector.GetMarketID()] = n;			///< 记录市场ID和位置序号的映射表
 			DataIOEngine::GetEngineObj().WriteInfo( "DataCollectorPool::Execute() : DataCollector Recovered Successfully! MarketID[%u] --> Index[%d] !", refDataCollector.GetMarketID(), n );
 		}
 	}
@@ -318,7 +317,6 @@ bool DataCollectorPool::PreserveAllConnection()
 		if( ET_SS_DISCONNECTED == eStatus )									///< 在传输断开的时，需要重新连接
 		{
 			DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : initializing DataCollector Plugin [%s] ...", refDataCollector.GetDllPath().c_str() );
-			m_mapMkID2Index[refDataCollector.GetMarketID()] = n;			///< 记录市场ID和位置序号的映射表
 			refDataCollector.HaltDataCollector();							///< 主动停止插件
 
 			int		nErrorCode = refDataCollector.RecoverDataCollector();	///< 启动行情插件
@@ -331,7 +329,7 @@ bool DataCollectorPool::PreserveAllConnection()
 
 	for( unsigned int i = 0; i < 60; i++ )
 	{
-		if( true == IsWorking() )
+		if( true == IsServiceWorking() )
 		{
 			DataIOEngine::GetEngineObj().WriteInfo( "DataCollectorPool::PreserveAllConnection() : All Connections had been established! Num=[%u] .......!!! ", GetCount() );
 			return true;
