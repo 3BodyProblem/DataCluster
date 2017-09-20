@@ -8,6 +8,8 @@
 ///< 大连商品期货
 static	std::map<short,short>			s_mapKindID2PriceRate4DL;
 static	std::map<std::string,short>		s_mapCode2Kind4DL;
+static	unsigned int					s_nTime4DL = 0;
+static	unsigned int					s_nDate4DL = 0;
 
 double	CalPriceRate( const char* pszCode, unsigned int& nKindID, std::map<std::string,short>& mapCode2Kind, std::map<short,short>& mapKind2Rate )
 {
@@ -50,6 +52,7 @@ struct MappingDLFuture_MkInfo2QuoMarketInfo : public InnerRecord { MappingDLFutu
 			pBigTable->objData.eMarketID = (enum QUO_MARKET_ID)pMkInfo->MarketID;
 			pBigTable->objData.uiKindCount = pMkInfo->KindCount;
 			pBigTable->objData.uiWareCount = pMkInfo->WareCount;
+			s_nDate4DL = pMkInfo->MarketDate;
 		}
 	}
 };
@@ -85,6 +88,7 @@ struct MappingDLFuture_MkStatus2QuoMarketInfo : public InnerRecord { MappingDLFu
 			T_Inner_MarketInfo*				pBigTable = (T_Inner_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->objData.uiMarketTime = pMkStatus->MarketTime;
+			s_nTime4DL = pMkStatus->MarketTime * 1000;
 		}
 	}
 };
@@ -121,6 +125,7 @@ struct MappingDLFuture_SnapLF2QuoSnapData : public InnerRecord { MappingDLFuture
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4DL, s_mapKindID2PriceRate4DL );
 
+			pBigTable->uiTime = s_nTime4DL;
 			pBigTable->dOpenPx = pSnapData->Open / dRate;
 			pBigTable->dClosePx = pSnapData->Close / dRate;
 			pBigTable->dPreClosePx = pSnapData->PreClose / dRate;
@@ -143,6 +148,7 @@ struct MappingDLFuture_SnapHF2QuoSnapData : public InnerRecord { MappingDLFuture
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4DL, s_mapKindID2PriceRate4DL );
 
+			pBigTable->uiTime = s_nTime4DL;
 			pBigTable->dNowPx = pSnapData->Now / dRate;
 			pBigTable->dHighPx = pSnapData->High / dRate;
 			pBigTable->dLowPx = pSnapData->Low / dRate;
@@ -160,6 +166,7 @@ struct MappingDLFuture_BuySell2QuoSnapData : public InnerRecord { MappingDLFutur
 			tagQUO_SnapData*				pBigTable = (tagQUO_SnapData*)&(m_objUnionData.SnapData_3);
 
 			::memcpy( pBigTable->szCode, pSnapData->Code, sizeof(pSnapData->Code) );
+			pBigTable->uiTime = s_nTime4DL;
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4DL, s_mapKindID2PriceRate4DL );
 
@@ -177,6 +184,8 @@ struct MappingDLFuture_BuySell2QuoSnapData : public InnerRecord { MappingDLFutur
 ///< 上海商品期货
 static	std::map<short,short>			s_mapKindID2PriceRate4SH;
 static	std::map<std::string,short>		s_mapCode2Kind4SH;
+static	unsigned int					s_nTime4SH = 0;
+static	unsigned int					s_nDate4SH = 0;
 
 struct MappingSHFuture_MkInfo2QuoMarketInfo : public InnerRecord { MappingSHFuture_MkInfo2QuoMarketInfo() : InnerRecord( 107, sizeof(tagSHFutureMarketInfo_LF107), QUO_MARKET_SHFE*100+1, true ) {}
 	void	FillMessage2BigTableRecord(  char* pMessagePtr, bool bNewRecord = false )	{
@@ -189,6 +198,7 @@ struct MappingSHFuture_MkInfo2QuoMarketInfo : public InnerRecord { MappingSHFutu
 			pBigTable->objData.eMarketID = (enum QUO_MARKET_ID)pMkInfo->MarketID;
 			pBigTable->objData.uiKindCount = pMkInfo->KindCount;
 			pBigTable->objData.uiWareCount = pMkInfo->WareCount;
+			s_nDate4SH = pMkInfo->MarketDate;
 		}
 	}
 };
@@ -224,6 +234,7 @@ struct MappingSHFuture_MkStatus2QuoMarketInfo : public InnerRecord { MappingSHFu
 			T_Inner_MarketInfo*				pBigTable = (T_Inner_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->objData.uiMarketTime = pMkStatus->MarketTime;
+			s_nTime4SH = pMkStatus->MarketTime * 1000;
 		}
 	}
 };
@@ -260,6 +271,7 @@ struct MappingSHFuture_SnapLF2QuoSnapData : public InnerRecord { MappingSHFuture
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4SH, s_mapKindID2PriceRate4SH );
 
+			pBigTable->uiTime = s_nTime4SH;
 			pBigTable->dOpenPx = pSnapData->Open / dRate;
 			pBigTable->dClosePx = pSnapData->Close / dRate;
 			pBigTable->dPreClosePx = pSnapData->PreClose / dRate;
@@ -282,6 +294,7 @@ struct MappingSHFuture_SnapHF2QuoSnapData : public InnerRecord { MappingSHFuture
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4SH, s_mapKindID2PriceRate4SH );
 
+			pBigTable->uiTime = s_nTime4SH;
 			pBigTable->dNowPx = pSnapData->Now / dRate;
 			pBigTable->dHighPx = pSnapData->High / dRate;
 			pBigTable->dLowPx = pSnapData->Low / dRate;
@@ -299,6 +312,7 @@ struct MappingSHFuture_BuySell2QuoSnapData : public InnerRecord { MappingSHFutur
 			tagQUO_SnapData*				pBigTable = (tagQUO_SnapData*)&(m_objUnionData.SnapData_3);
 
 			::memcpy( pBigTable->szCode, pSnapData->Code, sizeof(pSnapData->Code) );
+			pBigTable->uiTime = s_nTime4SH;
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4SH, s_mapKindID2PriceRate4SH );
 
@@ -316,6 +330,8 @@ struct MappingSHFuture_BuySell2QuoSnapData : public InnerRecord { MappingSHFutur
 ///< 郑州商品期货
 static	std::map<short,short>			s_mapKindID2PriceRate4ZZ;
 static	std::map<std::string,short>		s_mapCode2Kind4ZZ;
+static	unsigned int					s_nTime4ZZ = 0;
+static	unsigned int					s_nDate4ZZ = 0;
 
 struct MappingZZFuture_MkInfo2QuoMarketInfo : public InnerRecord { MappingZZFuture_MkInfo2QuoMarketInfo() : InnerRecord( 114, sizeof(tagZZFutureMarketInfo_LF114), QUO_MARKET_CZCE*100+1, true ) {}
 	void	FillMessage2BigTableRecord(  char* pMessagePtr, bool bNewRecord = false )	{
@@ -328,6 +344,7 @@ struct MappingZZFuture_MkInfo2QuoMarketInfo : public InnerRecord { MappingZZFutu
 			pBigTable->objData.eMarketID = (enum QUO_MARKET_ID)pMkInfo->MarketID;
 			pBigTable->objData.uiKindCount = pMkInfo->KindCount;
 			pBigTable->objData.uiWareCount = pMkInfo->WareCount;
+			s_nDate4ZZ = pMkInfo->MarketDate;
 		}
 	}
 };
@@ -363,6 +380,7 @@ struct MappingZZFuture_MkStatus2QuoMarketInfo : public InnerRecord { MappingZZFu
 			T_Inner_MarketInfo*				pBigTable = (T_Inner_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->objData.uiMarketTime = pMkStatus->MarketTime;
+			s_nTime4ZZ = pMkStatus->MarketTime * 1000;
 		}
 	}
 };
@@ -400,6 +418,7 @@ struct MappingZZFuture_SnapLF2QuoSnapData : public InnerRecord { MappingZZFuture
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4ZZ, s_mapKindID2PriceRate4ZZ );
 
+			pBigTable->uiTime = s_nTime4ZZ;
 			pBigTable->dOpenPx = pSnapData->Open / dRate;
 			pBigTable->dClosePx = pSnapData->Close / dRate;
 			pBigTable->dPreClosePx = pSnapData->PreClose / dRate;
@@ -422,6 +441,7 @@ struct MappingZZFuture_SnapHF2QuoSnapData : public InnerRecord { MappingZZFuture
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4ZZ, s_mapKindID2PriceRate4ZZ );
 
+			pBigTable->uiTime = s_nTime4ZZ;
 			pBigTable->dNowPx = pSnapData->Now / dRate;
 			pBigTable->dHighPx = pSnapData->High / dRate;
 			pBigTable->dLowPx = pSnapData->Low / dRate;
@@ -439,6 +459,7 @@ struct MappingZZFuture_BuySell2QuoSnapData : public InnerRecord { MappingZZFutur
 			tagQUO_SnapData*				pBigTable = (tagQUO_SnapData*)&(m_objUnionData.SnapData_3);
 
 			::memcpy( pBigTable->szCode, pSnapData->Code, sizeof(pSnapData->Code) );
+			pBigTable->uiTime = s_nTime4ZZ;
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4ZZ, s_mapKindID2PriceRate4ZZ );
 
@@ -456,6 +477,8 @@ struct MappingZZFuture_BuySell2QuoSnapData : public InnerRecord { MappingZZFutur
 ///< 大连商品期权
 static	std::map<short,short>			s_mapKindID2PriceRate4DLOPT;
 static	std::map<std::string,short>		s_mapCode2Kind4DLOPT;
+static	unsigned int					s_nTime4DLOPT = 0;
+static	unsigned int					s_nDate4DLOPT = 0;
 
 struct MappingDLOption_MkInfo2QuoMarketInfo : public InnerRecord { MappingDLOption_MkInfo2QuoMarketInfo() : InnerRecord( 128, sizeof(tagDLOptionMarketInfo_LF128), QUO_MARKET_DCEOPT*100+1, true ) {}
 	void	FillMessage2BigTableRecord(  char* pMessagePtr, bool bNewRecord = false )	{
@@ -468,6 +491,7 @@ struct MappingDLOption_MkInfo2QuoMarketInfo : public InnerRecord { MappingDLOpti
 			pBigTable->objData.eMarketID = (enum QUO_MARKET_ID)pMkInfo->MarketID;
 			pBigTable->objData.uiKindCount = pMkInfo->KindCount;
 			pBigTable->objData.uiWareCount = pMkInfo->WareCount;
+			s_nDate4DLOPT = pMkInfo->MarketDate;
 		}
 	}
 };
@@ -503,6 +527,7 @@ struct MappingDLOption_MkStatus2QuoMarketInfo : public InnerRecord { MappingDLOp
 			T_Inner_MarketInfo*				pBigTable = (T_Inner_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->objData.uiMarketTime = pMkStatus->MarketTime;
+			s_nTime4DLOPT = pMkStatus->MarketTime * 1000;
 		}
 	}
 };
@@ -540,6 +565,7 @@ struct MappingDLOption_SnapLF2QuoSnapData : public InnerRecord { MappingDLOption
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4DLOPT, s_mapKindID2PriceRate4DLOPT );
 
+			pBigTable->uiTime = s_nTime4DLOPT;
 			pBigTable->dOpenPx = pSnapData->Open / dRate;
 			pBigTable->dClosePx = pSnapData->Close / dRate;
 			pBigTable->dPreClosePx = pSnapData->PreClose / dRate;
@@ -562,6 +588,7 @@ struct MappingDLOption_SnapHF2QuoSnapData : public InnerRecord { MappingDLOption
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4DLOPT, s_mapKindID2PriceRate4DLOPT );
 
+			pBigTable->uiTime = s_nTime4DLOPT;
 			pBigTable->dNowPx = pSnapData->Now / dRate;
 			pBigTable->dHighPx = pSnapData->High / dRate;
 			pBigTable->dLowPx = pSnapData->Low / dRate;
@@ -579,6 +606,7 @@ struct MappingDLOption_BuySell2QuoSnapData : public InnerRecord { MappingDLOptio
 			tagQUO_SnapData*				pBigTable = (tagQUO_SnapData*)&(m_objUnionData.SnapData_3);
 
 			::memcpy( pBigTable->szCode, pSnapData->Code, sizeof(pSnapData->Code) );
+			pBigTable->uiTime = s_nTime4DLOPT;
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4DLOPT, s_mapKindID2PriceRate4DLOPT );
 
@@ -596,6 +624,8 @@ struct MappingDLOption_BuySell2QuoSnapData : public InnerRecord { MappingDLOptio
 ///< 上海商品期权
 static	std::map<short,short>			s_mapKindID2PriceRate4SHOPT;
 static	std::map<std::string,short>		s_mapCode2Kind4SHOPT;
+static	unsigned int					s_nTime4SHOPT = 0;
+static	unsigned int					s_nDate4SHOPT = 0;
 
 struct MappingSHOption_MkInfo2QuoMarketInfo : public InnerRecord { MappingSHOption_MkInfo2QuoMarketInfo() : InnerRecord( 135, sizeof(tagSHOptionMarketInfo_LF135), QUO_MARKET_SHFEOPT*100+1, true ) {}
 	void	FillMessage2BigTableRecord(  char* pMessagePtr, bool bNewRecord = false )	{
@@ -608,6 +638,7 @@ struct MappingSHOption_MkInfo2QuoMarketInfo : public InnerRecord { MappingSHOpti
 			pBigTable->objData.eMarketID = (enum QUO_MARKET_ID)pMkInfo->MarketID;
 			pBigTable->objData.uiKindCount = pMkInfo->KindCount;
 			pBigTable->objData.uiWareCount = pMkInfo->WareCount;
+			s_nDate4SHOPT = pMkInfo->MarketDate;
 		}
 	}
 };
@@ -643,6 +674,7 @@ struct MappingSHOption_MkStatus2QuoMarketInfo : public InnerRecord { MappingSHOp
 			T_Inner_MarketInfo*				pBigTable = (T_Inner_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->objData.uiMarketTime = pMkStatus->MarketTime;
+			s_nTime4SHOPT = pMkStatus->MarketTime * 1000;
 		}
 	}
 };
@@ -680,6 +712,7 @@ struct MappingSHOption_SnapLF2QuoSnapData : public InnerRecord { MappingSHOption
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4SHOPT, s_mapKindID2PriceRate4SHOPT );
 
+			pBigTable->uiTime = s_nTime4SHOPT;
 			pBigTable->dOpenPx = pSnapData->Open / dRate;
 			pBigTable->dClosePx = pSnapData->Close / dRate;
 			pBigTable->dPreClosePx = pSnapData->PreClose / dRate;
@@ -702,6 +735,7 @@ struct MappingSHOption_SnapHF2QuoSnapData : public InnerRecord { MappingSHOption
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4SHOPT, s_mapKindID2PriceRate4SHOPT );
 
+			pBigTable->uiTime = s_nTime4SHOPT;
 			pBigTable->dNowPx = pSnapData->Now / dRate;
 			pBigTable->dHighPx = pSnapData->High / dRate;
 			pBigTable->dLowPx = pSnapData->Low / dRate;
@@ -719,6 +753,7 @@ struct MappingSHOption_BuySell2QuoSnapData : public InnerRecord { MappingSHOptio
 			tagQUO_SnapData*				pBigTable = (tagQUO_SnapData*)&(m_objUnionData.SnapData_3);
 
 			::memcpy( pBigTable->szCode, pSnapData->Code, sizeof(pSnapData->Code) );
+			pBigTable->uiTime = s_nTime4SHOPT;
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4SHOPT, s_mapKindID2PriceRate4SHOPT );
 
@@ -736,6 +771,8 @@ struct MappingSHOption_BuySell2QuoSnapData : public InnerRecord { MappingSHOptio
 ///< 郑州商品期权
 static	std::map<short,short>			s_mapKindID2PriceRate4ZZOPT;
 static	std::map<std::string,short>		s_mapCode2Kind4ZZOPT;
+static	unsigned int					s_nTime4ZZOPT = 0;
+static	unsigned int					s_nDate4ZZOPT = 0;
 
 struct MappingZZOption_MkInfo2QuoMarketInfo : public InnerRecord { MappingZZOption_MkInfo2QuoMarketInfo() : InnerRecord( 142, sizeof(tagZZOptionMarketInfo_LF142), QUO_MARKET_CZCEOPT*100+1, true ) {}
 	void	FillMessage2BigTableRecord(  char* pMessagePtr, bool bNewRecord = false )	{
@@ -748,6 +785,7 @@ struct MappingZZOption_MkInfo2QuoMarketInfo : public InnerRecord { MappingZZOpti
 			pBigTable->objData.eMarketID = (enum QUO_MARKET_ID)pMkInfo->MarketID;
 			pBigTable->objData.uiKindCount = pMkInfo->KindCount;
 			pBigTable->objData.uiWareCount = pMkInfo->WareCount;
+			s_nDate4ZZOPT = pMkInfo->MarketDate;
 		}
 	}
 };
@@ -783,6 +821,7 @@ struct MappingZZOption_MkStatus2QuoMarketInfo : public InnerRecord { MappingZZOp
 			T_Inner_MarketInfo*				pBigTable = (T_Inner_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->objData.uiMarketTime = pMkStatus->MarketTime;
+			s_nTime4ZZOPT = pMkStatus->MarketTime * 1000;
 		}
 	}
 };
@@ -820,6 +859,7 @@ struct MappingZZOption_SnapLF2QuoSnapData : public InnerRecord { MappingZZOption
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4ZZOPT, s_mapKindID2PriceRate4ZZOPT );
 
+			pBigTable->uiTime = s_nTime4ZZOPT;
 			pBigTable->dOpenPx = pSnapData->Open / dRate;
 			pBigTable->dClosePx = pSnapData->Close / dRate;
 			pBigTable->dPreClosePx = pSnapData->PreClose / dRate;
@@ -842,6 +882,7 @@ struct MappingZZOption_SnapHF2QuoSnapData : public InnerRecord { MappingZZOption
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4ZZOPT, s_mapKindID2PriceRate4ZZOPT );
 
+			pBigTable->uiTime = s_nTime4ZZOPT;
 			pBigTable->dNowPx = pSnapData->Now / dRate;
 			pBigTable->dHighPx = pSnapData->High / dRate;
 			pBigTable->dLowPx = pSnapData->Low / dRate;
@@ -859,6 +900,7 @@ struct MappingZZOption_BuySell2QuoSnapData : public InnerRecord { MappingZZOptio
 			tagQUO_SnapData*				pBigTable = (tagQUO_SnapData*)&(m_objUnionData.SnapData_3);
 
 			::memcpy( pBigTable->szCode, pSnapData->Code, sizeof(pSnapData->Code) );
+			pBigTable->uiTime = s_nTime4ZZOPT;
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4ZZOPT, s_mapKindID2PriceRate4ZZOPT );
 
@@ -876,6 +918,8 @@ struct MappingZZOption_BuySell2QuoSnapData : public InnerRecord { MappingZZOptio
 ///< 中金商品期货
 static	std::map<short,short>			s_mapKindID2PriceRate4ZJ;
 static	std::map<std::string,short>		s_mapCode2Kind4ZJ;
+static	unsigned int					s_nTime4ZJ = 0;
+static	unsigned int					s_nDate4ZJ = 0;
 
 struct MappingCFFFuture_MkInfo2QuoMarketInfo : public InnerRecord { MappingCFFFuture_MkInfo2QuoMarketInfo() : InnerRecord( 172, sizeof(tagCFFFutureMarketInfo_LF172), QUO_MARKET_CFFEX*100+1, true ) {}
 	void	FillMessage2BigTableRecord(  char* pMessagePtr, bool bNewRecord = false )	{
@@ -888,6 +932,7 @@ struct MappingCFFFuture_MkInfo2QuoMarketInfo : public InnerRecord { MappingCFFFu
 			pBigTable->objData.eMarketID = (enum QUO_MARKET_ID)pMkInfo->MarketID;
 			pBigTable->objData.uiKindCount = pMkInfo->KindCount;
 			pBigTable->objData.uiWareCount = pMkInfo->WareCount;
+			s_nDate4ZJ = pMkInfo->MarketDate;
 		}
 	}
 };
@@ -924,7 +969,7 @@ struct MappingCFFFuture_MkStatus2QuoMarketInfo : public InnerRecord { MappingCFF
 			T_Inner_MarketInfo*				pBigTable = (T_Inner_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->objData.uiMarketTime = pMkStatus->MarketTime;
-
+			s_nTime4ZJ = pMkStatus->MarketTime * 1000;
 		}
 	}
 };
@@ -962,6 +1007,7 @@ struct MappingCFFFuture_SnapLF2QuoSnapData : public InnerRecord { MappingCFFFutu
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4ZJ, s_mapKindID2PriceRate4ZJ );
 
+			pBigTable->uiTime = s_nTime4ZJ;
 			pBigTable->dOpenPx = pSnapData->Open / dRate;
 			pBigTable->dClosePx = pSnapData->Close / dRate;
 			pBigTable->dPreClosePx = pSnapData->PreClose / dRate;
@@ -984,6 +1030,7 @@ struct MappingCFFFuture_SnapHF2QuoSnapData : public InnerRecord { MappingCFFFutu
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4ZJ, s_mapKindID2PriceRate4ZJ );
 
+			pBigTable->uiTime = s_nTime4ZJ;
 			pBigTable->dNowPx = pSnapData->Now / dRate;
 			pBigTable->dHighPx = pSnapData->High / dRate;
 			pBigTable->dLowPx = pSnapData->Low / dRate;
@@ -1001,6 +1048,7 @@ struct MappingCFFFuture_BuySell2QuoSnapData : public InnerRecord { MappingCFFFut
 			tagQUO_SnapData*				pBigTable = (tagQUO_SnapData*)&(m_objUnionData.SnapData_3);
 
 			::memcpy( pBigTable->szCode, pSnapData->Code, sizeof(pSnapData->Code) );
+			pBigTable->uiTime = s_nTime4ZJ;
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4ZJ, s_mapKindID2PriceRate4ZJ );
 
@@ -1018,6 +1066,8 @@ struct MappingCFFFuture_BuySell2QuoSnapData : public InnerRecord { MappingCFFFut
 ///< 上海Lv1现货
 static	std::map<short,short>			s_mapKindID2PriceRate4SHL1;
 static	std::map<std::string,short>		s_mapCode2Kind4SHL1;
+static	unsigned int					s_nTime4SHL1 = 0;
+static	unsigned int					s_nDate4SHL1 = 0;
 
 struct MappingSHL1_MkInfo2QuoMarketInfo : public InnerRecord { MappingSHL1_MkInfo2QuoMarketInfo() : InnerRecord( 149, sizeof(tagSHL1MarketInfo_LF149), QUO_MARKET_SSE*100+1, true ) {}
 	void	FillMessage2BigTableRecord(  char* pMessagePtr, bool bNewRecord = false )	{
@@ -1030,6 +1080,7 @@ struct MappingSHL1_MkInfo2QuoMarketInfo : public InnerRecord { MappingSHL1_MkInf
 			pBigTable->objData.eMarketID = (enum QUO_MARKET_ID)pMkInfo->MarketID;
 			pBigTable->objData.uiKindCount = pMkInfo->KindCount;
 			pBigTable->objData.uiWareCount = pMkInfo->WareCount;
+			s_nDate4SHL1 = pMkInfo->MarketDate;
 		}
 	}
 };
@@ -1061,6 +1112,7 @@ struct MappingSHL1_MkStatus2QuoMarketInfo : public InnerRecord { MappingSHL1_MkS
 			T_Inner_MarketInfo*				pBigTable = (T_Inner_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->objData.uiMarketTime = pMkStatus->MarketTime;
+			s_nTime4SHL1 = pMkStatus->MarketTime * 1000;
 		}
 	}
 };
@@ -1098,6 +1150,7 @@ struct MappingSHL1_SnapLF2QuoSnapData : public InnerRecord { MappingSHL1_SnapLF2
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4SHL1, s_mapKindID2PriceRate4SHL1 );
 
+			pBigTable->uiTime = s_nTime4SHL1;
 			pBigTable->dOpenPx = pSnapData->Open / dRate;
 			pBigTable->dClosePx = pSnapData->Close / dRate;
 			pBigTable->dPreClosePx = pSnapData->PreClose / dRate;
@@ -1117,6 +1170,7 @@ struct MappingSHL1_SnapHF2QuoSnapData : public InnerRecord { MappingSHL1_SnapHF2
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4SHL1, s_mapKindID2PriceRate4SHL1 );
 
+			pBigTable->uiTime = s_nTime4SHL1;
 			pBigTable->dNowPx = pSnapData->Now / dRate;
 			pBigTable->dHighPx = pSnapData->High / dRate;
 			pBigTable->dLowPx = pSnapData->Low / dRate;
@@ -1133,6 +1187,7 @@ struct MappingSHL1_BuySell2QuoSnapData : public InnerRecord { MappingSHL1_BuySel
 			tagQUO_SnapData*				pBigTable = (tagQUO_SnapData*)&(m_objUnionData.SnapData_3);
 
 			::memcpy( pBigTable->szCode, pSnapData->Code, sizeof(pSnapData->Code) );
+			pBigTable->uiTime = s_nTime4SHL1;
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4SHL1, s_mapKindID2PriceRate4SHL1 );
 
@@ -1151,6 +1206,8 @@ struct MappingSHL1_BuySell2QuoSnapData : public InnerRecord { MappingSHL1_BuySel
 ///< 上海期权
 static	std::map<short,short>			s_mapKindID2PriceRate4SHL1OPT;
 static	std::map<std::string,short>		s_mapCode2Kind4SHL1OPT;
+static	unsigned int					s_nTime4SHL1OPT = 0;
+static	unsigned int					s_nDate4SHL1OPT = 0;
 
 struct MappingSHL1Option_MkInfo2QuoMarketInfo : public InnerRecord { MappingSHL1Option_MkInfo2QuoMarketInfo() : InnerRecord( 157, sizeof(tagSHOptMarketInfo_LF157), QUO_MARKET_SSEOPT*100+1, true ) {}
 	void	FillMessage2BigTableRecord(  char* pMessagePtr, bool bNewRecord = false )	{
@@ -1163,6 +1220,7 @@ struct MappingSHL1Option_MkInfo2QuoMarketInfo : public InnerRecord { MappingSHL1
 			pBigTable->objData.eMarketID = (enum QUO_MARKET_ID)pMkInfo->MarketID;
 			pBigTable->objData.uiKindCount = pMkInfo->KindCount;
 			pBigTable->objData.uiWareCount = pMkInfo->WareCount;
+			s_nDate4SHL1OPT = pMkInfo->MarketDate;
 		}
 	}
 };
@@ -1198,6 +1256,7 @@ struct MappingSHL1Option_MkStatus2QuoMarketInfo : public InnerRecord { MappingSH
 			T_Inner_MarketInfo*				pBigTable = (T_Inner_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->objData.uiMarketTime = pMkStatus->MarketTime;
+			s_nTime4SHL1OPT = pMkStatus->MarketTime * 1000;
 		}
 	}
 };
@@ -1235,6 +1294,7 @@ struct MappingSHL1Option_SnapLF2QuoSnapData : public InnerRecord { MappingSHL1Op
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4SHL1OPT, s_mapKindID2PriceRate4SHL1OPT );
 
+			pBigTable->uiTime = s_nTime4SHL1OPT;
 			pBigTable->dOpenPx = pSnapData->Open / dRate;
 			pBigTable->dClosePx = pSnapData->Close / dRate;
 			pBigTable->dPreClosePx = pSnapData->PreClose / dRate;
@@ -1257,6 +1317,7 @@ struct MappingSHL1Option_SnapHF2QuoSnapData : public InnerRecord { MappingSHL1Op
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4SHL1OPT, s_mapKindID2PriceRate4SHL1OPT );
 
+			pBigTable->uiTime = s_nTime4SHL1OPT;
 			pBigTable->dNowPx = pSnapData->Now / dRate;
 			pBigTable->dHighPx = pSnapData->High / dRate;
 			pBigTable->dLowPx = pSnapData->Low / dRate;
@@ -1274,6 +1335,7 @@ struct MappingSHL1Option_BuySell2QuoSnapData : public InnerRecord { MappingSHL1O
 			tagQUO_SnapData*			pBigTable = (tagQUO_SnapData*)&(m_objUnionData.SnapData_3);
 
 			::memcpy( pBigTable->szCode, pSnapData->Code, sizeof(pSnapData->Code) );
+			pBigTable->uiTime = s_nTime4SHL1OPT;
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4SHL1OPT, s_mapKindID2PriceRate4SHL1OPT );
 
@@ -1291,6 +1353,8 @@ struct MappingSHL1Option_BuySell2QuoSnapData : public InnerRecord { MappingSHL1O
 ///< 深圳Lv1现货
 static	std::map<short,short>			s_mapKindID2PriceRate4SZL1;
 static	std::map<std::string,short>		s_mapCode2Kind4SZL1;
+static	unsigned int					s_nTime4SZL1 = 0;
+static	unsigned int					s_nDate4SZL1 = 0;
 
 struct MappingSZL1_MkInfo2QuoMarketInfo : public InnerRecord { MappingSZL1_MkInfo2QuoMarketInfo() : InnerRecord( 164, sizeof(tagSZL1MarketInfo_LF164), QUO_MARKET_SZSE*100+1, true ) {}
 	void	FillMessage2BigTableRecord(  char* pMessagePtr, bool bNewRecord = false )	{
@@ -1303,6 +1367,7 @@ struct MappingSZL1_MkInfo2QuoMarketInfo : public InnerRecord { MappingSZL1_MkInf
 			pBigTable->objData.eMarketID = (enum QUO_MARKET_ID)pMkInfo->MarketID;
 			pBigTable->objData.uiKindCount = pMkInfo->KindCount;
 			pBigTable->objData.uiWareCount = pMkInfo->WareCount;
+			s_nDate4SZL1 = pMkInfo->MarketDate;
 		}
 	}
 };
@@ -1334,6 +1399,7 @@ struct MappingSZL1_MkStatus2QuoMarketInfo : public InnerRecord { MappingSZL1_MkS
 			T_Inner_MarketInfo*				pBigTable = (T_Inner_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			pBigTable->objData.uiMarketTime = pMkStatus->MarketTime;
+			s_nTime4SZL1 = pMkStatus->MarketTime * 1000;
 		}
 	}
 };
@@ -1371,6 +1437,7 @@ struct MappingSZL1_SnapLF2QuoSnapData : public InnerRecord { MappingSZL1_SnapLF2
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4SZL1, s_mapKindID2PriceRate4SZL1 );
 
+			pBigTable->uiTime = s_nTime4SZL1;
 			pBigTable->dOpenPx = pSnapData->Open / dRate;
 			pBigTable->dClosePx = pSnapData->Close / dRate;
 			pBigTable->dPreClosePx = pSnapData->PreClose / dRate;
@@ -1390,6 +1457,7 @@ struct MappingSZL1_SnapHF2QuoSnapData : public InnerRecord { MappingSZL1_SnapHF2
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4SZL1, s_mapKindID2PriceRate4SZL1 );
 
+			pBigTable->uiTime = s_nTime4SZL1;
 			pBigTable->dNowPx = pSnapData->Now / dRate;
 			pBigTable->dHighPx = pSnapData->High / dRate;
 			pBigTable->dLowPx = pSnapData->Low / dRate;
@@ -1406,6 +1474,7 @@ struct MappingSZL1_BuySell2QuoSnapData : public InnerRecord { MappingSZL1_BuySel
 			tagQUO_SnapData*				pBigTable = (tagQUO_SnapData*)&(m_objUnionData.SnapData_3);
 
 			::memcpy( pBigTable->szCode, pSnapData->Code, sizeof(pSnapData->Code) );
+			pBigTable->uiTime = s_nTime4SZL1;
 			if( true == bNewRecord )	{	pBigTable->uiKindID = 0xFFFFffff;	}
 			double							dRate = CalPriceRate( pBigTable->szCode, pBigTable->uiKindID, s_mapCode2Kind4SZL1, s_mapKindID2PriceRate4SZL1 );
 

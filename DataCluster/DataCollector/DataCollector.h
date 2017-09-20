@@ -197,7 +197,6 @@ public:
 
 protected:
 	CriticalObject			m_oLock;						///< 锁
-	std::map<int,int>		m_mapMkID2Index;				///< 根据市场编号，取得位置索引值
 };
 
 

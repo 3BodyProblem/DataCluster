@@ -93,7 +93,7 @@ extern "C"
 	{
 		unsigned int	nMajor = 1;
 		unsigned int	nRelease = 1;
-		unsigned int	nBuild = 1;
+		unsigned int	nBuild = 2;
 
 		return 1000000 * nMajor + 100000 * nRelease + 1000 * nBuild;
 	}
@@ -225,9 +225,27 @@ extern "C"
 
 		int						nReturnNum = 0;
 		DataCollectorPool&		refPool = DataIOEngine::GetEngineObj().GetCollectorPool();
+
+		for( int n = 0; n < 60; n++ )
+		{
+			SimpleTask::Sleep( 1000 * 1 );
+			if( true == DataIOEngine::GetEngineObj().GetCollectorPool().IsServiceWorking() )
+			{
+				break;
+			}
+
+			if( n >= 59 )
+			{
+				return -3;
+			}
+		}
+
 		for( int nOldMkID = 0; nOldMkID < 64; nOldMkID++ )
 		{
+			int					nInnerMkID = DataCollectorPool::MkIDCast( nOldMkID );
 			DataCollector*		pCollector = refPool.GetCollectorByMkID( nOldMkID );
+
+			//if( nInnerMkID >= 0 && NULL == pCollector )
 
 			if( NULL != pCollector )
 			{

@@ -210,6 +210,7 @@ int DataCollector::Execute()
 
 	if( 0 != nErrorCode )
 	{
+		m_bActivated = false;
 		DataIOEngine::GetEngineObj().WriteError( "DataCollector::RecoverDataCollector() : failed 2 recover quotation, errorcode = %d ", nErrorCode );
 		return nErrorCode;
 	}
@@ -264,7 +265,6 @@ int DataCollectorPool::Initialize( I_DataHandle* pIDataCallBack )
 		return GetCount();
 	}
 
-	m_mapMkID2Index.clear();
 	for( unsigned int n = 0; n < nDllCount; n++ )
 	{
 		std::string		sDcDllPath = refDcDllTable.GetPathByPos( n );
@@ -289,21 +289,29 @@ bool DataCollectorPool::IsServiceWorking()
 
 	for( unsigned int n = 0; n < GetCount(); n++ )
 	{
-		static char			s_pszTmp[2048] = { 0 };
-		unsigned int		nBufLen = sizeof(s_pszTmp);
+		static char			s_pszTmpBuf[2048] = { 0 };
+		unsigned int		nBufLen = sizeof(s_pszTmpBuf);
 		DataCollector&		refDataCollector = this->operator []( n );
+		enum E_SS_Status	eStatus = refDataCollector.InquireDataCollectorStatus( s_pszTmpBuf, nBufLen );
 
-		if( true == refDataCollector.IsAlive() )
+		if( true == refDataCollector.IsAlive() && eStatus == ET_SS_WORKING )
 		{
 			nAffectNum++;
-			m_mapMkID2Index[refDataCollector.GetMarketID()] = n;			///< 记录市场ID和位置序号的映射表
-			DataIOEngine::GetEngineObj().WriteInfo( "DataCollectorPool::Execute() : DataCollector Recovered Successfully! MarketID[%u] --> Index[%d] !", refDataCollector.GetMarketID(), n );
 		}
 	}
 
-	return GetCount() == nAffectNum;
+	if( GetCount() == nAffectNum )
+	{
+		return true;
+	}
+	else
+	{
+		DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::Execute() : Service Isn\'t Availble! (%u > %u) !", GetCount(), nAffectNum );
+		return false;
+	}
 }
 
+static bool		s_bWaitCondition = false;
 bool DataCollectorPool::PreserveAllConnection()
 {
 	for( unsigned int n = 0; n < GetCount(); n++ )
@@ -324,19 +332,32 @@ bool DataCollectorPool::PreserveAllConnection()
 			{
 				DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : failed 2 initialize DataCollector, errorcode=%d", nErrorCode );
 			}
+			else
+			{
+				s_bWaitCondition = true;
+			}
 		}
+	}
+
+	if( false == s_bWaitCondition )
+	{
+		return false;
 	}
 
 	for( unsigned int i = 0; i < 60; i++ )
 	{
 		if( true == IsServiceWorking() )
 		{
+			DataIOEngine::GetEngineObj().GetCallBackPtr()->OnStatus( QUO_MARKET_UNKNOW, QUO_STATUS_NORMAL );
 			DataIOEngine::GetEngineObj().WriteInfo( "DataCollectorPool::PreserveAllConnection() : All Connections had been established! Num=[%u] .......!!! ", GetCount() );
+			s_bWaitCondition = false;
 			return true;
 		}
+
+		SimpleTask::Sleep( 1000*1 );
 	}
 
-	DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : initialize overtime > 60s" );
+	DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : initialize overtime > 60s, Num=[%u] .......!!! ", GetCount() );
 	return false;
 }
 
@@ -407,19 +428,21 @@ DataCollector* DataCollectorPool::GetCollectorByMkID( unsigned int nMkID )
 {
 	int						nInnerMkID = DataCollectorPool::MkIDCast( nMkID );
 	CriticalLock			lock( m_oLock );
+	unsigned int			nItemNumber = std::vector<DataCollector>::size();
 
 	if( nInnerMkID < 0 )
 	{
 		return NULL;
 	}
 
-	std::map<int,int>::iterator		it = m_mapMkID2Index.find( nInnerMkID );
-
-	if( it != m_mapMkID2Index.end() )
+	for( unsigned int n = 0; n < nItemNumber; n++ )
 	{
-		DataCollector&				refCollector = this->operator []( it->second );
+		DataCollector&		refCollector = operator []( n );
 
-		return &refCollector;
+		if( refCollector.GetMarketID() == nInnerMkID )
+		{
+			return &refCollector;
+		}
 	}
 
 	return NULL;

@@ -655,41 +655,97 @@ void STDCALL MDataClient::EndWork()
 //	Global_DataIO.Release();
 }
 
+
+static unsigned int	s_Date4CNF = 0;
+static unsigned int	s_Date4CNFOPT = 0;
+
+
 int	 STDCALL		MDataClient::GetMarketInfo( unsigned char cMarket, char* pszInBuf, int nInBytes )
 {
-	int							nInnerMkID = DataCollectorPool::MkIDCast( cMarket );
-	unsigned __int64			nSerialNo = 0;
-	XDFAPI_MarketKindHead		oHead = { 0 };
-	T_Inner_MarketInfo			tagMkInfo;
-	MStreamWrite				oMSW( pszInBuf, nInBytes );
-	DatabaseAdaptor&			refDatabase = DataIOEngine::GetEngineObj().GetDatabaseObj();
+	int										nInnerMkID = DataCollectorPool::MkIDCast( cMarket );
+	unsigned __int64						nSerialNo = 0;
+	XDFAPI_MarketKindHead					oHead = { 0 };
+	T_Inner_MarketInfo						tagMkInfo;
+	MStreamWrite							oMSW( pszInBuf, nInBytes );
+	DatabaseAdaptor&						refDatabase = DataIOEngine::GetEngineObj().GetDatabaseObj();
+	std::map<int,XDFAPI_MarketKindInfo>&	mapKindTable = m_mapMarketKind[cMarket];
+	unsigned int							nKindCount = mapKindTable.size();
 
 	if( nInnerMkID < 0 )
 	{
 		return -1;
 	}
 
-	if( refDatabase.QueryRecord( (nInnerMkID*100+1), (char*)&tagMkInfo, sizeof(T_Inner_MarketInfo), nSerialNo ) <= 0 )
+	for( int i = 0; i < 3; i++ )
 	{
-		return -2;
+		nSerialNo = 0;
+		if( refDatabase.QueryRecord( (nInnerMkID*100+1), (char*)&tagMkInfo, sizeof(T_Inner_MarketInfo), nSerialNo ) <= 0 )
+		{
+			if( XDF_CNF == cMarket || XDF_CNFOPT == cMarket )
+			{
+				if( XDF_CNF == cMarket )
+				{
+					if( 0 == i )	nInnerMkID = QUO_MARKET_CZCE;
+					if( 1 == i )	nInnerMkID = QUO_MARKET_SHFE;
+				}
+
+				if( XDF_CNFOPT == cMarket )
+				{
+					if( 0 == i )	nInnerMkID = QUO_MARKET_CZCEOPT;
+					if( 1 == i )	nInnerMkID = QUO_MARKET_SHFEOPT;
+				}
+
+				continue;
+			}
+
+			return -2;
+		}
+
+		oHead.WareCount += tagMkInfo.objData.uiWareCount;
+		oHead.KindCount = nKindCount;
+
+		if( XDF_CNF != cMarket && XDF_CNFOPT != cMarket )
+		{
+			break;
+		}
+
+		if( XDF_CNF == cMarket || XDF_CNFOPT ==  cMarket )
+		{
+			if( XDF_CNF == cMarket )
+			{
+				if( 0 == i )	nInnerMkID = QUO_MARKET_CZCE;
+				if( 1 == i )	nInnerMkID = QUO_MARKET_SHFE;
+			}
+
+			if( XDF_CNFOPT == cMarket )
+			{
+				if( 0 == i )	nInnerMkID = QUO_MARKET_CZCEOPT;
+				if( 1 == i )	nInnerMkID = QUO_MARKET_SHFEOPT;
+			}
+		}
 	}
 
-	::memset( &oHead, 0, sizeof(XDFAPI_MarketKindHead) );
-	oHead.WareCount = tagMkInfo.objData.uiWareCount;
-//	oHead.KindCount = tagMkInfo.objData.uiKindCount;
 	oMSW.PutSingleMsg( 100, (char*)&oHead, sizeof(XDFAPI_MarketKindHead) );
 
-	for( int n = 0; n < tagMkInfo.objData.uiKindCount; n++ )
+	if( XDF_CNF == cMarket )
 	{
-		XDFAPI_MarketKindInfo	oInfo = { 0 };
-		std::map<int,XDFAPI_MarketKindInfo>&	refKindTable = m_mapMarketKind[cMarket];
-		tagQUO_KindInfo&						tagCategory = tagMkInfo.objData.mKindRecord[n];
+		s_Date4CNF = tagMkInfo.objData.uiMarketDate;
+	}
+	else if( XDF_CNFOPT == cMarket )
+	{
+		s_Date4CNFOPT = tagMkInfo.objData.uiMarketDate;
+	}
+
+	for( int n = 0; n < nKindCount; n++ )
+	{
+		XDFAPI_MarketKindInfo			oInfo = { 0 };
+		XDFAPI_MarketKindInfo&			refKindTable = mapKindTable[n];
 
 		oInfo.Serial = n;									///< 序号
-		memcpy(oInfo.KindName, tagCategory.szKindName, 8);	///< 类别的名称
-	//	unsigned short					WareCount;				//该类商品的数量
-		oInfo.PriceRate = refKindTable[n].PriceRate;		///< //该类别中价格放大倍数[10的多少次方]
-		oInfo.LotSize = tagCategory.uiLotSize;				///< 该类别中"手"比率
+		memcpy(oInfo.KindName, refKindTable.KindName, 8);	///< 类别的名称
+		oInfo.WareCount = refKindTable.WareCount;			///< 该类商品的数量
+		oInfo.PriceRate = refKindTable.PriceRate;			///< 该类别中价格放大倍数[10的多少次方]
+		oInfo.LotSize = refKindTable.LotSize;				///< 该类别中"手"比率
 		oMSW.PutMsg( 101, (char*)&oInfo, sizeof(oInfo) );
 	}
 
@@ -923,21 +979,10 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 	unsigned int				MsgSize = 0;
 	int							nDataSize = 0;
 
+	nCount = 0;
 	if( nInnerMkID < 0 || NULL == m_pQueryBuffer )
 	{
 		return -1;
-	}
-
-	::memset( &tagMkInfo, 0, sizeof(T_Inner_MarketInfo) );
-	if( refDatabase.QueryRecord( (nInnerMkID*100+1), (char*)&tagMkInfo, sizeof(T_Inner_MarketInfo), nSerialNo ) <= 0 )
-	{
-		return -2;
-	}
-
-	nCount = tagMkInfo.objData.uiWareCount;
-	if( 0 == pszInBuf || 0 == nInBytes )		///< 通过nCount返回码表个数
-	{
-		return 1;
 	}
 
 	if( XDF_SH == cMarket || XDF_SZ == cMarket )
@@ -970,7 +1015,7 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 		MsgType = 9;
 		MsgSize = sizeof(XDFAPI_NameTableSzOpt);
 	}
-	else if( XDF_CNFOPT == cMarket )//商品期货和商品期权(上海/郑州/大连)
+	else if( XDF_CNFOPT == cMarket )//商品期权(上海/郑州/大连)
 	{
 		MsgType = 11;
 		MsgSize = sizeof(XDFAPI_NameTableCnfOpt);
@@ -982,7 +1027,60 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 
 	for( int i = 0; i < 3; i++ )
 	{
+		nSerialNo = 0;
+		::memset( &tagMkInfo, 0, sizeof(T_Inner_MarketInfo) );
+		if( refDatabase.QueryRecord( (nInnerMkID*100+1), (char*)&tagMkInfo, sizeof(T_Inner_MarketInfo), nSerialNo ) <= 0 )
+		{
+			if( XDF_CNF == cMarket || XDF_CNFOPT ==  cMarket )
+			{
+				if( XDF_CNF == cMarket )
+				{
+					if( 0 == i )	nInnerMkID = QUO_MARKET_CZCE;
+					if( 1 == i )	nInnerMkID = QUO_MARKET_SHFE;
+				}
+
+				if( XDF_CNFOPT == cMarket )
+				{
+					if( 0 == i )	nInnerMkID = QUO_MARKET_CZCEOPT;
+					if( 1 == i )	nInnerMkID = QUO_MARKET_SHFEOPT;
+				}
+				continue;
+			}
+
+			return -2;
+		}
+
+		nCount += tagMkInfo.objData.uiWareCount;
+
+		if( XDF_CNF != cMarket && XDF_CNFOPT != cMarket )
+		{
+			if( 0 == pszInBuf || 0 == nInBytes )		///< 通过nCount返回码表个数
+			{
+				return 1;
+			}
+		}
+		else
+		{
+			if( 0 == pszInBuf || 0 == nInBytes )		///< 通过nCount返回码表个数
+			{
+				if( XDF_CNF == cMarket )
+				{
+					if( 0 == i )	nInnerMkID = QUO_MARKET_CZCE;
+					if( 1 == i )	nInnerMkID = QUO_MARKET_SHFE;
+				}
+
+				if( XDF_CNFOPT == cMarket )
+				{
+					if( 0 == i )	nInnerMkID = QUO_MARKET_CZCEOPT;
+					if( 1 == i )	nInnerMkID = QUO_MARKET_SHFEOPT;
+				}
+
+				continue;
+			}
+		}
+
 		tagQUO_ReferenceData*		pRefData = (tagQUO_ReferenceData*)m_pQueryBuffer;
+		nSerialNo = 0;
 		if( (nDataSize=refDatabase.QueryBatchRecords( (nInnerMkID*100+2), m_pQueryBuffer, MAX_QUERY_BUF_SIZE, nSerialNo )) <= 0 )
 		{
 			return -4;
@@ -1034,10 +1132,10 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 				pRefData = (tagQUO_ReferenceData*)(m_pQueryBuffer + nOffset);
 
 				pData = (char*)&tagCnfName;
-				tagCnfName.Market = XDF_CNF;
-				tagCnfName.SecKind = CastKindID4CNF( nInnerMkID, NULL );
 				memcpy( tagCnfName.Code,pRefData->szCode, sizeof(tagCnfName.Code) );
 				memcpy( tagCnfName.Name, pRefData->szName, sizeof(tagCnfName.Name) );
+				tagCnfName.Market = XDF_CNF;
+				tagCnfName.SecKind = CastKindID4CNF( nInnerMkID, tagCnfName.Code );
 				tagCnfName.LotFactor = tagMkInfo.objData.mKindRecord[pRefData->uiKindID].uiLotFactor;
 			}
 			else if( XDF_SHOPT == cMarket )//上证期权
@@ -1072,16 +1170,14 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 				tagSHOPTName.DeliveryDate = pRefData->uiDeliveryDate;//交割日(YYYYMMDD)
 				tagSHOPTName.ExpireDate = pRefData->uiExpireDate;//到期日(YYYYMMDD)
 				//tagSHOPTName.UpdateVersion = pRefData->;//期权合约的版本号(新挂合约是'1')
-	/*
-		unsigned long					MarginUnit;			//单位保证金(精确到分)//[*放大100]
-		short							MarginRatio;		//保证金比例1(%)
-		short							MarginRatio2;		//保证金比例2(%)
-		int								MinMktFloor;		//单笔市价申报下限
-		int								MaxMktFloor;		//单笔市价申报上限
-		int								MinLmtFloor;		//单笔限价申报下限
-		int								MaxLmtFloor;		//单笔限价申报上限
-		char							StatusFlag[8];		//期权合约状态(8个字符,详细定义见文档)
-	*/
+//		unsigned long					MarginUnit;			//单位保证金(精确到分)//[*放大100]
+//		short							MarginRatio;		//保证金比例1(%)
+//		short							MarginRatio2;		//保证金比例2(%)
+//		int								MinMktFloor;		//单笔市价申报下限
+//		int								MaxMktFloor;		//单笔市价申报上限
+//		int								MinLmtFloor;		//单笔限价申报下限
+//		int								MaxLmtFloor;		//单笔限价申报上限
+//		char							StatusFlag[8];		//期权合约状态(8个字符,详细定义见文档)
 			}
 			else if( XDF_ZJOPT == cMarket )//中金期权
 			{
@@ -1155,7 +1251,10 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 	//			tagSHOPTName.EarlyNightFlag = pNameTb->EarlyNightFlag;
 			}
 
-			oMSW.PutMsg( MsgType, pData, MsgSize );
+			if( pData != NULL )
+			{
+				oMSW.PutMsg( MsgType, pData, MsgSize );
+			}
 		}
 
 		if( XDF_CNF != cMarket && XDF_CNFOPT != cMarket )
@@ -1165,18 +1264,23 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 
 		if( XDF_CNF == cMarket )
 		{
-			if( 1 == i )	nInnerMkID = QUO_MARKET_CZCE;
-			if( 2 == i )	nInnerMkID = QUO_MARKET_SHFE;
+			if( 0 == i )	nInnerMkID = QUO_MARKET_CZCE;
+			if( 1 == i )	nInnerMkID = QUO_MARKET_SHFE;
 		}
 
-		if( XDF_CNF == cMarket )
+		if( XDF_CNFOPT == cMarket )
 		{
-			if( 1 == i )	nInnerMkID = QUO_MARKET_CZCEOPT;
-			if( 2 == i )	nInnerMkID = QUO_MARKET_SHFEOPT;
+			if( 0 == i )	nInnerMkID = QUO_MARKET_CZCEOPT;
+			if( 1 == i )	nInnerMkID = QUO_MARKET_SHFEOPT;
 		}
 	}
 
 	oMSW.Detach();
+
+	if( 0 == pszInBuf || 0 == nInBytes )		///< 通过nCount返回码表个数
+	{
+		return 1;
+	}
 
 	return oMSW.GetOffset();
 }
@@ -1241,8 +1345,25 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 	{
 		tagQUO_SnapData*			pSnapData = (tagQUO_SnapData*)m_pQueryBuffer;
 		nSerialNo = 0;
+
 		if( (nDataSize=refDatabase.QueryBatchRecords( (nInnerMkID*100+3), m_pQueryBuffer, MAX_QUERY_BUF_SIZE, nSerialNo )) <= 0 )
 		{
+			if( XDF_CNF == cMarket || XDF_CNFOPT ==  cMarket )
+			{
+				if( XDF_CNF == cMarket )
+				{
+					if( 0 == i )	nInnerMkID = QUO_MARKET_CZCE;
+					if( 1 == i )	nInnerMkID = QUO_MARKET_SHFE;
+				}
+
+				if( XDF_CNFOPT == cMarket )
+				{
+					if( 0 == i )	nInnerMkID = QUO_MARKET_CZCEOPT;
+					if( 1 == i )	nInnerMkID = QUO_MARKET_SHFEOPT;
+				}
+				continue;
+			}
+
 			return -4;
 		}
 
@@ -1297,7 +1418,6 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 				pSnapData = (tagQUO_SnapData*)(m_pQueryBuffer + nOffset);
 				pData = (char*)&tagCFFStock;
 
-				//tagCFFStock.DataTimeStamp = pSnapData->DataTimeStamp;
 				memcpy(tagCFFStock.Code, pSnapData->szCode,6);
 				int		nKind = CastKindID4CFF( tagCFFStock.Code );
 				tagCFFStock.High = pSnapData->dHighPx * GetRate( cMarket, nKind  ) + 0.5;						//最高价格[* 放大倍数]
@@ -1314,6 +1434,7 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 				tagCFFStock.Volume = pSnapData->ui64Volume;             //总成交量[股]
 				tagCFFStock.PreOpenInterest = pSnapData->ui64PreOpenInterest; //昨日持仓量[股]
 				tagCFFStock.OpenInterest = pSnapData->ui64OpenInterest;       //持仓量[股]
+				tagCFFStock.DataTimeStamp = pSnapData->uiTime;
 
 				for (int i=0; i<5; i++)
 				{
@@ -1328,8 +1449,6 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 				pSnapData = (tagQUO_SnapData*)(m_pQueryBuffer + nOffset);
 				pData = (char*)&tagCNFStock;
 
-				//tagCNFStock.Date = pSnapData->Date;
-				//tagCNFStock.DataTimeStamp = pSnapData->DataTimeStamp;
 				memcpy(tagCNFStock.Code, pSnapData->szCode,20);
 				int		nKind = CastKindID4CNF( nInnerMkID, tagCNFStock.Code );
 				tagCNFStock.High = pSnapData->dHighPx * GetRate( cMarket, nKind  ) + 0.5;						//最高价格[* 放大倍数]
@@ -1346,6 +1465,8 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 				tagCNFStock.Volume		 = pSnapData->ui64Volume;             //总成交量[股]
 				tagCNFStock.PreOpenInterest = pSnapData->ui64PreOpenInterest; //昨日持仓量[股]
 				tagCNFStock.OpenInterest = pSnapData->ui64OpenInterest;       //持仓量[股]
+				tagCNFStock.DataTimeStamp = pSnapData->uiTime;
+				tagCNFStock.Date = s_Date4CNF % 10000;
 
 				for (int i=0; i<5; i++)
 				{
@@ -1362,7 +1483,6 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 
 				memcpy(tagSHOPTStock.Code, pSnapData->szCode,8);
 				int		nKind = CastKindID4SHOPT( tagSHOPTStock.Code );
-				//tagSHOPTStock.Time = pSnapData->DataTimeStamp;
 				tagSHOPTStock.PreSettlePx = pSnapData->dPreSettlePx * GetRate( cMarket, nKind  ) + 0.5;
 				tagSHOPTStock.SettlePrice = pSnapData->dSettlePx * GetRate( cMarket, nKind  ) + 0.5;
 				tagSHOPTStock.OpenPx = pSnapData->dOpenPx * GetRate( cMarket, nKind  ) + 0.5;
@@ -1375,6 +1495,8 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 				//tagSHOPTStock.AuctionPrice = pSnapData->AuctionPrice;
 				//tagSHOPTStock.AuctionQty = pSnapData->AuctionQty;
 				tagSHOPTStock.Position = pSnapData->ui64OpenInterest;
+				tagSHOPTStock.Time = pSnapData->uiTime;
+
 				for (int i=0; i<5; i++)
 				{
 					tagSHOPTStock.Buy[i].Price = pSnapData->mBid[i].dVPrice * GetRate( cMarket, nKind  ) + 0.5;
@@ -1388,7 +1510,6 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 				pSnapData = (tagQUO_SnapData*)(m_pQueryBuffer + nOffset);
 				pData = (char*)&tagZJOPTStock;
 
-				//tagZJOPTStock.DataTimeStamp = pSnapData->DataTimeStamp;
 				memcpy(tagZJOPTStock.Code, pSnapData->szCode,32);
 				int		nKind = CastKindID4CFFOPT( tagZJOPTStock.Code );
 				tagZJOPTStock.High = pSnapData->dHighPx * GetRate( cMarket, nKind  ) + 0.5;						//最高价格[* 放大倍数]
@@ -1396,7 +1517,7 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 				tagZJOPTStock.Low = pSnapData->dLowPx * GetRate( cMarket, nKind  ) + 0.5;						//最低价格[* 放大倍数]
 				tagZJOPTStock.PreClose = pSnapData->dPreClosePx * GetRate( cMarket, nKind  ) + 0.5;				//昨收价格[* 放大倍数]
 				tagZJOPTStock.PreSettlePrice = pSnapData->dPreSettlePx * GetRate( cMarket, nKind  ) + 0.5;	//昨日结算价格[* 放大倍数]
-				
+
 				tagZJOPTStock.Now = pSnapData->dNowPx * GetRate( cMarket, nKind  ) + 0.5;                    //最新价格[* 放大倍数]
 				tagZJOPTStock.Close	= pSnapData->dClosePx * GetRate( cMarket, nKind  ) + 0.5;                  //今日收盘价格[* 放大倍数]
 				tagZJOPTStock.SettlePrice = pSnapData->dSettlePx * GetRate( cMarket, nKind  ) + 0.5;        //今日结算价格[* 放大倍数]
@@ -1406,6 +1527,7 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 				tagZJOPTStock.Volume = pSnapData->ui64Volume;             //总成交量[股]
 				tagZJOPTStock.PreOpenInterest = pSnapData->ui64PreOpenInterest; //昨日持仓量[股]
 				tagZJOPTStock.OpenInterest = pSnapData->ui64OpenInterest;       //持仓量[股]
+				tagZJOPTStock.DataTimeStamp = pSnapData->uiTime;
 
 				for (int i=0; i<5; i++)
 				{
@@ -1422,7 +1544,6 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 
 				memcpy(tagSZOPTStock.Code, pSnapData->szCode,8);
 				int		nKind = CastKindID4SZOPT( tagSZOPTStock.Code );
-				//tagSZOPTStock.Time = pSnapData->DataTimeStamp;
 				tagSZOPTStock.PreSettlePx = pSnapData->dPreSettlePx * GetRate( cMarket, nKind  ) + 0.5;
 				tagSZOPTStock.SettlePrice = pSnapData->dSettlePx * GetRate( cMarket, nKind  ) + 0.5;
 				tagSZOPTStock.OpenPx = pSnapData->dOpenPx * GetRate( cMarket, nKind  ) + 0.5;
@@ -1433,6 +1554,8 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 				tagSZOPTStock.Amount = pSnapData->dAmount;
 				memcpy(tagSZOPTStock.TradingPhaseCode, pSnapData->szTradingPhaseCode,4);
 				tagSZOPTStock.Position = pSnapData->ui64OpenInterest;
+				tagSZOPTStock.Time = pSnapData->uiTime;
+
 				for (int i=0; i<5; i++)
 				{
 					tagSZOPTStock.Buy[i].Price = pSnapData->mBid[i].dVPrice * GetRate( cMarket, nKind  ) + 0.5;
@@ -1446,8 +1569,6 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 				pSnapData = (tagQUO_SnapData*)(m_pQueryBuffer + nOffset);
 				pData = (char*)&tagCNFOPTStock;
 
-				//tagCNFOPTStock.Date = pSnapData->Date;
-				//tagCNFOPTStock.DataTimeStamp = pSnapData->DataTimeStamp;
 				memcpy(tagCNFOPTStock.Code, pSnapData->szCode,20);
 				int		nKind = CastKindID4CNFOPT( nInnerMkID, tagCNFStock.Code );
 				tagCNFOPTStock.High = pSnapData->dHighPx * GetRate( cMarket, nKind  ) + 0.5;						//最高价格[* 放大倍数]
@@ -1464,6 +1585,8 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 				tagCNFOPTStock.Volume = pSnapData->ui64Volume;             //总成交量[股]
 				tagCNFOPTStock.PreOpenInterest = pSnapData->ui64PreOpenInterest; //昨日持仓量[股]
 				tagCNFOPTStock.OpenInterest = pSnapData->ui64OpenInterest;       //持仓量[股]
+				tagCNFOPTStock.DataTimeStamp = pSnapData->uiTime;
+				tagCNFOPTStock.Date = s_Date4CNFOPT % 10000;
 
 				for (int i=0; i<5; i++)
 				{
@@ -1474,7 +1597,10 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 				}
 			}
 
-			oMSW.PutMsg( MsgType, pData, MsgSize );
+			if( NULL != pData )
+			{
+				oMSW.PutMsg( MsgType, pData, MsgSize );
+			}
 		}
 
 		if( XDF_CNF != cMarket && XDF_CNFOPT != cMarket )
@@ -1484,14 +1610,14 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 
 		if( XDF_CNF == cMarket )
 		{
-			if( 1 == i )	nInnerMkID = QUO_MARKET_CZCE;
-			if( 2 == i )	nInnerMkID = QUO_MARKET_SHFE;
+			if( 0 == i )	nInnerMkID = QUO_MARKET_CZCE;
+			if( 1 == i )	nInnerMkID = QUO_MARKET_SHFE;
 		}
 
-		if( XDF_CNF == cMarket )
+		if( XDF_CNFOPT == cMarket )
 		{
-			if( 1 == i )	nInnerMkID = QUO_MARKET_CZCEOPT;
-			if( 2 == i )	nInnerMkID = QUO_MARKET_SHFEOPT;
+			if( 0 == i )	nInnerMkID = QUO_MARKET_CZCEOPT;
+			if( 1 == i )	nInnerMkID = QUO_MARKET_SHFEOPT;
 		}
 	}
 
@@ -1567,7 +1693,7 @@ int		STDCALL		MPrimeClient::ReqFuncData(int FuncNo, void* wParam, void* lParam)
 				oInfo.MarketStatus = 1;
 
 				*pInfo = oInfo;
-				return 0;
+				return 1;
 			}
 		}
 	}
@@ -1664,7 +1790,6 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 			XDFAPI_CffexData			tagData = { 0 };
 			tagQUO_SnapData*			pData = (tagQUO_SnapData*)pDataPtr;
 
-			//tagCFFStock.DataTimeStamp = pSnapData->DataTimeStamp;
 			memcpy(tagData.Code, pData->szCode,6);
 			int		nKind = CastKindID4CFF( tagData.Code );
 			tagData.High = pData->dHighPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;						//最高价格[* 放大倍数]
@@ -1681,6 +1806,7 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 			tagData.Volume = pData->ui64Volume;             //总成交量[股]
 			tagData.PreOpenInterest = pData->ui64PreOpenInterest; //昨日持仓量[股]
 			tagData.OpenInterest = pData->ui64OpenInterest;       //持仓量[股]
+			tagData.DataTimeStamp = pData->uiTime;
 
 			for (int i=0; i<5; i++)
 			{
@@ -1703,6 +1829,7 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 			tagData.MarketTime = pData->objData.uiMarketTime;
 			tagData.MarketID = nOldMkID;
 			tagData.MarketStatus = 1;
+			s_Date4CNF = tagData.MarketDate;
 
 			oMSW.PutSingleMsg(1, (char*)&tagData, sizeof(XDFAPI_MarketStatusInfo));
 			
@@ -1712,8 +1839,6 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 			XDFAPI_CNFutureData			tagData = { 0 };
 			tagQUO_SnapData*			pData = (tagQUO_SnapData*)pDataPtr;
 
-			//tagData.Date = pData->Date;
-			//tagData.DataTimeStamp = pData->DataTimeStamp;
 			memcpy(tagData.Code, pData->szCode,20);
 			int		nKind = CastKindID4CNF( eMarketID, tagData.Code );
 			tagData.High = pData->dHighPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;						//最高价格[* 放大倍数]
@@ -1730,6 +1855,8 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 			tagData.Volume		 = pData->ui64Volume;             //总成交量[股]
 			tagData.PreOpenInterest = pData->ui64PreOpenInterest; //昨日持仓量[股]
 			tagData.OpenInterest = pData->ui64OpenInterest;       //持仓量[股]
+			tagData.DataTimeStamp = pData->uiTime;
+			tagData.Date = s_Date4CNF % 10000;
 
 			for (int i=0; i<5; i++)
 			{
@@ -1753,7 +1880,6 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 			tagData.TradingPhaseCode[0] = '1';
 
 			oMSW.PutSingleMsg(14, (char*)&tagData, sizeof(XDFAPI_ShOptMarketStatus));
-			
 		}
 		else if( nMsgID == 3 )
 		{
@@ -1762,7 +1888,7 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 
 			memcpy(tagData.Code, pData->szCode,8);
 			int		nKind = CastKindID4SHOPT( tagData.Code );
-			//tagData.Time = pData->DataTimeStamp;
+			tagData.Time = pData->uiTime;
 			tagData.PreSettlePx = pData->dPreSettlePx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
 			tagData.SettlePrice = pData->dSettlePx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
 			tagData.OpenPx = pData->dOpenPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
@@ -1805,7 +1931,6 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 			XDFAPI_ZjOptData			tagData = { 0 };
 			tagQUO_SnapData*			pData = (tagQUO_SnapData*)pDataPtr;
 
-			//tagData.DataTimeStamp = pData->DataTimeStamp;
 			memcpy(tagData.Code, pData->szCode,32);
 			int		nKind = CastKindID4CFFOPT( tagData.Code );
 			tagData.High = pData->dHighPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;						//最高价格[* 放大倍数]
@@ -1823,6 +1948,7 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 			tagData.Volume = pData->ui64Volume;             //总成交量[股]
 			tagData.PreOpenInterest = pData->ui64PreOpenInterest; //昨日持仓量[股]
 			tagData.OpenInterest = pData->ui64OpenInterest;       //持仓量[股]
+			tagData.DataTimeStamp = pData->uiTime;
 
 			for (int i=0; i<5; i++)
 			{
@@ -1856,7 +1982,7 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 
 			memcpy(tagData.Code, pData->szCode,8);
 			int		nKind = CastKindID4SZOPT( tagData.Code );
-			//tagData.Time = pData->DataTimeStamp;
+			tagData.Time = pData->uiTime;
 			tagData.PreSettlePx = pData->dPreSettlePx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
 			tagData.SettlePrice = pData->dSettlePx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
 			tagData.OpenPx = pData->dOpenPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;
@@ -1878,7 +2004,7 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 			oMSW.PutMsg(35, (char*)&tagData, sizeof(XDFAPI_SzOptData));
 		}
 		break;
-	case XDF_CNFOPT://商品期货和商品期权(上海/郑州/大连)
+	case XDF_CNFOPT://商品期权(上海/郑州/大连)
 		if( nMsgID == 1 )
 		{
 			XDFAPI_MarketStatusInfo		tagData = { 0 };
@@ -1888,17 +2014,15 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 			tagData.MarketTime = pData->objData.uiMarketTime;
 			tagData.MarketID = nOldMkID;
 			tagData.MarketStatus = 1;
+			s_Date4CNFOPT = tagData.MarketDate;
 
 			oMSW.PutSingleMsg(1, (char*)&tagData, sizeof(XDFAPI_MarketStatusInfo));
-			
 		}
 		else if( nMsgID == 3 )
 		{
 			XDFAPI_CNFutOptData			tagData = { 0 };
 			tagQUO_SnapData*			pData = (tagQUO_SnapData*)pDataPtr;
 
-			//tagData.Date = pData->Date;
-			//tagData.DataTimeStamp = pData->DataTimeStamp;
 			memcpy(tagData.Code, pData->szCode,20);
 			int		nKind = CastKindID4CNFOPT( eMarketID, tagData.Code );
 			tagData.High = pData->dHighPx * MDataClient::GetRate( nOldMkID, nKind  ) + 0.5;						//最高价格[* 放大倍数]
@@ -1915,6 +2039,8 @@ void QuotationAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessa
 			tagData.Volume = pData->ui64Volume;             //总成交量[股]
 			tagData.PreOpenInterest = pData->ui64PreOpenInterest; //昨日持仓量[股]
 			tagData.OpenInterest = pData->ui64OpenInterest;       //持仓量[股]
+			tagData.DataTimeStamp = pData->uiTime;
+			tagData.Date = s_Date4CNFOPT % 10000;
 
 			for (int i=0; i<5; i++)
 			{
@@ -1959,6 +2085,64 @@ void QuotationAdaptor::OnStatus( QUO_MARKET_ID eMarketID, QUO_MARKET_STATUS eMar
 		{
 			eStatus = XRS_Unknow;
 		}
+
+		///< ------------------------- 秘技: 只在全市场初始化完成时调用 ---------------------------------------
+		static std::map<short,enum XDFRunStat>		s_mapMkStatus;						///< 商品期货/期权各市场状态
+		if( cMkID == XDF_CNFOPT || cMkID == XDF_CNF )									///< 对商品期货、权部分的状态先进行缓存
+		{
+			s_mapMkStatus[(short)eMarketID] = eStatus;
+			return;
+		}
+
+		if( QUO_MARKET_UNKNOW == eMarketID && QUO_STATUS_NORMAL == eMarketStatus )		///< 秘技,检查状态缓存，判断是否需要通知状态变化
+		{
+			bool							bNotifyCNF = true;
+			bool							bNotifyCNFOPT = true;
+			std::map<short,enum XDFRunStat>::iterator itDL = s_mapMkStatus.find( QUO_MARKET_DCE );
+			std::map<short,enum XDFRunStat>::iterator itSH = s_mapMkStatus.find( QUO_MARKET_SHFE );
+			std::map<short,enum XDFRunStat>::iterator itZZ = s_mapMkStatus.find( QUO_MARKET_CZCE );
+			std::map<short,enum XDFRunStat>::iterator itDLOPT = s_mapMkStatus.find( QUO_MARKET_DCEOPT );
+			std::map<short,enum XDFRunStat>::iterator itSHOPT = s_mapMkStatus.find( QUO_MARKET_SHFEOPT );
+			std::map<short,enum XDFRunStat>::iterator itZZOPT = s_mapMkStatus.find( QUO_MARKET_CZCEOPT );
+
+			if( itDL == s_mapMkStatus.end() && itSH == s_mapMkStatus.end() && itZZ == s_mapMkStatus.end() )	bNotifyCNF = false;
+			if( itDLOPT == s_mapMkStatus.end() && itSHOPT == s_mapMkStatus.end() && itZZOPT == s_mapMkStatus.end() )	bNotifyCNFOPT = false;
+
+			if( itDL != s_mapMkStatus.end() ) {
+				if( itDL->second != XRS_Normal )	bNotifyCNF = false;
+			}
+			if( itSH != s_mapMkStatus.end() ) {
+				if( itSH->second != XRS_Normal )	bNotifyCNF = false;
+			}
+			if( itZZ != s_mapMkStatus.end() ) {
+				if( itZZ->second != XRS_Normal )	bNotifyCNF = false;
+			}
+
+			if( itDLOPT != s_mapMkStatus.end() ) {
+				if( itDLOPT->second != XRS_Normal )	bNotifyCNFOPT = false;
+			}
+			if( itSHOPT != s_mapMkStatus.end() ) {
+				if( itSHOPT->second != XRS_Normal )	bNotifyCNFOPT = false;
+			}
+			if( itZZOPT != s_mapMkStatus.end() ) {
+				if( itZZOPT->second != XRS_Normal )	bNotifyCNFOPT = false;
+			}
+
+			if( true == bNotifyCNF )
+			{
+				Global_pSpi->XDF_OnRspStatusChanged( XDF_CNF, XRS_Normal );
+				OnLog( 0, "CNF status changed : ---> normal" );
+			}
+
+			if( true == bNotifyCNFOPT )
+			{
+				Global_pSpi->XDF_OnRspStatusChanged( XDF_CNFOPT, XRS_Normal );
+				OnLog( 0, "CNFOPT status changed : ---> normal" );
+			}
+
+			return;
+		}
+		///< --------------------------------------------------------------------------------------------------
 
 		Global_pSpi->XDF_OnRspStatusChanged( cMkID, eStatus );
 
