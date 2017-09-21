@@ -634,7 +634,6 @@ void STDCALL MDataClient::Release()
 	if( Global_bInit )
 	{
 		Global_bInit = false;
-		EndWork();
 		g_oDataIO.Release();
 	}
 }
@@ -651,8 +650,7 @@ int STDCALL	MDataClient::BeginWork()
 
 void STDCALL MDataClient::EndWork()
 {
-//	Global_DllMgr.EndWork();
-//	Global_DataIO.Release();
+	::EndWork();
 }
 
 
@@ -756,7 +754,7 @@ int	 STDCALL		MDataClient::GetMarketInfo( unsigned char cMarket, char* pszInBuf,
 
 int CastKindID4SHL1( char* pszCode )
 {
-	if( (pszCode[0] == '0' && pszCode[1] == '0' && pszCode[2] == '0') || pszCode[3] == '0' || pszCode[3] == '1' || pszCode[3] == '2' || pszCode[3] == '3' || pszCode[3] == '4' || pszCode[3] == '7' || pszCode[3] == '8' || pszCode[9] == '9' )
+	if( (pszCode[0] == '0' && pszCode[1] == '0' && pszCode[2] == '0') && (pszCode[3] == '0' || pszCode[3] == '1' || pszCode[3] == '2' || pszCode[3] == '3' || pszCode[3] == '4' || pszCode[3] == '7' || pszCode[3] == '8' || pszCode[3] == '9') )
 		return 0;	///< 上证指数 
 
 	if( pszCode[0] == '6' )
@@ -766,7 +764,7 @@ int CastKindID4SHL1( char* pszCode )
 		return 2;	///< 上证Ｂ股
 
 	if( pszCode[0] == '5' && pszCode[1] == '0' )
-		return 3;	///< 上证基金 
+		return 3;	///< 上证基金
 
 	if( (pszCode[0] == '0' && (pszCode[1] == '0' || pszCode[1] == '1' || pszCode[1] == '2' )) || (pszCode[0] == '1' && pszCode[1] == '2') || (pszCode[0] == '1' && pszCode[1] == '3' && (pszCode[2] == '0' || pszCode[2] == '5' || pszCode[2] == '6')) )
 		return 4;	///< 上证债券
@@ -776,7 +774,7 @@ int CastKindID4SHL1( char* pszCode )
 
 	if( (pszCode[0] == '2' && pszCode[1] == '0' && (pszCode[2] == '1' || pszCode[2] == '2' || pszCode[2] == '3' || pszCode[2] == '4')) || (pszCode[0] == '1' && pszCode[1] == '0' && pszCode[2] == '6') )
 		return 6;	///< 上证回购
-
+ 
 	if( pszCode[0] == '5' && pszCode[1] == '1' && (pszCode[2] == '0' || pszCode[2] == '1' || pszCode[2] == '2' || pszCode[2] == '3' || pszCode[2] == '8') )
 		return 7;	///< 上证ETF
 
@@ -879,7 +877,7 @@ int CastKindID4SZL1( const char* pszCode )
 
 int	CastKindID4CFF( char* pszCode )
 {
-	if( pszCode[0] == 'T' || pszCode[1] == 'F' )
+	if( pszCode[0] == 'T' || (pszCode[0] == 'T' && pszCode[1] == 'F') )
 	{
 		return 1;
 	}
@@ -891,7 +889,7 @@ int	CastKindID4CFF( char* pszCode )
 
 int	CastKindID4CFFOPT( char* pszCode )
 {
-	if( pszCode[0] == 'T' || pszCode[1] == 'F' )
+	if( pszCode[0] == 'T' || (pszCode[0] == 'T' && pszCode[1] == 'F') )
 	{
 		return 1;
 	}
@@ -1118,9 +1116,9 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 				pRefData = (tagQUO_ReferenceData*)(m_pQueryBuffer + nOffset);
 
 				pData = (char*)&tagZJQHName;
-				tagCnfName.SecKind = CastKindID4CFF( pRefData->szCode );
 				tagZJQHName.Market = XDF_CF;
 				memcpy( tagZJQHName.Code, pRefData->szCode, 6 );
+				tagCnfName.SecKind = CastKindID4CFF( pRefData->szCode );
 				tagZJQHName.ContractMult = tagMkInfo.objData.mKindRecord[pRefData->uiKindID].uiContractMult;	///< 合约乘数
 				//tagZJQHName.ExFlag = pRefData->ExFlag;			///< 最后交易日标记,0x01表示是最后交易日只对普通合约有效；其他值暂未定义
 				strncpy(tagZJQHName.Name, pRefData->szName, 8);

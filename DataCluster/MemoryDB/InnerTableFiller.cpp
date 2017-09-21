@@ -1212,7 +1212,7 @@ static	unsigned int					s_nDate4SHL1OPT = 0;
 struct MappingSHL1Option_MkInfo2QuoMarketInfo : public InnerRecord { MappingSHL1Option_MkInfo2QuoMarketInfo() : InnerRecord( 157, sizeof(tagSHOptMarketInfo_LF157), QUO_MARKET_SSEOPT*100+1, true ) {}
 	void	FillMessage2BigTableRecord(  char* pMessagePtr, bool bNewRecord = false )	{
 		if( NULL != pMessagePtr )	{
-			tagSHOptMarketInfo_LF157*	pMkInfo = (tagSHOptMarketInfo_LF157*)pMessagePtr;
+			tagSHOptMarketInfo_LF157*		pMkInfo = (tagSHOptMarketInfo_LF157*)pMessagePtr;
 			T_Inner_MarketInfo*				pBigTable = (T_Inner_MarketInfo*)&(m_objUnionData.MarketData_1);
 
 			::memset( pBigTable->szCode, 0, sizeof(pBigTable->szCode) );
@@ -1228,7 +1228,7 @@ struct MappingSHL1Option_MkInfo2QuoMarketInfo : public InnerRecord { MappingSHL1
 struct MappingSHL1Option_Kind2QuoCategory : public InnerRecord { MappingSHL1Option_Kind2QuoCategory() : InnerRecord( 158, sizeof(tagSHOptKindDetail_LF158), QUO_MARKET_SSEOPT*100+1, true ) {}
 	void	FillMessage2BigTableRecord(  char* pMessagePtr, bool bNewRecord = false )	{
 		if( NULL != pMessagePtr )	{
-			tagSHOptKindDetail_LF158*	pKind = (tagSHOptKindDetail_LF158*)pMessagePtr;
+			tagSHOptKindDetail_LF158*		pKind = (tagSHOptKindDetail_LF158*)pMessagePtr;
 			T_Inner_MarketInfo*				pBigTable = (T_Inner_MarketInfo*)&(m_objUnionData.MarketData_1);
 			int								nIndex = ::atoi( pKind->Key );
 

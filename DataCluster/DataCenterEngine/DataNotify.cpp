@@ -171,6 +171,7 @@ QuotationNotify::~QuotationNotify()
 
 void QuotationNotify::Release()
 {
+	SimpleTask::StopAllThread();
 	SimpleTask::StopThread();	///< 停止线程
 	SimpleTask::Join();			///< 退出等待
 	m_oDataBuffer.Release();	///< 释放所有资源

@@ -98,9 +98,17 @@ int DataIOEngine::Initialize( I_QuotationCallBack* pIQuotation )
 
 void DataIOEngine::Release()
 {
-	SimpleTask::StopThread();
-	m_oDataCollectorPool.Release();
-	m_oDatabaseIO.Release();
+	if( NULL != m_pQuotationCallBack )
+	{
+		SimpleTask::StopAllThread();
+		SimpleTask::StopThread();
+		m_oDataCollectorPool.Release();
+		m_oDatabaseIO.Release();
+		SimpleTask::Join( 5000 );
+		m_oQuoNotify.Release();
+		m_oDatabaseIO.Release();
+		m_pQuotationCallBack = NULL;
+	}
 }
 
 int DataIOEngine::Execute()
