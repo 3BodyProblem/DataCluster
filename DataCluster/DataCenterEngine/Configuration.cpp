@@ -60,13 +60,14 @@ std::string GetModulePath( void* hModule )
 }
 
 
-void DllPathTable::AddPath( std::string sDllPath, std::string sQuotationName )
+void DllPathTable::AddPath( std::string sDllPath, std::string sQuotationName, std::string sAddress )
 {
 	CriticalLock			lock( m_oLock );
 
 	DataIOEngine::GetEngineObj().WriteInfo( "DllPathTable::AddPath() : %s : dll path: %s", sQuotationName.c_str(), sDllPath.c_str() );
 	std::vector<std::string>::push_back( sDllPath );
 	m_vctMarketName.push_back( sQuotationName );
+	m_vctTCPAddress.push_back( sAddress );
 }
 
 unsigned int DllPathTable::GetCount()
@@ -88,6 +89,20 @@ std::string DllPathTable::GetMkNameByPos( unsigned int nPos )
 	}
 
 	return m_vctMarketName[nPos];
+}
+
+std::string DllPathTable::GetTCPAddressByPos( unsigned int nPos )
+{
+	CriticalLock			lock( m_oLock );
+	unsigned int			nSize = m_vctTCPAddress.size();
+
+	if( nPos >= nSize )
+	{
+		DataIOEngine::GetEngineObj().WriteWarning( "DllPathTable::GetTCPAddressByPos() : invalid dll path table index ( %u >= %u )", nPos, nSize );
+		return "";
+	}
+
+	return m_vctTCPAddress[nPos];
 }
 
 std::string DllPathTable::GetPathByPos( unsigned int nPos )
@@ -162,9 +177,39 @@ int Configuration::Load()
 		}
 
 		::sprintf( pszDllPath, "Name_%d", n );
+		std::string		sTCPAddress = "";
 		std::string		sQuotationName = oIniFile.getStringValue( std::string("Plugin"), std::string(pszDllPath), nErrCode );
 
-		m_oDCPathTable.AddPath( sQuotationPluginPath, sQuotationName );
+		{	///< [1]由dll 去寻找对应的ini
+			char		szAbsPath[255] = { 0 };
+
+			strcpy( szAbsPath, sQuotationPluginPath.c_str() );
+			for( int i = sQuotationPluginPath.length()-1; i>=0; i-- )
+			{
+				if (szAbsPath[i] == '.' )
+				{
+					szAbsPath[i] = '\0';
+					break;
+				}
+			}
+
+			//[2]读取内容
+			strcat( szAbsPath,".ini" );
+			int			srvcount = GetPrivateProfileInt("SRV","count", 0, szAbsPath);
+			for( int j = 0; j < srvcount; j++ )
+			{
+				char	pszBuf[216] = { 0 };
+				char	szIP[128] = { 0 };
+
+				GetPrivateProfileString( "SRV", "SvrIP_0", "", szIP, 127, szAbsPath );
+				int		nPort = GetPrivateProfileInt( "SRV", "SvrPort_0", 0, szAbsPath );
+
+				_snprintf( pszBuf, sizeof(pszBuf), "%s:%d ", szIP, nPort );
+				sTCPAddress += pszBuf;
+			}
+	}
+
+		m_oDCPathTable.AddPath( sQuotationPluginPath, sQuotationName, sTCPAddress );
 	}
 
 	m_bLoaded = true;

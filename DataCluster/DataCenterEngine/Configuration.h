@@ -20,7 +20,7 @@ public:
 	/**
 	 * @brief							新添dll路径
 	 */
-	void								AddPath( std::string sDllPath, std::string sQuotationName );
+	void								AddPath( std::string sDllPath, std::string sQuotationName, std::string sAddress );
 
 	/**
 	 * @brief							获取配置的路径数量
@@ -41,9 +41,17 @@ public:
 	 */
 	std::string							GetMkNameByPos( unsigned int nPos );
 
+	/**
+	 * @brief							根据位置索引获取连接地址和端口
+	 * @param[in]						nPos				位置索引
+	 * @return							TCP连接信息
+	 */
+	std::string							GetTCPAddressByPos( unsigned int nPos );
+
 protected:
 	CriticalObject						m_oLock;						///< 锁
 	std::vector<std::string>			m_vctMarketName;				///< 各市场名称
+	std::vector<std::string>			m_vctTCPAddress;				///< 连接地址和端口
 };
 
 

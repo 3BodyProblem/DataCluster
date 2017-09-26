@@ -8,6 +8,13 @@ CollectorStatus::CollectorStatus()
 {
 }
 
+CollectorStatus::CollectorStatus( const CollectorStatus& obj )
+{
+	m_eMkStatus = obj.m_eMkStatus;
+	m_eStatus = obj.m_eStatus;
+	m_nMarketID = obj.m_nMarketID;
+}
+
 void CollectorStatus::SetMkID( unsigned int nMkID )
 {
 	m_nMarketID = nMkID;
@@ -92,16 +99,22 @@ const std::string& DataCollector::GetMkName()
 	return m_sMkName;
 }
 
+const std::string& DataCollector::GetTCPAddr()
+{
+	return m_sTCPAddr;
+}
+
 bool DataCollector::IsProxy()
 {
 	return m_bIsProxyPlugin;
 }
 
-int DataCollector::Initialize( I_DataHandle* pIDataCallBack, std::string sDllPath, std::string sMkName )
+int DataCollector::Initialize( I_DataHandle* pIDataCallBack, std::string sDllPath, std::string sMkName, std::string sTCPAddr )
 {
 	Release();
 	m_sMkName = sMkName;
 	m_sDllPath = sDllPath;
+	m_sTCPAddr = sTCPAddr;
 	DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Initialize() : Initializing DataCollector [%s] ......", sDllPath.c_str() );
 
 	int				nErrorCode = m_oDllPlugin.LoadDll( sDllPath );
@@ -136,7 +149,6 @@ int DataCollector::Initialize( I_DataHandle* pIDataCallBack, std::string sDllPat
 
 	m_oCollectorStatus.SetMkID( m_pFuncGetMarketID() );
 	m_bIsProxyPlugin = m_pFuncIsProxy();
-
 	DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Initialize() : DataCollector [%s] is Initialized! ......", sDllPath.c_str() );
 
 	return 0;
@@ -229,7 +241,6 @@ int DataCollector::Execute()
 
 DataCollectorPool::DataCollectorPool()
 {
-	std::vector<DataCollector>::reserve( 128 );
 }
 
 DataCollectorPool::~DataCollectorPool()
@@ -239,7 +250,9 @@ DataCollectorPool::~DataCollectorPool()
 
 void DataCollectorPool::Release()
 {
-	for( unsigned int n = 0; n < GetCount(); n++ )
+	int		nSize = std::vector<DataCollector>::size();
+
+	for( unsigned int n = 0; n < nSize; n++ )
 	{
 		this->operator []( n ).Release();
 	}
@@ -260,17 +273,18 @@ int DataCollectorPool::Initialize( I_DataHandle* pIDataCallBack )
 		return -1;
 	}
 
-	if( GetCount() > 0 )							///< 避免重复初始化
+	if( GetCount() > 0 )								///< 避免重复初始化
 	{
 		return GetCount();
 	}
+
+	std::vector<DataCollector>::resize( nDllCount );	///< 预分配好配置市场数量的内存
 
 	for( unsigned int n = 0; n < nDllCount; n++ )
 	{
 		std::string		sDcDllPath = refDcDllTable.GetPathByPos( n );
 
-		std::vector<DataCollector>::push_back( DataCollector() );
-		if( this->operator []( n ).Initialize( pIDataCallBack, sDcDllPath, refDcDllTable.GetMkNameByPos( n ) ) < 0 )
+		if( this->operator []( n ).Initialize( pIDataCallBack, sDcDllPath, refDcDllTable.GetMkNameByPos( n ), refDcDllTable.GetTCPAddressByPos( n ) ) < 0 )
 		{
 			DataIOEngine::GetEngineObj().WriteError( "DataCollectorPool::Initialize() : failed 2 initialize data collector, %s", sDcDllPath.c_str() );
 			this->operator []( n ).Release();

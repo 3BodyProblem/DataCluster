@@ -100,14 +100,13 @@ void DataIOEngine::Release()
 {
 	if( NULL != m_pQuotationCallBack )
 	{
-		SimpleTask::StopAllThread();
 		SimpleTask::StopThread();
+		SimpleTask::StopAllThread();
+		m_pQuotationCallBack = NULL;
+		SimpleTask::Join( 5000 );
 		m_oDataCollectorPool.Release();
 		m_oDatabaseIO.Release();
-		SimpleTask::Join( 5000 );
 		m_oQuoNotify.Release();
-		m_oDatabaseIO.Release();
-		m_pQuotationCallBack = NULL;
 	}
 }
 

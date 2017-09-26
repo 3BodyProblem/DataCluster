@@ -245,8 +245,6 @@ extern "C"
 			int					nInnerMkID = DataCollectorPool::MkIDCast( nOldMkID );
 			DataCollector*		pCollector = refPool.GetCollectorByMkID( nOldMkID );
 
-			//if( nInnerMkID >= 0 && NULL == pCollector )
-
 			if( NULL != pCollector )
 			{
 				int						nStatus = XRS_None;
@@ -270,7 +268,7 @@ extern "C"
 				pArrMarket[nReturnNum].cMarketID = nOldMkID;
 				pArrMarket[nReturnNum].nStatus = nStatus;
 				::strcpy( pArrMarket[nReturnNum].cMarketChn, pCollector->GetMkName().c_str() );
-				::strcpy( pArrMarket[nReturnNum].cAddress, pCollector->GetDllPath().c_str() );
+				::strcpy( pArrMarket[nReturnNum].cAddress, pCollector->GetTCPAddr().c_str() );
 				nReturnNum++;
 			}
 		}

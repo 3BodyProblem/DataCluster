@@ -634,6 +634,7 @@ void STDCALL MDataClient::Release()
 	if( Global_bInit )
 	{
 		Global_bInit = false;
+		RegisterSpi( NULL );
 		g_oDataIO.Release();
 	}
 }
@@ -1118,7 +1119,7 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 				pData = (char*)&tagZJQHName;
 				tagZJQHName.Market = XDF_CF;
 				memcpy( tagZJQHName.Code, pRefData->szCode, 6 );
-				tagCnfName.SecKind = CastKindID4CFF( pRefData->szCode );
+				tagZJQHName.SecKind = CastKindID4CFF( pRefData->szCode );
 				tagZJQHName.ContractMult = tagMkInfo.objData.mKindRecord[pRefData->uiKindID].uiContractMult;	///< 合约乘数
 				//tagZJQHName.ExFlag = pRefData->ExFlag;			///< 最后交易日标记,0x01表示是最后交易日只对普通合约有效；其他值暂未定义
 				strncpy(tagZJQHName.Name, pRefData->szName, 8);

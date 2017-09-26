@@ -24,6 +24,8 @@ class CollectorStatus
 public:
 	CollectorStatus();
 
+	CollectorStatus( const CollectorStatus& obj );
+
 public:
 	enum E_SS_Status		Get() const;
 
@@ -59,10 +61,11 @@ public:
 	 * @param[in]			pIDataCallBack				行情回调接口
 	 * @param[in]			sDllPath					数据采集模块的加载路径
 	 * @param[in]			sMkName						市场名称
+	 * @param[in]			sTCPAddr					TCP连接信息
 	 * @return				==0							成功
 							!=0							错误
 	 */
-	int						Initialize( I_DataHandle* pIDataCallBack, std::string sDllPath, std::string sMkName );
+	int						Initialize( I_DataHandle* pIDataCallBack, std::string sDllPath, std::string sMkName, std::string sTCPAddr );
 
 	/**
 	 * @breif				数据采集模块释放退出
@@ -116,6 +119,11 @@ public:///< 数据采集模块事件定义
 	 */
 	const std::string&		GetMkName();
 
+	/**
+	 * @brief				获取市场连接信息
+	 */
+	const std::string&		GetTCPAddr();
+
 protected:///< 线程任务相关函数
 	/**
 	 * @brief				任务函数(内循环)
@@ -127,6 +135,7 @@ protected:///< 线程任务相关函数
 protected:
 	std::string				m_sMkName;						///< 市场名称
 	std::string				m_sDllPath;						///< DLL路径信息
+	std::string				m_sTCPAddr;						///< 链接信息
 	bool					m_bActivated;					///< 是否已经激活
 	bool					m_bIsProxyPlugin;				///< 是否为传输代理插件
 	CollectorStatus			m_oCollectorStatus;				///< 数据采集模块的状态
