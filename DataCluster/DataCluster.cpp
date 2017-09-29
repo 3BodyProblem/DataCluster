@@ -92,8 +92,8 @@ extern "C"
 	__declspec(dllexport) int __stdcall		GetVersionNo()
 	{
 		unsigned int	nMajor = 1;
-		unsigned int	nRelease = 1;
-		unsigned int	nBuild = 2;
+		unsigned int	nRelease = 0;
+		unsigned int	nBuild = 1;
 
 		return 1000000 * nMajor + 100000 * nRelease + 1000 * nBuild;
 	}
@@ -106,7 +106,12 @@ extern "C"
 			return -1;
 		}
 
-		return DataIOEngine::GetEngineObj().Initialize( pIDataHandle );
+		int				nRet = DataIOEngine::GetEngineObj().Initialize( pIDataHandle );
+		unsigned int	nVer = GetVersionNo();
+
+		DataIOEngine::GetEngineObj().WriteInfo( "DataIOEngine::Initialize() : [Version] %d.%d.%d", nVer/1000000, nVer%1000000/1000, nVer%1000 );
+
+		return nRet;
 	}
 
 	__declspec(dllexport) void __stdcall	EndWork()
