@@ -87,7 +87,10 @@ enum E_SS_Status InterfaceWrapper4DataNode::GetCollectorStatus( char* pszStatusD
 
 void InterfaceWrapper4DataNode::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen )
 {
-
+	if( NULL != m_pDataHandle )
+	{
+		m_pDataHandle->OnData( nMessageID, pDataPtr, nDataLen, false );
+	}
 }
 
 void InterfaceWrapper4DataNode::OnStatus( QUO_MARKET_ID eMarketID, QUO_MARKET_STATUS eMarketStatus )
@@ -105,7 +108,10 @@ void InterfaceWrapper4DataNode::OnLog( unsigned char nLogLevel, const char* pszL
 {
 	unsigned int	nLevel = nLogLevel;
 
-	::printf( "[DataCluster.dll] : LogLevel(%u), %s \n", nLevel, pszLogBuf );
+	if( NULL != m_pDataHandle )
+	{
+		m_pDataHandle->OnLog( nLevel, "%s", pszLogBuf );
+	}
 }
 
 
