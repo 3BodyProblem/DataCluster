@@ -377,6 +377,18 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="DataNodeWrapper"
+			>
+			<File
+				RelativePath=".\DataNodeWrapper\NodeWrapper.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DataNodeWrapper\NodeWrapper.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\DataCluster.cpp"
 			>

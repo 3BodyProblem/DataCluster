@@ -119,7 +119,7 @@ extern "C"
 		DataIOEngine::GetEngineObj().Release();
 	}
 
-	__declspec(dllexport) int  __stdcall	GetMarketID( QUO_MARKET_ID* lpOut, unsigned int uiSize )
+	__declspec(dllexport) int  __stdcall	GetMarketIDTable( QUO_MARKET_ID* lpOut, unsigned int uiSize )
 	{
 		return 0;
 	}
@@ -187,6 +187,47 @@ extern "C"
 		_snprintf( pszBuf, 254, "V%.02d B%.02d", s_nMajorVer, s_nMinorVer );
 
 		return pszBuf;
+	}
+
+///< ------------------------ 以下为被DataNode.exe调用的接口 -------------------------------------------------
+
+	__declspec(dllexport) int __stdcall	Initialize( I_DataHandle* pIDataHandle )
+	{
+		return 0;//QuoCollector::GetCollector().Initialize( pIDataHandle );
+	}
+
+	__declspec(dllexport) void __stdcall Release()
+	{
+		//QuoCollector::GetCollector().Release();
+	}
+
+	__declspec(dllexport) int __stdcall	RecoverQuotation()
+	{
+		return 0;//QuoCollector::GetCollector().RecoverQuotation();
+	}
+
+	__declspec(dllexport) void __stdcall HaltQuotation()
+	{
+		//QuoCollector::GetCollector().Halt();
+	}
+
+	__declspec(dllexport) bool __stdcall IsProxy()
+	{
+		return true;
+	}
+
+	__declspec(dllexport) int __stdcall	GetStatus( char* pszStatusDesc, unsigned int& nStrLen )
+	{
+		return 0;//QuoCollector::GetCollector().GetCollectorStatus( pszStatusDesc, nStrLen );
+	}
+
+	__declspec(dllexport) int __stdcall	GetMarketID()
+	{
+		return 0;//QuoCollector::GetCollector().GetMarketID();
+	}
+
+	__declspec(dllexport) void __stdcall Echo()
+	{
 	}
 
 ///< ------------------------ 以下为兼容老版的接口 -----------------------------------------------------------

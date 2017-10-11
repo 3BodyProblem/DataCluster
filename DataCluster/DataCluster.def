@@ -2,13 +2,21 @@ EXPORTS
 	GetVersionNo
 	StartWork
 	EndWork
-	GetMarketID
+	GetMarketIDTable
 	GetMarketInfo
 	GetAllReferenceData
 	GetReferenceData
 	GetAllSnapData
 	GetSnapData
 	ExecuteUnitTest
+	Initialize
+	Release
+	RecoverQuotation
+	HaltQuotation
+	IsProxy
+	GetStatus
+	GetMarketID
+	Echo
 	GetDllVersion
 	CreateQuoteApi
 	GetSettingInfo
