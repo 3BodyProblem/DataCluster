@@ -6,6 +6,7 @@
 #include "UnitTest/UnitTest.h"
 #include "Infrastructure/Lock.h"
 #include "DataCenterEngine/DataCenterEngine.h"
+#include "DataNodeWrapper/NodeWrapper.h"
 #include "QuoteClientApi.h"
 
 
@@ -23,9 +24,12 @@ public:
 
 	~RecordsFilter()
 	{
-		if( NULL != m_pBuff ) {
-			delete [] m_pBuff;
-			m_pBuff = NULL;
+		if( false == InterfaceWrapper4DataNode::GetObj().IsUsed() )
+		{
+			if( NULL != m_pBuff ) {
+				delete [] m_pBuff;
+				m_pBuff = NULL;
+			}
 		}
 	}
 
@@ -35,15 +39,20 @@ public:
 							!=0					出错
 	 */
 	int	Initialize() {
-		if( NULL == m_pBuff ) {
-			m_pBuff = new char[MAX_BUF_SIZE];
+		if( false == InterfaceWrapper4DataNode::GetObj().IsUsed() )
+		{
+			if( NULL == m_pBuff ) {
+				m_pBuff = new char[MAX_BUF_SIZE];
+			}
+
+			if( NULL != m_pBuff ) {
+				return 0;
+			}
+
+			return -1;
 		}
 
-		if( NULL != m_pBuff ) {
-			return 0;
-		}
-
-		return -1;
+		return 0;
 	}
 
 	/**
@@ -57,6 +66,16 @@ public:
 	 */
 	int	ExtraRecords( unsigned int nMessageID, unsigned int nMessageSize, unsigned int uiOffset, char* lpOut, unsigned int uiSize )
 	{
+		if( true == InterfaceWrapper4DataNode::GetObj().IsUsed() )
+		{
+			if( DataIOEngine::GetEngineObj().OnQuery( nMessageID, lpOut, uiSize ) <= 0 )
+			{
+				return -1;
+			}
+
+			return 0;
+		}
+
 		unsigned int			nCopySize = 0;
 		unsigned int			nItemNumber = 0;
 		CriticalLock			lock( m_oLock );
@@ -89,6 +108,7 @@ static RecordsFilter		objRecordsFilter;
 
 extern "C"
 {
+///< ------------------------ 以下为行情客户端模式接口 --------------------------------------------------------
 	__declspec(dllexport) int __stdcall		GetVersionNo()
 	{
 		unsigned int	nMajor = 1;
@@ -193,22 +213,27 @@ extern "C"
 
 	__declspec(dllexport) int __stdcall	Initialize( I_DataHandle* pIDataHandle )
 	{
-		return 0;//QuoCollector::GetCollector().Initialize( pIDataHandle );
+		return InterfaceWrapper4DataNode::GetObj().Initialize( pIDataHandle );
 	}
 
 	__declspec(dllexport) void __stdcall Release()
 	{
-		//QuoCollector::GetCollector().Release();
+		InterfaceWrapper4DataNode::GetObj().Release();
 	}
 
 	__declspec(dllexport) int __stdcall	RecoverQuotation()
 	{
-		return 0;//QuoCollector::GetCollector().RecoverQuotation();
+		return InterfaceWrapper4DataNode::GetObj().RecoverQuotation();
 	}
 
 	__declspec(dllexport) void __stdcall HaltQuotation()
 	{
-		//QuoCollector::GetCollector().Halt();
+		InterfaceWrapper4DataNode::GetObj().Halt();
+	}
+
+	__declspec(dllexport) int __stdcall	GetStatus( char* pszStatusDesc, unsigned int& nStrLen )
+	{
+		return 0;//InterfaceWrapper4DataNode::GetObj().GetCollectorStatus( pszStatusDesc, nStrLen );
 	}
 
 	__declspec(dllexport) bool __stdcall IsProxy()
@@ -216,14 +241,9 @@ extern "C"
 		return true;
 	}
 
-	__declspec(dllexport) int __stdcall	GetStatus( char* pszStatusDesc, unsigned int& nStrLen )
-	{
-		return 0;//QuoCollector::GetCollector().GetCollectorStatus( pszStatusDesc, nStrLen );
-	}
-
 	__declspec(dllexport) int __stdcall	GetMarketID()
 	{
-		return 0;//QuoCollector::GetCollector().GetMarketID();
+		return 255;		///< 255表示全市场的市场ID
 	}
 
 	__declspec(dllexport) void __stdcall Echo()
