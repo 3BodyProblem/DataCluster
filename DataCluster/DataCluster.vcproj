@@ -389,6 +389,18 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="DataClientWrapper"
+			>
+			<File
+				RelativePath=".\DataClientWrapper\ClientWrapper.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\DataClientWrapper\ClientWrapper.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\DataCluster.cpp"
 			>
