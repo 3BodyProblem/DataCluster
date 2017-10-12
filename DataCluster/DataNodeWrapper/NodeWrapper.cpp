@@ -2,48 +2,84 @@
 #include "../DataCluster.h"
 
 
-InterfaceWrapper4DataNode::InterfaceWrapper4DataNode()
+ClusterCBAdaptor::ClusterCBAdaptor()
  : m_pDataHandle( NULL )
 {
 }
 
-InterfaceWrapper4DataNode& InterfaceWrapper4DataNode::GetObj()
-{
-	static InterfaceWrapper4DataNode	obj;
-
-	return obj;
-}
-
-bool InterfaceWrapper4DataNode::IsUsed()
-{
-	return NULL != m_pDataHandle;
-}
-
-int InterfaceWrapper4DataNode::Initialize( I_DataHandle* pIDataHandle )
+int ClusterCBAdaptor::Initialize( I_DataHandle* pIDataHandle )
 {
 	m_pDataHandle = pIDataHandle;
 	if( NULL == pIDataHandle )
 	{
-		DataIOEngine::GetEngineObj().WriteError( "InterfaceWrapper4DataNode::Initialize() : invalid arguments (I_DataHandle* ptr, NULL)\n" );
+		DataIOEngine::GetEngineObj().WriteError( "ClusterCBAdaptor::Initialize() : invalid arguments (I_DataHandle* ptr, NULL)\n" );
 		return -1;
 	}
 
-	return StartWork( (I_QuotationCallBack*)this );
+	return 0;
 }
 
-void InterfaceWrapper4DataNode::Release()
+void ClusterCBAdaptor::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen )
+{
+}
+
+void ClusterCBAdaptor::OnStatus( QUO_MARKET_ID eMarketID, QUO_MARKET_STATUS eMarketStatus )
+{
+}
+
+void ClusterCBAdaptor::OnLog( unsigned char nLogLevel, const char* pszLogBuf )
+{
+}
+
+
+EngineWrapper4DataNode::EngineWrapper4DataNode()
+ : m_pDataHandle( NULL )
+{
+}
+
+EngineWrapper4DataNode& EngineWrapper4DataNode::GetObj()
+{
+	static EngineWrapper4DataNode	obj;
+
+	return obj;
+}
+
+bool EngineWrapper4DataNode::IsUsed()
+{
+	return NULL != m_pDataHandle;
+}
+
+int EngineWrapper4DataNode::Initialize( I_DataHandle* pIDataHandle )
+{
+	m_pDataHandle = pIDataHandle;
+	if( NULL == pIDataHandle )
+	{
+		DataIOEngine::GetEngineObj().WriteError( "EngineWrapper4DataNode::Initialize() : invalid arguments (I_DataHandle* ptr, NULL)\n" );
+		return -1;
+	}
+
+	if( m_oClusterCBAdaptor.Initialize( pIDataHandle ) )
+	{
+		DataIOEngine::GetEngineObj().WriteError( "EngineWrapper4DataNode::Initialize() : failed 2 initialize ClusterAdatpor.\n" );
+		return -2;
+	}
+
+	return StartWork( (I_QuotationCallBack*)&m_oClusterCBAdaptor );
+}
+
+void EngineWrapper4DataNode::Release()
 {
 	EndWork();
 }
 
-int InterfaceWrapper4DataNode::RecoverQuotation()
+int EngineWrapper4DataNode::RecoverQuotation()
 {
 	unsigned int	nSec = 0;
 	int				nErrorCode = 0;
 
 	if( 0 != (nErrorCode=StartWork( (I_QuotationCallBack*)this )) )
 	{
-		DataIOEngine::GetEngineObj().WriteError( "InterfaceWrapper4DataNode::RecoverQuotation() : failed 2 subscript quotation, errorcode=%d", nErrorCode );
+		DataIOEngine::GetEngineObj().WriteError( "EngineWrapper4DataNode::RecoverQuotation() : failed 2 subscript quotation, errorcode=%d", nErrorCode );
 		return -1;
 	}
 
@@ -63,12 +99,12 @@ int InterfaceWrapper4DataNode::RecoverQuotation()
 	}
 }
 
-void InterfaceWrapper4DataNode::Halt()
+void EngineWrapper4DataNode::Halt()
 {
 	DataIOEngine::GetEngineObj().GetCollectorPool().Release();
 }
 
-enum E_SS_Status InterfaceWrapper4DataNode::GetCollectorStatus( char* pszStatusDesc, unsigned int& nStrLen )
+enum E_SS_Status EngineWrapper4DataNode::GetCollectorStatus( char* pszStatusDesc, unsigned int& nStrLen )
 {
 	unsigned int			nVer = GetVersionNo();
 
@@ -85,34 +121,93 @@ enum E_SS_Status InterfaceWrapper4DataNode::GetCollectorStatus( char* pszStatusD
 	}
 }
 
-void InterfaceWrapper4DataNode::OnQuotation( QUO_MARKET_ID eMarketID, unsigned int nMessageID, char* pDataPtr, unsigned int nDataLen )
+int EngineWrapper4DataNode::OnQuery( unsigned int nDataID, char* pData, unsigned int nDataLen )
 {
-	if( NULL != m_pDataHandle )
+	if( NULL == m_pDataHandle )
 	{
-		m_pDataHandle->OnData( nMessageID, pDataPtr, nDataLen, false );
+		return -1;
 	}
+
+	return m_pDataHandle->OnQuery( nDataID, pData, nDataLen );
 }
 
-void InterfaceWrapper4DataNode::OnStatus( QUO_MARKET_ID eMarketID, QUO_MARKET_STATUS eMarketStatus )
+int EngineWrapper4DataNode::OnImage( unsigned int nDataID, char* pData, unsigned int nDataLen, bool bLastFlag )
 {
-//	::printf( "DataClusterPlugin::OnStatusChg() : MarketID=%u, Status=%u \n", eMarketID, eMarketStatus );
-/*
-	if( eMarketStatus == 2 )
+	if( NULL == m_pDataHandle )
 	{
-		tagQUO_MarketInfo	tagMk;
-		m_funcGetMarketInfo( eMarketID, &tagMk );
+		return -1;
+	}
+
+	return m_pDataHandle->OnImage( nDataID, pData, nDataLen, false );
+}
+
+int EngineWrapper4DataNode::OnData( unsigned int nDataID, char* pData, unsigned int nDataLen, bool bPushFlag )
+{
+	int						nAffectNum = 0;
+	InnerRecord*			pRecord = TableFillerRegister::GetRegister().PrepareNewTableBlock( nDataID, pData, nDataLen );
+
+	if( NULL == m_pDataHandle )
+	{
+		return -1;
+	}
+
+	if( NULL == pRecord )
+	{
+		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::NewRecord() : MessageID is invalid, id=%d", nDataID );
+		return -2;
+	}
+
+	unsigned int			nBigTableID = pRecord->GetBigTableID();
+	///< 只有Code有内容填充，其他字段都为空, 所以再从内存查询一把，取得其他字段的内容
+	nAffectNum = OnQuery( nBigTableID, pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth() );
+	if( nAffectNum < 0 )
+	{
+		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::UpdateRecord() : error occur in UpdateRecord(), MessageID=%d", nDataID );
+		return -3;
+	}
+	else if( nAffectNum == 0 )
+	{
+		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::UpdateRecord() : MessageID isn\'t exist, id=%d", nDataID );
+		return -4;
+	}
+	else
+	{
+		pRecord->FillMessage2BigTableRecord( pData );
+		nAffectNum = m_pDataHandle->OnData( nBigTableID, pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), false );
+	}
+
+	return nAffectNum;
+}
+
+void EngineWrapper4DataNode::OnLog( unsigned char nLogLevel, const char* pszFormat, ... )
+{
+	va_list		valist;
+	char		pszLogBuf[8000] = { 0 };
+
+	va_start( valist, pszFormat );
+	_vsnprintf( pszLogBuf, sizeof(pszLogBuf)-1, pszFormat, valist );
+	va_end( valist );
+/*
+	switch( nLogLevel )	///< 日志类型[0=信息、1=警告日志、2=错误日志、3=详细日志]
+	{
+	case 0:
+		DataIOEngine::WriteInfo( "[Plugin] %s", pszLogBuf );
+		break;
+	case 1:
+		DataIOEngine::WriteWarning( "[Plugin] %s", pszLogBuf );
+		break;
+	case 2:
+		DataIOEngine::WriteError( "[Plugin] %s", pszLogBuf );
+		break;
+	case 3:
+		DataIOEngine::WriteDetail( "[Plugin] %s", pszLogBuf );
+		break;
+	default:
+		::printf( "[Plugin] unknow log level [%d] \n", nLogLevel );
+		break;
 	}*/
 }
 
-void InterfaceWrapper4DataNode::OnLog( unsigned char nLogLevel, const char* pszLogBuf )
-{
-	unsigned int	nLevel = nLogLevel;
-
-	if( NULL != m_pDataHandle )
-	{
-		m_pDataHandle->OnLog( nLevel, "%s", pszLogBuf );
-	}
-}
 
 
 

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "MemoryDatabase.h"
 #include "InnerTableFiller.h"
+#include "../DataNodeWrapper/NodeWrapper.h"
 #include "../DataCenterEngine/DataCenterEngine.h"
 
 
@@ -189,6 +190,11 @@ void DatabaseIO::UnitTest()
 
 int DatabaseIO::Initialize()
 {
+	if( true == EngineWrapper4DataNode::GetObj().IsUsed() )
+	{
+		return 0;
+	}
+
 	Release();
 
 	DataIOEngine::GetEngineObj().WriteInfo( "DatabaseIO::Initialize() : initializing memory database plugin ......" );
@@ -254,6 +260,12 @@ DatabaseAdaptor::~DatabaseAdaptor()
 int DatabaseAdaptor::Initialize()
 {
 	int			nErrCode = 0;
+
+	if( true == EngineWrapper4DataNode::GetObj().IsUsed() )
+	{
+		return 0;
+	}
+
 	DataIOEngine::GetEngineObj().WriteInfo( "DatabaseAdaptor::Initialize() : initializing powerfull database object ......" );
 
 	if( (nErrCode=DatabaseIO::Initialize()) < 0 )
@@ -274,6 +286,11 @@ void DatabaseAdaptor::Release()
 
 int DatabaseAdaptor::RecoverDatabase()
 {
+	if( true == EngineWrapper4DataNode::GetObj().IsUsed() )
+	{
+		return 0;
+	}
+
 	try
 	{
 		if( m_pIDatabase )
@@ -319,6 +336,11 @@ int DatabaseAdaptor::RecoverDatabase()
 
 int DatabaseAdaptor::BackupDatabase()
 {
+	if( true == EngineWrapper4DataNode::GetObj().IsUsed() )
+	{
+		return 0;
+	}
+
 	try
 	{
 		if( m_pIDatabase )

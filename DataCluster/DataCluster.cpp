@@ -24,7 +24,7 @@ public:
 
 	~RecordsFilter()
 	{
-		if( false == InterfaceWrapper4DataNode::GetObj().IsUsed() )
+		if( false == EngineWrapper4DataNode::GetObj().IsUsed() )
 		{
 			if( NULL != m_pBuff ) {
 				delete [] m_pBuff;
@@ -38,8 +38,9 @@ public:
 	 * @return				==0					初始化成功
 							!=0					出错
 	 */
-	int	Initialize() {
-		if( false == InterfaceWrapper4DataNode::GetObj().IsUsed() )
+	int	Initialize()
+	{
+		if( false == EngineWrapper4DataNode::GetObj().IsUsed() )
 		{
 			if( NULL == m_pBuff ) {
 				m_pBuff = new char[MAX_BUF_SIZE];
@@ -66,7 +67,7 @@ public:
 	 */
 	int	ExtraRecords( unsigned int nMessageID, unsigned int nMessageSize, unsigned int uiOffset, char* lpOut, unsigned int uiSize )
 	{
-		if( true == InterfaceWrapper4DataNode::GetObj().IsUsed() )
+		if( true == EngineWrapper4DataNode::GetObj().IsUsed() )
 		{
 			if( DataIOEngine::GetEngineObj().OnQuery( nMessageID, lpOut, uiSize ) <= 0 )
 			{
@@ -213,27 +214,27 @@ extern "C"
 
 	__declspec(dllexport) int __stdcall	Initialize( I_DataHandle* pIDataHandle )
 	{
-		return InterfaceWrapper4DataNode::GetObj().Initialize( pIDataHandle );
+		return EngineWrapper4DataNode::GetObj().Initialize( pIDataHandle );
 	}
 
 	__declspec(dllexport) void __stdcall Release()
 	{
-		InterfaceWrapper4DataNode::GetObj().Release();
+		EngineWrapper4DataNode::GetObj().Release();
 	}
 
 	__declspec(dllexport) int __stdcall	RecoverQuotation()
 	{
-		return InterfaceWrapper4DataNode::GetObj().RecoverQuotation();
+		return EngineWrapper4DataNode::GetObj().RecoverQuotation();
 	}
 
 	__declspec(dllexport) void __stdcall HaltQuotation()
 	{
-		InterfaceWrapper4DataNode::GetObj().Halt();
+		EngineWrapper4DataNode::GetObj().Halt();
 	}
 
 	__declspec(dllexport) int __stdcall	GetStatus( char* pszStatusDesc, unsigned int& nStrLen )
 	{
-		return 0;//InterfaceWrapper4DataNode::GetObj().GetCollectorStatus( pszStatusDesc, nStrLen );
+		return 0;//EngineWrapper4DataNode::GetObj().GetCollectorStatus( pszStatusDesc, nStrLen );
 	}
 
 	__declspec(dllexport) bool __stdcall IsProxy()

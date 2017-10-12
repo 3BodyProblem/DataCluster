@@ -6,6 +6,7 @@
 #include <functional>
 #include "../DataCluster.h"
 #include "DataCenterEngine.h"
+#include "../DataNodeWrapper/NodeWrapper.h"
 
 
 DataIOEngine::DataIOEngine()
@@ -42,12 +43,12 @@ I_QuotationCallBack* DataIOEngine::GetCallBackPtr()
 
 int DataIOEngine::Initialize( I_QuotationCallBack* pIQuotation )
 {
-	int			nErrorCode = 0;
+	int							nErrorCode = 0;
+	EngineWrapper4DataNode&	refWrapper = EngineWrapper4DataNode::GetObj();
+	I_DataHandle*				pHandlePtr = refWrapper.IsUsed() ? &refWrapper : (I_DataHandle*)this;
 
 	Release();
-
-	m_pQuotationCallBack = pIQuotation;
-	if( NULL == pIQuotation )
+	if( NULL == (m_pQuotationCallBack = pIQuotation) )
 	{
 		DataIOEngine::GetEngineObj().WriteError( "DataIOEngine::Initialize() : invalid callback object pointer(Null)" );
 		return -1;
@@ -65,7 +66,6 @@ int DataIOEngine::Initialize( I_QuotationCallBack* pIQuotation )
 	}
 
 	DataIOEngine::GetEngineObj().WriteInfo( "DataIOEngine::Initialize() : DataNode Engine is initializing ......" );
-
 	if( 0 != (nErrorCode = m_oDatabaseIO.Initialize()) )
 	{
 		DataIOEngine::GetEngineObj().WriteError( "DataIOEngine::Initialize() : failed 2 initialize memory database plugin, errorcode=%d", nErrorCode );
@@ -73,7 +73,7 @@ int DataIOEngine::Initialize( I_QuotationCallBack* pIQuotation )
 	}
 
 	m_oDatabaseIO.RecoverDatabase();
-	if( 0 >= (nErrorCode = m_oDataCollectorPool.Initialize( this )) )
+	if( 0 >= (nErrorCode = m_oDataCollectorPool.Initialize( pHandlePtr )) )
 	{
 		DataIOEngine::GetEngineObj().WriteError( "DataIOEngine::Initialize() : failed 2 initialize data collector plugin, errorcode=%d", nErrorCode );
 		return nErrorCode;
@@ -92,7 +92,6 @@ int DataIOEngine::Initialize( I_QuotationCallBack* pIQuotation )
 	}
 
 	DataIOEngine::GetEngineObj().WriteInfo( "DataIOEngine::Initialize() : DataNode Engine is initialized ......" );
-
 	return nErrorCode;
 }
 
