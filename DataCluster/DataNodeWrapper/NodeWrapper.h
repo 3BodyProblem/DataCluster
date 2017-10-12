@@ -75,7 +75,7 @@ private:
 	EngineWrapper4DataNode();
 
 public:
-	static EngineWrapper4DataNode&	GetObj();
+	static EngineWrapper4DataNode&		GetObj();
 
 	/**
 	 * @brief							是否被DataNode.exe调用

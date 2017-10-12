@@ -127,10 +127,10 @@ extern "C"
 			return -1;
 		}
 
-		int				nRet = DataIOEngine::GetEngineObj().Initialize( pIDataHandle );
-		unsigned int	nVer = GetVersionNo();
+		I_DataHandle*		pDataHandlePtr = EngineWrapper4DataNode::GetObj().IsUsed() ? &(EngineWrapper4DataNode::GetObj()) : (I_DataHandle*)&(DataIOEngine::GetEngineObj());
+		int					nRet = DataIOEngine::GetEngineObj().Initialize( pIDataHandle, pDataHandlePtr );
 
-		DataIOEngine::GetEngineObj().WriteInfo( "DataIOEngine::Initialize() : [Version] %d.%d.%d", nVer/1000000, nVer%1000000/1000, nVer%1000 );
+		DataIOEngine::GetEngineObj().WriteInfo( "DataIOEngine::Initialize() : [Version] %d.%d.%d", GetVersionNo()/1000000, GetVersionNo()%1000000/1000, GetVersionNo()%1000 );
 
 		return nRet;
 	}

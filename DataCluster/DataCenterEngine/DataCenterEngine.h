@@ -50,10 +50,11 @@ public:///< 引擎构造和初始化相关功能
 	/**
  	 * @brief				初始化行情各参数，准备工作
 	 * @param[in]			pIQuotation					用于行情回调通知的接口
+	 * @param[in]			pIDataHandle4DataNode		用于处理转发行情回调给DataNode包装类的指针
 	 * @return				==0							成功
 							!=0							失败
 	 */
-	int						Initialize( I_QuotationCallBack* pIQuotation );
+	int						Initialize( I_QuotationCallBack* pIQuotation, I_DataHandle* pIDataHandle4DataNode );
 
 	/**
 	 * @brief				释放行情模块各资源
@@ -127,7 +128,7 @@ public:
 	/**
 	 * @brief				获取数据库对象
 	 */
-	DatabaseAdaptor&		GetDatabaseObj();
+	BigTableDatabase&		GetDatabaseObj();
 
 	/**
 	 * @brief				获取回调接口
@@ -136,7 +137,7 @@ public:
 
 protected:
 	QuotationNotify			m_oQuoNotify;					///< 行情数据通知回调
-	DatabaseAdaptor			m_oDatabaseIO;					///< 内存数据插件管理
+	BigTableDatabase		m_oDB4ClientMode;				///< 内存数据插件管理
 	DataCollectorPool		m_oDataCollectorPool;			///< 行情采集模块资源池
 	I_QuotationCallBack*	m_pQuotationCallBack;			///< 行情回调
 };

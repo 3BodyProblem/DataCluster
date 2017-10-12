@@ -1614,18 +1614,18 @@ int TableFillerRegister::Register( InnerRecord& refRecordFiller )
 	return 0;
 }
 
-InnerRecord* TableFillerRegister::PrepareNewTableBlock( unsigned int nMessageID, const char* pMsgPtr, unsigned int nMsgLen )
+InnerRecord* TableFillerRegister::PrepareRecordBlock( unsigned int nMessageID, const char* pMsgPtr, unsigned int nMsgLen )
 {
 	unsigned int			nPos = nMessageID % s_nRegisterTableSize;
 	InnerRecord*			pInnerRecord = s_vctRegisterTable[nPos];
 
 	if( NULL == pMsgPtr || nMsgLen < 20 || NULL == pInnerRecord )	{
-		DataIOEngine::GetEngineObj().WriteWarning( "TableFillerRegister::PrepareNewTableBlock() : invalid parameters, MessageID(%d), MessagePtr(%x), MessageLength(%d), MemoryBlockPtr(%x)", nMessageID, pMsgPtr, nMsgLen, pInnerRecord );
+		DataIOEngine::GetEngineObj().WriteWarning( "TableFillerRegister::PrepareRecordBlock() : invalid parameters, MessageID(%d), MessagePtr(%x), MessageLength(%d), MemoryBlockPtr(%x)", nMessageID, pMsgPtr, nMsgLen, pInnerRecord );
 		return NULL;
 	}
 
 	if( pInnerRecord->GetMessageID() != nMessageID || pInnerRecord->GetMessageLength() != nMsgLen )	{
-		DataIOEngine::GetEngineObj().WriteWarning( "TableFillerRegister::PrepareNewTableBlock() : invalid parameters, MessageID(%d!=%d), MessageLength(%d!=%d)", nMessageID, pInnerRecord->GetMessageID(), nMsgLen, pInnerRecord->GetMessageLength() );
+		DataIOEngine::GetEngineObj().WriteWarning( "TableFillerRegister::PrepareRecordBlock() : invalid parameters, MessageID(%d!=%d), MessageLength(%d!=%d)", nMessageID, pInnerRecord->GetMessageID(), nMsgLen, pInnerRecord->GetMessageLength() );
 		return NULL;
 	}
 

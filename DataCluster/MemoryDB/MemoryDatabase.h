@@ -127,16 +127,16 @@ protected:///< DB插件相关
 
 
 /**
- * @class							DatabaseAdaptor
+ * @class							BigTableDatabase
  * @brief							数据库操作扩展类
  * @author							barry
  * @date							2017/5/5
  */
-class DatabaseAdaptor : public DatabaseIO
+class BigTableDatabase : public DatabaseIO
 {
 public:///< 初始化
-	DatabaseAdaptor();
-	~DatabaseAdaptor();
+	BigTableDatabase();
+	~BigTableDatabase();
 
 	/**
 	 * @brief						初始化数据库管理对象

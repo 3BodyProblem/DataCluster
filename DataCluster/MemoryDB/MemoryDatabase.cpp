@@ -247,17 +247,17 @@ void DatabaseIO::Release()
 
 
 
-DatabaseAdaptor::DatabaseAdaptor()
+BigTableDatabase::BigTableDatabase()
 {
 }
 
-DatabaseAdaptor::~DatabaseAdaptor()
+BigTableDatabase::~BigTableDatabase()
 {
 	BackupDatabase();		///< 先备份数据库
 	Release();				///< 再释放所有资源
 }
 
-int DatabaseAdaptor::Initialize()
+int BigTableDatabase::Initialize()
 {
 	int			nErrCode = 0;
 
@@ -266,25 +266,25 @@ int DatabaseAdaptor::Initialize()
 		return 0;
 	}
 
-	DataIOEngine::GetEngineObj().WriteInfo( "DatabaseAdaptor::Initialize() : initializing powerfull database object ......" );
+	DataIOEngine::GetEngineObj().WriteInfo( "BigTableDatabase::Initialize() : initializing powerfull database object ......" );
 
 	if( (nErrCode=DatabaseIO::Initialize()) < 0 )
 	{
-		DataIOEngine::GetEngineObj().WriteError( "DatabaseAdaptor::Initialize() : failed 2 initialize, errorcode = %d", nErrCode );
+		DataIOEngine::GetEngineObj().WriteError( "BigTableDatabase::Initialize() : failed 2 initialize, errorcode = %d", nErrCode );
 		return nErrCode;
 	}
 
-	DataIOEngine::GetEngineObj().WriteInfo( "DatabaseAdaptor::Initialize() : powerfull database object initialized! ..." );
+	DataIOEngine::GetEngineObj().WriteInfo( "BigTableDatabase::Initialize() : powerfull database object initialized! ..." );
 
 	return 0;
 }
 
-void DatabaseAdaptor::Release()
+void BigTableDatabase::Release()
 {
 	DatabaseIO::Release();				///< 释放数据库插件的资源
 }
 
-int DatabaseAdaptor::RecoverDatabase()
+int BigTableDatabase::RecoverDatabase()
 {
 	if( true == EngineWrapper4DataNode::GetObj().IsUsed() )
 	{
@@ -297,20 +297,20 @@ int DatabaseAdaptor::RecoverDatabase()
 		{
 			int				nDBLoadDate = 0;		///< 行情落盘文件日期
 
-			DataIOEngine::GetEngineObj().WriteInfo( "DatabaseAdaptor::RecoverDatabase() : recovering ......" );
+			DataIOEngine::GetEngineObj().WriteInfo( "BigTableDatabase::RecoverDatabase() : recovering ......" );
 			m_mapTableID.clear();
 			m_bBuilded = false;
 
 			if( 0 != m_pIDatabase->DeleteTables() )
 			{
-				DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::RecoverDatabase() : failed 2 clean mem-database" );
+				DataIOEngine::GetEngineObj().WriteWarning( "BigTableDatabase::RecoverDatabase() : failed 2 clean mem-database" );
 				return -1;
 			}
 
 			///< ----------------- 从磁盘恢复历史数据 --------------------------------------------------
 			if( 0 > (nDBLoadDate=m_pIDatabase->LoadFromDisk( Configuration::GetConfigObj().GetRecoveryFolderPath().c_str() )) )
 			{
-				DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::RecoverDatabase() : failed 2 recover mem-database from disk." );
+				DataIOEngine::GetEngineObj().WriteWarning( "BigTableDatabase::RecoverDatabase() : failed 2 recover mem-database from disk." );
 				return 0;
 			}
 
@@ -318,23 +318,23 @@ int DatabaseAdaptor::RecoverDatabase()
 			return 0;
 		}
 
-		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::RecoverDatabase() : invalid database pointer(NULL)" );
+		DataIOEngine::GetEngineObj().WriteWarning( "BigTableDatabase::RecoverDatabase() : invalid database pointer(NULL)" );
 
 		return -3;
 	}
 	catch( std::exception& err )
 	{
-		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::RecoverDatabase() : exception : %s", err.what() );
+		DataIOEngine::GetEngineObj().WriteWarning( "BigTableDatabase::RecoverDatabase() : exception : %s", err.what() );
 	}
 	catch( ... )
 	{
-		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::RecoverDatabase() : unknow exception" );
+		DataIOEngine::GetEngineObj().WriteWarning( "BigTableDatabase::RecoverDatabase() : unknow exception" );
 	}
 
 	return -3;
 }
 
-int DatabaseAdaptor::BackupDatabase()
+int BigTableDatabase::BackupDatabase()
 {
 	if( true == EngineWrapper4DataNode::GetObj().IsUsed() )
 	{
@@ -345,27 +345,27 @@ int DatabaseAdaptor::BackupDatabase()
 	{
 		if( m_pIDatabase )
 		{
-			DataIOEngine::GetEngineObj().WriteInfo( "DatabaseAdaptor::BackupDatabase() : making backup ......" );
+			DataIOEngine::GetEngineObj().WriteInfo( "BigTableDatabase::BackupDatabase() : making backup ......" );
 
 			if( true == m_pIDatabase->SaveToDisk( Configuration::GetConfigObj().GetRecoveryFolderPath().c_str() ) )
 			{
-				DataIOEngine::GetEngineObj().WriteInfo( "DatabaseAdaptor::BackupDatabase() : backup completed ......" );
+				DataIOEngine::GetEngineObj().WriteInfo( "BigTableDatabase::BackupDatabase() : backup completed ......" );
 				return 0;
 			}
 			else
 			{
-				DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::BackupDatabase() : miss backup ......" );
+				DataIOEngine::GetEngineObj().WriteWarning( "BigTableDatabase::BackupDatabase() : miss backup ......" );
 				return -2;
 			}
 		}
 	}
 	catch( std::exception& err )
 	{
-		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::BackupDatabase() : exception : %s", err.what() );
+		DataIOEngine::GetEngineObj().WriteWarning( "BigTableDatabase::BackupDatabase() : exception : %s", err.what() );
 	}
 	catch( ... )
 	{
-		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::BackupDatabase() : unknow exception" );
+		DataIOEngine::GetEngineObj().WriteWarning( "BigTableDatabase::BackupDatabase() : unknow exception" );
 	}
 
 	return -1;

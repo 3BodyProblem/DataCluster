@@ -167,7 +167,7 @@ public:
 	 * @return					返回对应的大表的转换对象地址
 								NULL				未找到对应的转换对象
 	 */
-	InnerRecord*				PrepareNewTableBlock( unsigned int nMessageID, const char* pMsgPtr, unsigned int nMsgLen );
+	InnerRecord*				PrepareRecordBlock( unsigned int nMessageID, const char* pMsgPtr, unsigned int nMsgLen );
 
 private:
 	static const unsigned int			s_nRegisterTableSize;		///< 注册表长度

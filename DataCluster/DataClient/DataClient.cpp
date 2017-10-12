@@ -666,7 +666,7 @@ int	 STDCALL		MDataClient::GetMarketInfo( unsigned char cMarket, char* pszInBuf,
 	XDFAPI_MarketKindHead					oHead = { 0 };
 	T_Inner_MarketInfo						tagMkInfo;
 	MStreamWrite							oMSW( pszInBuf, nInBytes );
-	DatabaseAdaptor&						refDatabase = DataIOEngine::GetEngineObj().GetDatabaseObj();
+	BigTableDatabase&						refDatabase = DataIOEngine::GetEngineObj().GetDatabaseObj();
 	std::map<int,XDFAPI_MarketKindInfo>&	mapKindTable = m_mapMarketKind[cMarket];
 	unsigned int							nKindCount = mapKindTable.size();
 
@@ -973,7 +973,7 @@ int	STDCALL		MDataClient::GetCodeTable( unsigned char cMarket, char* pszInBuf, i
 	T_Inner_MarketInfo			tagMkInfo;
 	CriticalLock				lock( m_oLock );
 	MStreamWrite				oMSW( pszInBuf, nInBytes );
-	DatabaseAdaptor&			refDatabase = DataIOEngine::GetEngineObj().GetDatabaseObj();
+	BigTableDatabase&			refDatabase = DataIOEngine::GetEngineObj().GetDatabaseObj();
 	unsigned int				MsgType = 0;
 	unsigned int				MsgSize = 0;
 	int							nDataSize = 0;
@@ -1290,7 +1290,7 @@ int STDCALL		MDataClient::GetLastMarketDataAll(unsigned char cMarket, char* pszI
 	unsigned __int64			nSerialNo = 0;
 	CriticalLock				lock( m_oLock );
 	MStreamWrite				oMSW( pszInBuf, nInBytes );
-	DatabaseAdaptor&			refDatabase = DataIOEngine::GetEngineObj().GetDatabaseObj();
+	BigTableDatabase&			refDatabase = DataIOEngine::GetEngineObj().GetDatabaseObj();
 	unsigned int				MsgType = 0;
 	unsigned int				MsgSize = 0;
 	int							nDataSize = 0;

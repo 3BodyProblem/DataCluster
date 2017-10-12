@@ -144,39 +144,13 @@ int EngineWrapper4DataNode::OnImage( unsigned int nDataID, char* pData, unsigned
 int EngineWrapper4DataNode::OnData( unsigned int nDataID, char* pData, unsigned int nDataLen, bool bPushFlag )
 {
 	int						nAffectNum = 0;
-	InnerRecord*			pRecord = TableFillerRegister::GetRegister().PrepareNewTableBlock( nDataID, pData, nDataLen );
 
 	if( NULL == m_pDataHandle )
 	{
 		return -1;
 	}
 
-	if( NULL == pRecord )
-	{
-		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::NewRecord() : MessageID is invalid, id=%d", nDataID );
-		return -2;
-	}
-
-	unsigned int			nBigTableID = pRecord->GetBigTableID();
-	///< 只有Code有内容填充，其他字段都为空, 所以再从内存查询一把，取得其他字段的内容
-	nAffectNum = OnQuery( nBigTableID, pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth() );
-	if( nAffectNum < 0 )
-	{
-		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::UpdateRecord() : error occur in UpdateRecord(), MessageID=%d", nDataID );
-		return -3;
-	}
-	else if( nAffectNum == 0 )
-	{
-		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::UpdateRecord() : MessageID isn\'t exist, id=%d", nDataID );
-		return -4;
-	}
-	else
-	{
-		pRecord->FillMessage2BigTableRecord( pData );
-		nAffectNum = m_pDataHandle->OnData( nBigTableID, pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), false );
-	}
-
-	return nAffectNum;
+	return m_pDataHandle->OnData( nDataID, pData, nDataLen, false );
 }
 
 void EngineWrapper4DataNode::OnLog( unsigned char nLogLevel, const char* pszFormat, ... )

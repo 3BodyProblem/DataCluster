@@ -26,9 +26,9 @@ DataIOEngine& DataIOEngine::GetEngineObj()
 	return obj;
 }
 
-DatabaseAdaptor& DataIOEngine::GetDatabaseObj()
+BigTableDatabase& DataIOEngine::GetDatabaseObj()
 {
-	return m_oDatabaseIO;
+	return m_oDB4ClientMode;
 }
 
 DataCollectorPool& DataIOEngine::GetCollectorPool()
@@ -41,11 +41,9 @@ I_QuotationCallBack* DataIOEngine::GetCallBackPtr()
 	return m_pQuotationCallBack;
 }
 
-int DataIOEngine::Initialize( I_QuotationCallBack* pIQuotation )
+int DataIOEngine::Initialize( I_QuotationCallBack* pIQuotation, I_DataHandle* pIDataHandle4DataNode )
 {
 	int							nErrorCode = 0;
-	EngineWrapper4DataNode&	refWrapper = EngineWrapper4DataNode::GetObj();
-	I_DataHandle*				pHandlePtr = refWrapper.IsUsed() ? &refWrapper : (I_DataHandle*)this;
 
 	Release();
 	if( NULL == (m_pQuotationCallBack = pIQuotation) )
@@ -66,14 +64,14 @@ int DataIOEngine::Initialize( I_QuotationCallBack* pIQuotation )
 	}
 
 	DataIOEngine::GetEngineObj().WriteInfo( "DataIOEngine::Initialize() : DataNode Engine is initializing ......" );
-	if( 0 != (nErrorCode = m_oDatabaseIO.Initialize()) )
+	if( 0 != (nErrorCode = m_oDB4ClientMode.Initialize()) )
 	{
 		DataIOEngine::GetEngineObj().WriteError( "DataIOEngine::Initialize() : failed 2 initialize memory database plugin, errorcode=%d", nErrorCode );
 		return nErrorCode;
 	}
 
-	m_oDatabaseIO.RecoverDatabase();
-	if( 0 >= (nErrorCode = m_oDataCollectorPool.Initialize( pHandlePtr )) )
+	m_oDB4ClientMode.RecoverDatabase();
+	if( 0 >= (nErrorCode = m_oDataCollectorPool.Initialize( pIDataHandle4DataNode )) )
 	{
 		DataIOEngine::GetEngineObj().WriteError( "DataIOEngine::Initialize() : failed 2 initialize data collector plugin, errorcode=%d", nErrorCode );
 		return nErrorCode;
@@ -104,7 +102,7 @@ void DataIOEngine::Release()
 		m_pQuotationCallBack = NULL;
 		SimpleTask::Join( 5000 );
 		m_oDataCollectorPool.Release();
-		m_oDatabaseIO.Release();
+		m_oDB4ClientMode.Release();
 		m_oQuoNotify.Release();
 	}
 }
@@ -143,11 +141,11 @@ int DataIOEngine::OnQuery( unsigned int nDataID, char* pData, unsigned int nData
 
 	if( 0 == strncmp( pData, s_pszZeroBuff, min(nDataLen, sizeof(s_pszZeroBuff)) ) )
 	{
-		return m_oDatabaseIO.QueryBatchRecords( nDataID, pData, nDataLen, nSerialNo );
+		return m_oDB4ClientMode.QueryBatchRecords( nDataID, pData, nDataLen, nSerialNo );
 	}
 	else
 	{
-		return m_oDatabaseIO.QueryRecord( nDataID, pData, nDataLen, nSerialNo );
+		return m_oDB4ClientMode.QueryRecord( nDataID, pData, nDataLen, nSerialNo );
 	}
 }
 
@@ -155,26 +153,26 @@ int DataIOEngine::OnImage( unsigned int nDataID, char* pData, unsigned int nData
 {
 	unsigned __int64		nSerialNo = 0;
 	int						nAffectNum = 0;
-	InnerRecord*			pRecord = TableFillerRegister::GetRegister().PrepareNewTableBlock( nDataID, pData, nDataLen );
+	InnerRecord*			pRecord = TableFillerRegister::GetRegister().PrepareRecordBlock( nDataID, pData, nDataLen );
 
 	if( NULL == pRecord )
 	{
-		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::NewRecord() : MessageID is invalid, id=%d", nDataID );
+		DataIOEngine::GetEngineObj().WriteWarning( "BigTableDatabase::NewRecord() : MessageID is invalid, id=%d", nDataID );
 		return -1;
 	}
 
 	///< 只有Code有内容填充，其他字段都为空, 所以再从内存查询一把，取得其他字段的内容
-	nAffectNum = m_oDatabaseIO.QueryRecord( pRecord->GetBigTableID(), pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), nSerialNo );
+	nAffectNum = m_oDB4ClientMode.QueryRecord( pRecord->GetBigTableID(), pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), nSerialNo );
 
 	if( nAffectNum <= 0 )
 	{
 		pRecord->FillMessage2BigTableRecord( pData, true );
-		nAffectNum = m_oDatabaseIO.NewRecord( pRecord->GetBigTableID(), pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), bLastFlag, nSerialNo );
+		nAffectNum = m_oDB4ClientMode.NewRecord( pRecord->GetBigTableID(), pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), bLastFlag, nSerialNo );
 	}
 	else
 	{
 		pRecord->FillMessage2BigTableRecord( pData );
-		nAffectNum = m_oDatabaseIO.UpdateRecord( pRecord->GetBigTableID(), pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), nSerialNo );
+		nAffectNum = m_oDB4ClientMode.UpdateRecord( pRecord->GetBigTableID(), pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), nSerialNo );
 	}
 
 	return nAffectNum;
@@ -184,31 +182,31 @@ int DataIOEngine::OnData( unsigned int nDataID, char* pData, unsigned int nDataL
 {
 	unsigned __int64		nSerialNo = 0;
 	int						nAffectNum = 0;
-	InnerRecord*			pRecord = TableFillerRegister::GetRegister().PrepareNewTableBlock( nDataID, pData, nDataLen );
+	InnerRecord*			pRecord = TableFillerRegister::GetRegister().PrepareRecordBlock( nDataID, pData, nDataLen );
 
 	if( NULL == pRecord )
 	{
-		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::NewRecord() : MessageID is invalid, id=%d", nDataID );
+		DataIOEngine::GetEngineObj().WriteWarning( "BigTableDatabase::NewRecord() : MessageID is invalid, id=%d", nDataID );
 		return -1;
 	}
 
 	unsigned int			nBigTableID = pRecord->GetBigTableID();
 	///< 只有Code有内容填充，其他字段都为空, 所以再从内存查询一把，取得其他字段的内容
-	nAffectNum = m_oDatabaseIO.QueryRecord( nBigTableID, pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), nSerialNo );
+	nAffectNum = m_oDB4ClientMode.QueryRecord( nBigTableID, pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), nSerialNo );
 	if( nAffectNum < 0 )
 	{
-		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::UpdateRecord() : error occur in UpdateRecord(), MessageID=%d", nDataID );
+		DataIOEngine::GetEngineObj().WriteWarning( "BigTableDatabase::UpdateRecord() : error occur in UpdateRecord(), MessageID=%d", nDataID );
 		return -2;
 	}
 	else if( nAffectNum == 0 )
 	{
-		DataIOEngine::GetEngineObj().WriteWarning( "DatabaseAdaptor::UpdateRecord() : MessageID isn\'t exist, id=%d", nDataID );
+		DataIOEngine::GetEngineObj().WriteWarning( "BigTableDatabase::UpdateRecord() : MessageID isn\'t exist, id=%d", nDataID );
 		return -3;
 	}
 	else
 	{
 		pRecord->FillMessage2BigTableRecord( pData );
-		nAffectNum = m_oDatabaseIO.UpdateRecord( nBigTableID, pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), nSerialNo );
+		nAffectNum = m_oDB4ClientMode.UpdateRecord( nBigTableID, pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), nSerialNo );
 	}
 
 	m_oQuoNotify.PutMessage( nBigTableID/100, nBigTableID, pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth() );
