@@ -30,6 +30,12 @@ int EngineWrapper4DataClient::Initialize( I_QuotationCallBack* pIQuotation )
 		return -1;
 	}
 
+	if( 0 != (nErrorCode = Configuration::GetConfigObj().Load()) )
+	{
+		DataIOEngine::GetEngineObj().WriteError( "EngineWrapper4DataClient::Initialize() : invalid configuration file, errorcode=%d", nErrorCode );
+		return nErrorCode;
+	}
+
 	DataIOEngine::GetEngineObj().WriteInfo( "EngineWrapper4DataClient::Initialize() : DataNode Engine is initializing ......" );
 	if( 0 != (nErrorCode = m_oDB4ClientMode.Initialize()) )
 	{
@@ -37,7 +43,8 @@ int EngineWrapper4DataClient::Initialize( I_QuotationCallBack* pIQuotation )
 		return nErrorCode;
 	}
 
-	m_oDB4ClientMode.RecoverDatabase();
+	m_oDB4ClientMode.RecoverDatabase();		///< 从本地恢复历史数据(DataCluster.DLL内部的数据库，独立于DataNode.exe中的数据库)
+
 	if( 0 != (nErrorCode = m_oQuoNotify.Initialize( pIQuotation )) )
 	{
 		DataIOEngine::GetEngineObj().WriteError( "EngineWrapper4DataClient::Initialize() : failed 2 initialize quotation notify, errorcode=%d", nErrorCode );
@@ -50,7 +57,6 @@ int EngineWrapper4DataClient::Initialize( I_QuotationCallBack* pIQuotation )
 void EngineWrapper4DataClient::Release()
 {
 	DataIOEngine::GetEngineObj().Release();
-	SimpleTask::StopAllThread();
 	m_pQuotationCallBack = NULL;
 	m_oDB4ClientMode.Release();
 	m_oQuoNotify.Release();
@@ -79,7 +85,7 @@ int EngineWrapper4DataClient::OnImage( unsigned int nDataID, char* pData, unsign
 
 	if( NULL == pRecord )
 	{
-		DataIOEngine::GetEngineObj().WriteWarning( "BigTableDatabase::NewRecord() : MessageID is invalid, id=%d", nDataID );
+		DataIOEngine::GetEngineObj().WriteWarning( "EngineWrapper4DataClient::NewRecord() : MessageID is invalid, id=%d", nDataID );
 		return -1;
 	}
 
@@ -108,7 +114,7 @@ int EngineWrapper4DataClient::OnData( unsigned int nDataID, char* pData, unsigne
 
 	if( NULL == pRecord )
 	{
-		DataIOEngine::GetEngineObj().WriteWarning( "BigTableDatabase::NewRecord() : MessageID is invalid, id=%d", nDataID );
+		DataIOEngine::GetEngineObj().WriteWarning( "EngineWrapper4DataClient::NewRecord() : MessageID is invalid, id=%d", nDataID );
 		return -1;
 	}
 
@@ -117,12 +123,12 @@ int EngineWrapper4DataClient::OnData( unsigned int nDataID, char* pData, unsigne
 	nAffectNum = m_oDB4ClientMode.QueryRecord( nBigTableID, pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), nSerialNo );
 	if( nAffectNum < 0 )
 	{
-		DataIOEngine::GetEngineObj().WriteWarning( "BigTableDatabase::UpdateRecord() : error occur in UpdateRecord(), MessageID=%d", nDataID );
+		DataIOEngine::GetEngineObj().WriteWarning( "EngineWrapper4DataClient::UpdateRecord() : error occur in UpdateRecord(), MessageID=%d", nDataID );
 		return -2;
 	}
 	else if( nAffectNum == 0 )
 	{
-		DataIOEngine::GetEngineObj().WriteWarning( "BigTableDatabase::UpdateRecord() : MessageID isn\'t exist, id=%d", nDataID );
+		DataIOEngine::GetEngineObj().WriteWarning( "EngineWrapper4DataClient::UpdateRecord() : MessageID isn\'t exist, id=%d", nDataID );
 		return -3;
 	}
 	else
@@ -158,11 +164,6 @@ void EngineWrapper4DataClient::OnLog( unsigned char nLogLevel, const char* pszFo
 BigTableDatabase& EngineWrapper4DataClient::GetDatabaseObj()
 {
 	return m_oDB4ClientMode;
-}
-
-I_QuotationCallBack* EngineWrapper4DataClient::GetCallBackPtr()
-{
-	return m_pQuotationCallBack;
 }
 
 void EngineWrapper4DataClient::OnStatus( QUO_MARKET_ID eMarketID, QUO_MARKET_STATUS eMarketStatus )

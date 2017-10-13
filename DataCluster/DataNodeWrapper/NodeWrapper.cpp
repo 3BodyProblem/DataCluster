@@ -58,10 +58,16 @@ int EngineWrapper4DataNode::Initialize( I_DataHandle* pIDataHandle )
 		return -1;
 	}
 
+	if( 0 != Configuration::GetConfigObj().Load() )
+	{
+		DataIOEngine::GetEngineObj().WriteError( "EngineWrapper4DataNode::Initialize() : invalid configuration file" );
+		return -2;
+	}
+
 	if( m_oClusterCBAdaptor.Initialize( pIDataHandle ) )
 	{
 		DataIOEngine::GetEngineObj().WriteError( "EngineWrapper4DataNode::Initialize() : failed 2 initialize ClusterAdatpor.\n" );
-		return -2;
+		return -3;
 	}
 
 	return DataIOEngine::GetEngineObj().Initialize( this );
@@ -70,7 +76,6 @@ int EngineWrapper4DataNode::Initialize( I_DataHandle* pIDataHandle )
 void EngineWrapper4DataNode::Release()
 {
 	DataIOEngine::GetEngineObj().Release();
-	SimpleTask::StopAllThread();
 	m_pDataHandle = NULL;
 }
 

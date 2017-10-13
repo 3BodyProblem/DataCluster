@@ -9,7 +9,8 @@
 #include "../DataClientWrapper/ClientWrapper.h"
 
 
-#define MAX_DATABUF_COUNT	81920000
+#define MAX_DATABUF_COUNT	(1024*1024*50)
+
 
 MDataIO::MDataIO()
 {
@@ -81,14 +82,18 @@ void* STDCALL MDataIO::DataThreadFunc(void *pParam)
 		try
 		{
 			pSelf->m_oWEvent.Wait(1000);	//每隔1秒钟扫描
-
 			pSelf->inner_CheckData();
-		
 		}
-		catch (...)
+		catch( std::exception& err )
+		{
+			char	pszError[1024*2] = { 0 };
+
+			::sprintf( pszError, "MDataIO::DataThreadFunc() : %s", err.what() );
+			Global_CBAdaptor.OnLog( 3, pszError );
+		}
+		catch( ... )
         {
-            // 处理异常代码
-            //Global_WriteLog(ERR, 0,"<TaskThreadFunc>线程出现未知异常");
+			Global_CBAdaptor.OnLog( 3, "MDataIO::DataThreadFunc() : unknow error occur" );
         }
 	}
 	
@@ -635,6 +640,7 @@ void STDCALL MDataClient::Release()
 {
 	if( Global_bInit )
 	{
+		SimpleTask::StopAllThread();
 		Global_bInit = false;
 		RegisterSpi( NULL );
 		g_oDataIO.Release();

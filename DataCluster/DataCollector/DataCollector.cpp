@@ -61,9 +61,9 @@ bool CollectorStatus::Set( enum E_SS_Status eNewStatus )
 		}
 	}
 
-	if( m_eMkStatus != eNewMkStatus && NULL != EngineWrapper4DataClient::GetObj().GetCallBackPtr() && QUO_MARKET_UNKNOW != m_nMarketID )
+	if( m_eMkStatus != eNewMkStatus && EngineWrapper4DataClient::GetObj().IsUsed() && QUO_MARKET_UNKNOW != m_nMarketID )
 	{
-		EngineWrapper4DataClient::GetObj().GetCallBackPtr()->OnStatus( (enum QUO_MARKET_ID)m_nMarketID, eNewMkStatus );
+		EngineWrapper4DataClient::GetObj().OnStatus( (enum QUO_MARKET_ID)m_nMarketID, eNewMkStatus );
 		m_eMkStatus = eNewMkStatus;
 	}
 

@@ -37,11 +37,6 @@ int DataIOEngine::Initialize( I_DataHandle* pIDataHandle )
 	int			nErrorCode = 0;
 
 	Release();
-	if( 0 != (nErrorCode = Configuration::GetConfigObj().Load()) )	{
-		DataIOEngine::GetEngineObj().WriteError( "DataIOEngine::Initialize() : invalid configuration file, errorcode=%d", nErrorCode );
-		return nErrorCode;
-	}
-
 	if( 0 != (nErrorCode = TableFillerRegister::GetRegister().Initialize()) )
 	{
 		DataIOEngine::GetEngineObj().WriteError( "DataIOEngine::Initialize() : failed 2 register message filler 2 table, errorcode=%d", nErrorCode );
@@ -66,7 +61,6 @@ int DataIOEngine::Initialize( I_DataHandle* pIDataHandle )
 
 void DataIOEngine::Release()
 {
-	SimpleTask::StopAllThread();
 	SimpleTask::StopThread();
 	SimpleTask::Join( 5000 );
 	m_oDataCollectorPool.Release();

@@ -135,6 +135,7 @@ extern "C"
 
 	__declspec(dllexport) void __stdcall	EndWork()
 	{
+		SimpleTask::StopAllThread();
 		EngineWrapper4DataClient::GetObj().Release();
 	}
 
@@ -219,6 +220,7 @@ extern "C"
 
 	__declspec(dllexport) void __stdcall Release()
 	{
+		SimpleTask::StopAllThread();
 		EngineWrapper4DataNode::GetObj().Release();
 	}
 

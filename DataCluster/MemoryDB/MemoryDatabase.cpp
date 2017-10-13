@@ -190,11 +190,6 @@ void DatabaseIO::UnitTest()
 
 int DatabaseIO::Initialize()
 {
-	if( true == EngineWrapper4DataNode::GetObj().IsUsed() )
-	{
-		return 0;
-	}
-
 	Release();
 
 	DataIOEngine::GetEngineObj().WriteInfo( "DatabaseIO::Initialize() : initializing memory database plugin ......" );
@@ -260,11 +255,6 @@ BigTableDatabase::~BigTableDatabase()
 int BigTableDatabase::Initialize()
 {
 	int			nErrCode = 0;
-
-	if( true == EngineWrapper4DataNode::GetObj().IsUsed() )
-	{
-		return 0;
-	}
 
 	DataIOEngine::GetEngineObj().WriteInfo( "BigTableDatabase::Initialize() : initializing powerfull database object ......" );
 
@@ -336,11 +326,6 @@ int BigTableDatabase::RecoverDatabase()
 
 int BigTableDatabase::BackupDatabase()
 {
-	if( true == EngineWrapper4DataNode::GetObj().IsUsed() )
-	{
-		return 0;
-	}
-
 	try
 	{
 		if( m_pIDatabase )

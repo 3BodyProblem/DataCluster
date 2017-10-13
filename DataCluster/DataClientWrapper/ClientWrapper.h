@@ -20,7 +20,7 @@ public:
 	static EngineWrapper4DataClient&	GetObj();
 
 	/**
-	 * @brief							是否被DataNode.exe调用
+	 * @brief							是否以Client终端模式被调用
 	 */
 	bool								IsUsed();
 
@@ -88,11 +88,6 @@ public:
 	 * @brief							获取数据库对象
 	 */
 	BigTableDatabase&					GetDatabaseObj();
-
-	/**
-	 * @brief							获取回调接口
-	 */
-	I_QuotationCallBack*				GetCallBackPtr();
 
 	/**
 	 * @brief							内存数据查询接口
