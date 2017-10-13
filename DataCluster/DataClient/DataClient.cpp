@@ -9,7 +9,7 @@
 #include "../DataClientWrapper/ClientWrapper.h"
 
 
-#define MAX_DATABUF_COUNT	(1024*1024*50)
+#define MAX_DATABUF_COUNT	(1024*1024*10)
 
 
 MDataIO::MDataIO()
@@ -19,9 +19,7 @@ MDataIO::MDataIO()
 
 MDataIO::~MDataIO()
 {
-
 }
-
 
 int		MDataIO::Instance()
 {
@@ -309,6 +307,11 @@ int MDataClient::GetRate( int nMarketID, unsigned int nKind )
 	}
 
 	return -2;
+}
+
+bool MDataClient::InQuoteClientApiMode()
+{
+	return NULL != m_pQueryBuffer;
 }
 
 int STDCALL	MDataClient::Init()

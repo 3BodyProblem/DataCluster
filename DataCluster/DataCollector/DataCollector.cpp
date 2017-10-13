@@ -224,7 +224,7 @@ int DataCollector::Execute()
 	if( 0 != nErrorCode )
 	{
 		m_bActivated = false;
-		DataIOEngine::GetEngineObj().WriteError( "DataCollector::RecoverDataCollector() : failed 2 recover quotation, errorcode = %d ", nErrorCode );
+		DataIOEngine::GetEngineObj().WriteError( "DataCollector::Execute() : failed 2 recover quotation, errorcode = %d ", nErrorCode );
 		return nErrorCode;
 	}
 

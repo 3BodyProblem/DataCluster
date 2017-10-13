@@ -45,10 +45,13 @@ int EngineWrapper4DataClient::Initialize( I_QuotationCallBack* pIQuotation )
 
 	m_oDB4ClientMode.RecoverDatabase();		///< 从本地恢复历史数据(DataCluster.DLL内部的数据库，独立于DataNode.exe中的数据库)
 
-	if( 0 != (nErrorCode = m_oQuoNotify.Initialize( pIQuotation )) )
+	if( false == Global_Client.InQuoteClientApiMode() )
 	{
-		DataIOEngine::GetEngineObj().WriteError( "EngineWrapper4DataClient::Initialize() : failed 2 initialize quotation notify, errorcode=%d", nErrorCode );
-		return nErrorCode;
+		if( 0 != (nErrorCode = m_oQuoNotify.Initialize( pIQuotation )) )
+		{
+			DataIOEngine::GetEngineObj().WriteError( "EngineWrapper4DataClient::Initialize() : failed 2 initialize quotation notify, errorcode=%d", nErrorCode );
+			return nErrorCode;
+		}
 	}
 
 	return DataIOEngine::GetEngineObj().Initialize( this );
@@ -137,7 +140,14 @@ int EngineWrapper4DataClient::OnData( unsigned int nDataID, char* pData, unsigne
 		nAffectNum = m_oDB4ClientMode.UpdateRecord( nBigTableID, pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), nSerialNo );
 	}
 
-	m_oQuoNotify.PutMessage( nBigTableID/100, nBigTableID, pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth() );
+	if( false == Global_Client.InQuoteClientApiMode() )
+	{
+		m_oQuoNotify.PutMessage( nBigTableID/100, nBigTableID, pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth() );
+	}
+	else
+	{
+		m_pQuotationCallBack->OnQuotation( (enum QUO_MARKET_ID)(nBigTableID/100), nBigTableID, pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth() );
+	}
 
 	return nAffectNum;
 }

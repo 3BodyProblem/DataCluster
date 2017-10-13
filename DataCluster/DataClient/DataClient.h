@@ -126,6 +126,12 @@ public:
 public:
 	static int			GetRate( int nMarketID, unsigned int nKind );
 
+	/**
+	 * @brief			是否为兼容老版quoteclientapi.dll的模式
+	 * @return			true							为兼容版
+	 */
+	bool				InQuoteClientApiMode();
+
 private:
 	CriticalObject		m_oLock;						///< 锁
 	char*				m_pQueryBuffer;
