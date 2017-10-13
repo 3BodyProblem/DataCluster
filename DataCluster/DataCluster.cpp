@@ -6,6 +6,7 @@
 #include "UnitTest/UnitTest.h"
 #include "Infrastructure/Lock.h"
 #include "DataCenterEngine/DataCenterEngine.h"
+#include "DataClientWrapper/ClientWrapper.h"
 #include "DataNodeWrapper/NodeWrapper.h"
 #include "QuoteClientApi.h"
 
@@ -69,7 +70,7 @@ public:
 	{
 		if( true == EngineWrapper4DataNode::GetObj().IsUsed() )
 		{
-			if( DataIOEngine::GetEngineObj().OnQuery( nMessageID, lpOut, uiSize ) <= 0 )
+			if( EngineWrapper4DataNode::GetObj().OnQuery( nMessageID, lpOut, uiSize ) <= 0 )
 			{
 				return -1;
 			}
@@ -81,7 +82,7 @@ public:
 		unsigned int			nItemNumber = 0;
 		CriticalLock			lock( m_oLock );
 
-		if( DataIOEngine::GetEngineObj().OnQuery( nMessageID, m_pBuff, MAX_BUF_SIZE ) <= 0 )
+		if( EngineWrapper4DataClient::GetObj().OnQuery( nMessageID, m_pBuff, MAX_BUF_SIZE ) <= 0 )
 		{
 			return -1;
 		}
@@ -127,17 +128,14 @@ extern "C"
 			return -1;
 		}
 
-		I_DataHandle*		pDataHandlePtr = EngineWrapper4DataNode::GetObj().IsUsed() ? &(EngineWrapper4DataNode::GetObj()) : (I_DataHandle*)&(DataIOEngine::GetEngineObj());
-		int					nRet = DataIOEngine::GetEngineObj().Initialize( pIDataHandle, pDataHandlePtr );
-
 		DataIOEngine::GetEngineObj().WriteInfo( "DataIOEngine::Initialize() : [Version] %d.%d.%d", GetVersionNo()/1000000, GetVersionNo()%1000000/1000, GetVersionNo()%1000 );
 
-		return nRet;
+		return EngineWrapper4DataClient::GetObj().Initialize( pIDataHandle );
 	}
 
 	__declspec(dllexport) void __stdcall	EndWork()
 	{
-		DataIOEngine::GetEngineObj().Release();
+		EngineWrapper4DataClient::GetObj().Release();
 	}
 
 	__declspec(dllexport) int  __stdcall	GetMarketIDTable( QUO_MARKET_ID* lpOut, unsigned int uiSize )
@@ -154,7 +152,7 @@ extern "C"
 			return -1;
 		}
 
-		if( DataIOEngine::GetEngineObj().OnQuery( eMarketID*100+1, (char*)&tagMarketinfo, sizeof(T_Inner_MarketInfo) ) <= 0 )
+		if( EngineWrapper4DataClient::GetObj().OnQuery( eMarketID*100+1, (char*)&tagMarketinfo, sizeof(T_Inner_MarketInfo) ) <= 0 )
 		{
 			return -2;
 		}
@@ -174,7 +172,7 @@ extern "C"
 		::memset( lpOut, 0, sizeof(tagQUO_ReferenceData) );
 		::strcpy( (char*)lpOut, szCode );
 
-		return DataIOEngine::GetEngineObj().OnQuery( eMarketID*100+2, (char*)lpOut, sizeof(tagQUO_ReferenceData) );
+		return EngineWrapper4DataClient::GetObj().OnQuery( eMarketID*100+2, (char*)lpOut, sizeof(tagQUO_ReferenceData) );
 	}
 
 	__declspec(dllexport) int  __stdcall	GetAllSnapData( QUO_MARKET_ID eMarketID, unsigned int uiOffset, tagQUO_SnapData* lpOut, unsigned int uiSize )
@@ -187,7 +185,7 @@ extern "C"
 		::memset( lpOut, 0, sizeof(tagQUO_SnapData) );
 		::strcpy( (char*)lpOut, szCode );
 
-		return DataIOEngine::GetEngineObj().OnQuery( eMarketID*100+3, (char*)lpOut, sizeof(tagQUO_SnapData) );
+		return EngineWrapper4DataClient::GetObj().OnQuery( eMarketID*100+3, (char*)lpOut, sizeof(tagQUO_SnapData) );
 	}
 
 	__declspec(dllexport) void __stdcall	ExecuteUnitTest()
@@ -214,6 +212,8 @@ extern "C"
 
 	__declspec(dllexport) int __stdcall	Initialize( I_DataHandle* pIDataHandle )
 	{
+		DataIOEngine::GetEngineObj().WriteInfo( "DataIOEngine::Initialize() : [Version] %d.%d.%d", GetVersionNo()/1000000, GetVersionNo()%1000000/1000, GetVersionNo()%1000 );
+
 		return EngineWrapper4DataNode::GetObj().Initialize( pIDataHandle );
 	}
 

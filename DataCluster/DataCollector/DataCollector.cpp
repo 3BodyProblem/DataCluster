@@ -1,5 +1,6 @@
 #include "DataCollector.h"
 #include "../QuoteCltDef.h"
+#include "../DataClientWrapper/ClientWrapper.h"
 #include "../DataCenterEngine/DataCenterEngine.h"
 
 
@@ -60,9 +61,9 @@ bool CollectorStatus::Set( enum E_SS_Status eNewStatus )
 		}
 	}
 
-	if( m_eMkStatus != eNewMkStatus && NULL != DataIOEngine::GetEngineObj().GetCallBackPtr() && QUO_MARKET_UNKNOW != m_nMarketID )
+	if( m_eMkStatus != eNewMkStatus && NULL != EngineWrapper4DataClient::GetObj().GetCallBackPtr() && QUO_MARKET_UNKNOW != m_nMarketID )
 	{
-		DataIOEngine::GetEngineObj().GetCallBackPtr()->OnStatus( (enum QUO_MARKET_ID)m_nMarketID, eNewMkStatus );
+		EngineWrapper4DataClient::GetObj().GetCallBackPtr()->OnStatus( (enum QUO_MARKET_ID)m_nMarketID, eNewMkStatus );
 		m_eMkStatus = eNewMkStatus;
 	}
 
@@ -362,7 +363,7 @@ bool DataCollectorPool::PreserveAllConnection()
 	{
 		if( true == IsServiceWorking() )
 		{
-			DataIOEngine::GetEngineObj().GetCallBackPtr()->OnStatus( QUO_MARKET_UNKNOW, QUO_STATUS_NORMAL );
+			EngineWrapper4DataClient::GetObj().OnStatus( QUO_MARKET_UNKNOW, QUO_STATUS_NORMAL );
 			DataIOEngine::GetEngineObj().WriteInfo( "DataCollectorPool::PreserveAllConnection() : All Connections had been established! Num=[%u] .......!!! ", GetCount() );
 			s_bWaitCondition = false;
 			return true;

@@ -81,7 +81,7 @@ extern MDataIO				g_oDataIO;
 
 /**
  * @class	MDataClient
- * @brief	api接口的实现
+ * @brief	QuoClientApi.DLL的接口的实现
  */
 class MDataClient : public QuoteClientApi
 {

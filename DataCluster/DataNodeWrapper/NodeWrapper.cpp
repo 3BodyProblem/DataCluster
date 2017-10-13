@@ -64,12 +64,14 @@ int EngineWrapper4DataNode::Initialize( I_DataHandle* pIDataHandle )
 		return -2;
 	}
 
-	return StartWork( (I_QuotationCallBack*)&m_oClusterCBAdaptor );
+	return DataIOEngine::GetEngineObj().Initialize( this );
 }
 
 void EngineWrapper4DataNode::Release()
 {
-	EndWork();
+	DataIOEngine::GetEngineObj().Release();
+	SimpleTask::StopAllThread();
+	m_pDataHandle = NULL;
 }
 
 int EngineWrapper4DataNode::RecoverQuotation()
@@ -161,25 +163,15 @@ void EngineWrapper4DataNode::OnLog( unsigned char nLogLevel, const char* pszForm
 	va_start( valist, pszFormat );
 	_vsnprintf( pszLogBuf, sizeof(pszLogBuf)-1, pszFormat, valist );
 	va_end( valist );
-/*
-	switch( nLogLevel )	///< 日志类型[0=信息、1=警告日志、2=错误日志、3=详细日志]
+
+	if( NULL != m_pDataHandle )
 	{
-	case 0:
-		DataIOEngine::WriteInfo( "[Plugin] %s", pszLogBuf );
-		break;
-	case 1:
-		DataIOEngine::WriteWarning( "[Plugin] %s", pszLogBuf );
-		break;
-	case 2:
-		DataIOEngine::WriteError( "[Plugin] %s", pszLogBuf );
-		break;
-	case 3:
-		DataIOEngine::WriteDetail( "[Plugin] %s", pszLogBuf );
-		break;
-	default:
-		::printf( "[Plugin] unknow log level [%d] \n", nLogLevel );
-		break;
-	}*/
+		m_pDataHandle->OnLog( nLogLevel, pszLogBuf );
+	}
+	else
+	{
+		::printf( "%s\n", pszLogBuf );
+	}
 }
 
 
