@@ -325,16 +325,6 @@ int STDCALL	MDataClient::Init()
 	{
 		Global_bInit = true;
 
-		if( g_oDataIO.Instance() < 0 )
-		{
-			return -1;
-		}
-
-		if( 0 != StartWork( &Global_CBAdaptor ) )
-		{
-			return -2;
-		}
-
 		{///< 商品期货(上海/郑州/大连)
 		std::map<int,XDFAPI_MarketKindInfo>&	refKindTable = m_mapMarketKind[XDF_CNF];
 		strncpy( refKindTable[0].KindName, "指数保留", 8 );
@@ -633,6 +623,16 @@ int STDCALL	MDataClient::Init()
 		refKindTable[14].LotSize = 100;
 		refKindTable[14].Serial = refKindTable.size() - 1;
 		refKindTable[14].WareCount = 0;
+		}
+
+		if( g_oDataIO.Instance() < 0 )
+		{
+			return -1;
+		}
+
+		if( 0 != StartWork( &Global_CBAdaptor ) )
+		{
+			return -2;
 		}
 	}
 
@@ -1674,12 +1674,10 @@ int STDCALL		MDataClient::GetMarketStatus( unsigned char cMarket,int& nStatus, u
 //....................................................................................................................................................................................................................................................................
 MPrimeClient::MPrimeClient()
 {
-
 }
 
 MPrimeClient::~MPrimeClient()
 {
-
 }
 
 int		STDCALL		MPrimeClient::ReqFuncData(int FuncNo, void* wParam, void* lParam)

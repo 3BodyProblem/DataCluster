@@ -47,7 +47,7 @@ int DatabaseIO::QueryBatchRecords( unsigned int nDataID, char* pBuffer, unsigned
 	int						nAffectNum = 0;
 	CriticalLock			lock( m_oLock );
 
-	if( NULL == pBuffer )
+	if( NULL == pBuffer || NULL == m_pIDatabase )
 	{
 		nSerialNo = 0;
 		DataIOEngine::GetEngineObj().WriteError( "DatabaseIO::QueryBatchRecords() : invalid buffer pointer(NULL)" );
