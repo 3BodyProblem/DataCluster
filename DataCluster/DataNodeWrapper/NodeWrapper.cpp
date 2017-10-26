@@ -90,7 +90,7 @@ int EngineWrapper4DataNode::RecoverQuotation()
 		return -1;
 	}
 
-	for( nSec = 0; nSec < 60 && false == DataIOEngine::GetEngineObj().GetCollectorPool().IsServiceWorking(); nSec++ )
+	for( nSec = 0; nSec < 16 && false == DataIOEngine::GetEngineObj().GetCollectorPool().IsServiceWorking(); nSec++ )
 	{
 		SimpleTask::Sleep( 1000 * 1 );
 	}

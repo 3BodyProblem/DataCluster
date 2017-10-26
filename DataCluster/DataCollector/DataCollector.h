@@ -194,6 +194,11 @@ public:
 	 */
 	unsigned int			GetCount();
 
+	/**
+	 * @brief				获取有效的可服务的会话数量
+	 */
+	unsigned int			GetValidSessionCount();
+
 public:
 	/**
 	 * @brief				根据市场编号取得数据采集模块
@@ -206,6 +211,7 @@ public:
 
 protected:
 	CriticalObject			m_oLock;						///< 锁
+	unsigned int			m_nValidCollector;				///< 工作中的会话数量
 };
 
 

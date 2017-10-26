@@ -241,6 +241,7 @@ int DataCollector::Execute()
 
 
 DataCollectorPool::DataCollectorPool()
+ : m_nValidCollector( 0 )
 {
 }
 
@@ -253,6 +254,7 @@ void DataCollectorPool::Release()
 {
 	int		nSize = std::vector<DataCollector>::size();
 
+	m_nValidCollector = 0;								///< 清空当前有效会话计数
 	for( unsigned int n = 0; n < nSize; n++ )
 	{
 		this->operator []( n ).Release();
@@ -268,6 +270,7 @@ int DataCollectorPool::Initialize( I_DataHandle* pIDataCallBack )
 
 	DataIOEngine::GetEngineObj().WriteInfo( "DataCollectorPool::Initialize() : initializing ... " );
 
+	m_nValidCollector = 0;								///< 清空当前有效会话计数
 	if( nDllCount >= 64 || nDllCount == 0 )
 	{
 		DataIOEngine::GetEngineObj().WriteError( "DataCollectorPool::Initialize() : invalid data collector configuration, dll count = %d (>=64)", nDllCount );
@@ -313,6 +316,12 @@ bool DataCollectorPool::IsServiceWorking()
 		{
 			nAffectNum++;
 		}
+	}
+
+	{	///< 更新可服务的会话数量计数
+		CriticalLock		lock( m_oLock );
+
+		m_nValidCollector = nAffectNum;
 	}
 
 	if( GetCount() == nAffectNum )
@@ -374,6 +383,13 @@ bool DataCollectorPool::PreserveAllConnection()
 
 	DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : initialize overtime > 60s, Num=[%u] .......!!! ", GetCount() );
 	return false;
+}
+
+unsigned int DataCollectorPool::GetValidSessionCount()
+{
+	CriticalLock			lock( m_oLock );
+
+	return m_nValidCollector;
 }
 
 unsigned int DataCollectorPool::GetCount()

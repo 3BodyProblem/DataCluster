@@ -2078,6 +2078,7 @@ void QuotationAdaptor::OnStatus( QUO_MARKET_ID eMarketID, QUO_MARKET_STATUS eMar
 {
 	if( Global_pSpi )
 	{
+		char			pszInfo[128] = { 0 };
 		XDFRunStat		eStatus = XRS_None;
 		unsigned char	cMkID = DataCollectorPool::Cast2OldMkID(eMarketID);
 
@@ -2095,14 +2096,13 @@ void QuotationAdaptor::OnStatus( QUO_MARKET_ID eMarketID, QUO_MARKET_STATUS eMar
 		}
 
 		///< ------------------------- 秘技: 只在全市场初始化完成时调用 ---------------------------------------
-		static std::map<short,enum XDFRunStat>		s_mapMkStatus;						///< 商品期货/期权各市场状态
-		if( cMkID == XDF_CNFOPT || cMkID == XDF_CNF )									///< 对商品期货、权部分的状态先进行缓存
+		static std::map<short,enum XDFRunStat>		s_mapMkStatus;								///< 商品期货/期权各市场状态
+		if( cMkID == XDF_CNFOPT || cMkID == XDF_CNF )											///< 对商品期货、权部分的状态先进行缓存
 		{
 			s_mapMkStatus[(short)eMarketID] = eStatus;
-			return;
 		}
 
-		if( QUO_MARKET_UNKNOW == eMarketID && QUO_STATUS_NORMAL == eMarketStatus )		///< 秘技,检查状态缓存，判断是否需要通知状态变化
+		if( (cMkID == XDF_CNFOPT || cMkID == XDF_CNF) && QUO_STATUS_NORMAL == eMarketStatus )	///< 秘技,检查状态缓存，判断是否需要通知状态变化
 		{
 			bool							bNotifyCNF = true;
 			bool							bNotifyCNFOPT = true;
@@ -2115,37 +2115,27 @@ void QuotationAdaptor::OnStatus( QUO_MARKET_ID eMarketID, QUO_MARKET_STATUS eMar
 
 			if( itDL == s_mapMkStatus.end() && itSH == s_mapMkStatus.end() && itZZ == s_mapMkStatus.end() )	bNotifyCNF = false;
 			if( itDLOPT == s_mapMkStatus.end() && itSHOPT == s_mapMkStatus.end() && itZZOPT == s_mapMkStatus.end() )	bNotifyCNFOPT = false;
-
-			if( itDL != s_mapMkStatus.end() ) {
-				if( itDL->second != XRS_Normal )	bNotifyCNF = false;
-			}
-			if( itSH != s_mapMkStatus.end() ) {
-				if( itSH->second != XRS_Normal )	bNotifyCNF = false;
-			}
-			if( itZZ != s_mapMkStatus.end() ) {
-				if( itZZ->second != XRS_Normal )	bNotifyCNF = false;
-			}
-
-			if( itDLOPT != s_mapMkStatus.end() ) {
-				if( itDLOPT->second != XRS_Normal )	bNotifyCNFOPT = false;
-			}
-			if( itSHOPT != s_mapMkStatus.end() ) {
-				if( itSHOPT->second != XRS_Normal )	bNotifyCNFOPT = false;
-			}
-			if( itZZOPT != s_mapMkStatus.end() ) {
-				if( itZZOPT->second != XRS_Normal )	bNotifyCNFOPT = false;
-			}
+			if( itDL != s_mapMkStatus.end() ) {				if( itDL->second != XRS_Normal )	bNotifyCNF = false;			}
+			if( itSH != s_mapMkStatus.end() ) {				if( itSH->second != XRS_Normal )	bNotifyCNF = false;			}
+			if( itZZ != s_mapMkStatus.end() ) {				if( itZZ->second != XRS_Normal )	bNotifyCNF = false;			}
+			if( itDLOPT != s_mapMkStatus.end() ) {			if( itDLOPT->second != XRS_Normal )	bNotifyCNFOPT = false;			}
+			if( itSHOPT != s_mapMkStatus.end() ) {			if( itSHOPT->second != XRS_Normal )	bNotifyCNFOPT = false;			}
+			if( itZZOPT != s_mapMkStatus.end() ) {			if( itZZOPT->second != XRS_Normal )	bNotifyCNFOPT = false;			}
 
 			if( true == bNotifyCNF )
 			{
 				Global_pSpi->XDF_OnRspStatusChanged( XDF_CNF, XRS_Normal );
-				OnLog( 0, "CNF status changed : ---> normal" );
+				::sprintf( pszInfo, "status changed : mkid = %d, status = %d", cMkID, eStatus );
+				s_mapMkStatus.erase( QUO_MARKET_DCE );s_mapMkStatus.erase( QUO_MARKET_SHFE );s_mapMkStatus.erase( QUO_MARKET_CZCE );
+				OnLog( 0, pszInfo );
 			}
 
 			if( true == bNotifyCNFOPT )
 			{
 				Global_pSpi->XDF_OnRspStatusChanged( XDF_CNFOPT, XRS_Normal );
-				OnLog( 0, "CNFOPT status changed : ---> normal" );
+				::sprintf( pszInfo, "status changed : mkid = %d, status = %d", cMkID, eStatus );
+				s_mapMkStatus.erase( QUO_MARKET_DCEOPT );s_mapMkStatus.erase( QUO_MARKET_SHFEOPT );s_mapMkStatus.erase( QUO_MARKET_CZCEOPT );
+				OnLog( 0, pszInfo );
 			}
 
 			return;
@@ -2154,7 +2144,6 @@ void QuotationAdaptor::OnStatus( QUO_MARKET_ID eMarketID, QUO_MARKET_STATUS eMar
 
 		Global_pSpi->XDF_OnRspStatusChanged( cMkID, eStatus );
 
-		char	pszInfo[128] = { 0 };
 		::sprintf( pszInfo, "status changed : mkid = %d, status = %d", cMkID, eStatus );
 		OnLog( 0, pszInfo );
 	}

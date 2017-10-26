@@ -295,18 +295,22 @@ extern "C"
 
 		int						nReturnNum = 0;
 		DataCollectorPool&		refPool = DataIOEngine::GetEngineObj().GetCollectorPool();
+		unsigned int			nLoopTimes = (refPool.GetCount() - refPool.GetValidSessionCount()) * 5;
+		unsigned int			nLoopSec = nLoopTimes;
 
-		for( int n = 0; n < 60; n++ )
+		for( int n = 0; n < nLoopSec; n++ )
 		{
 			SimpleTask::Sleep( 1000 * 1 );
+			nLoopSec = (refPool.GetCount() - refPool.GetValidSessionCount()) * 5;
 			if( true == DataIOEngine::GetEngineObj().GetCollectorPool().IsServiceWorking() )
 			{
 				break;
 			}
 
-			if( n >= 59 )
+			if( n >= (nLoopSec-1) )
 			{
-				return -3;
+				DataIOEngine::GetEngineObj().WriteWarning( "GetSettingInfo() : overtime (>= %d sec)", nLoopTimes );
+				break;
 			}
 		}
 
