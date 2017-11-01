@@ -360,7 +360,7 @@ bool DataCollectorPool::PreserveAllConnection()
 			int		nErrorCode = refDataCollector.RecoverDataCollector();	///< 启动行情插件
 			if( 0 != nErrorCode )
 			{
-				DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : Failed 2 initialize DataCollector, ErrorCode=%d", nErrorCode );
+				DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : ...... [Warning] Failed 2 initialize DataCollector, ErrorCode=%d ......", nErrorCode );
 			}
 		}
 	}
