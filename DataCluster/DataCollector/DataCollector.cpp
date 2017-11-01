@@ -334,14 +334,15 @@ bool DataCollectorPool::IsServiceWorking()
 	}
 	else
 	{
-		DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::Execute() : Service Isn\'t Availble! (%u > %u) !", GetCount(), nAffectNum );
+		DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::Execute() : ...... [Warning] Service Isn\'t Availble! (%u > %u) ! ......", GetCount(), nAffectNum );
 		return false;
 	}
 }
 
-static bool		s_bWaitCondition = false;
 bool DataCollectorPool::PreserveAllConnection()
 {
+	bool		bHasInitModule = false;
+
 	for( unsigned int n = 0; n < GetCount(); n++ )
 	{
 		CriticalLock		lock( m_oLock );
@@ -352,40 +353,35 @@ bool DataCollectorPool::PreserveAllConnection()
 
 		if( ET_SS_DISCONNECTED == eStatus )									///< 在传输断开的时，需要重新连接
 		{
-			DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : initializing DataCollector Plugin [%s] ...", refDataCollector.GetDllPath().c_str() );
+			bHasInitModule = true;
+			DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : ...... [Info] Initializing DataCollector(%s) ......", refDataCollector.GetDllPath().c_str() );
 			refDataCollector.HaltDataCollector();							///< 主动停止插件
 
 			int		nErrorCode = refDataCollector.RecoverDataCollector();	///< 启动行情插件
 			if( 0 != nErrorCode )
 			{
-				DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : failed 2 initialize DataCollector, errorcode=%d", nErrorCode );
-			}
-			else
-			{
-				s_bWaitCondition = true;
+				DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : Failed 2 initialize DataCollector, ErrorCode=%d", nErrorCode );
 			}
 		}
 	}
 
-	if( false == s_bWaitCondition )
+	if( true == bHasInitModule )
 	{
-		return false;
-	}
+		for( unsigned int n = 0; (n < (GetCount() - GetValidSessionCount()) * 5) && (false == IsServiceWorking()); n++ )
+		{
+			SimpleTask::Sleep( 1000 );		///< 一秒循环一次
+		}
 
-	for( unsigned int i = 0; i < 60; i++ )
-	{
 		if( true == IsServiceWorking() )
 		{
-			DataIOEngine::GetEngineObj().WriteInfo( "DataCollectorPool::PreserveAllConnection() : All Connections had been established! Num=[%u] .......!!! ", GetCount() );
-			s_bWaitCondition = false;
+			DataIOEngine::GetEngineObj().WriteInfo( "DataCollectorPool::PreserveAllConnection() : ...... [Okey] All Connections Had Been Established! Market Number = (%u) !!! .......", GetCount() );
 			return true;
 		}
 
-		SimpleTask::Sleep( 1000*1 );
+		return false;
 	}
 
-	DataIOEngine::GetEngineObj().WriteWarning( "DataCollectorPool::PreserveAllConnection() : initialize overtime > 60s, Num=[%u] .......!!! ", GetCount() );
-	return false;
+	return true;
 }
 
 unsigned int DataCollectorPool::GetValidSessionCount()

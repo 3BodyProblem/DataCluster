@@ -2125,7 +2125,7 @@ void QuotationAdaptor::OnStatus( QUO_MARKET_ID eMarketID, QUO_MARKET_STATUS eMar
 			if( true == bNotifyCNF )
 			{
 				Global_pSpi->XDF_OnRspStatusChanged( XDF_CNF, XRS_Normal );
-				::sprintf( pszInfo, "status changed : mkid = %d, status = %d", cMkID, eStatus );
+				::sprintf( pszInfo, "[Status Changed] ---> MkID = %d, Status = %d", XDF_CNF, XRS_Normal );
 				s_mapMkStatus.erase( QUO_MARKET_DCE );s_mapMkStatus.erase( QUO_MARKET_SHFE );s_mapMkStatus.erase( QUO_MARKET_CZCE );
 				OnLog( 0, pszInfo );
 			}
@@ -2133,7 +2133,7 @@ void QuotationAdaptor::OnStatus( QUO_MARKET_ID eMarketID, QUO_MARKET_STATUS eMar
 			if( true == bNotifyCNFOPT )
 			{
 				Global_pSpi->XDF_OnRspStatusChanged( XDF_CNFOPT, XRS_Normal );
-				::sprintf( pszInfo, "status changed : mkid = %d, status = %d", cMkID, eStatus );
+				::sprintf( pszInfo, "[Status Changed] ---> MkID = %d, status = %d", XDF_CNFOPT, XRS_Normal );
 				s_mapMkStatus.erase( QUO_MARKET_DCEOPT );s_mapMkStatus.erase( QUO_MARKET_SHFEOPT );s_mapMkStatus.erase( QUO_MARKET_CZCEOPT );
 				OnLog( 0, pszInfo );
 			}
@@ -2144,7 +2144,7 @@ void QuotationAdaptor::OnStatus( QUO_MARKET_ID eMarketID, QUO_MARKET_STATUS eMar
 
 		Global_pSpi->XDF_OnRspStatusChanged( cMkID, eStatus );
 
-		::sprintf( pszInfo, "status changed : mkid = %d, status = %d", cMkID, eStatus );
+		::sprintf( pszInfo, "[Status Changed] ---> MkID = %d, Status = %d", cMkID, eStatus );
 		OnLog( 0, pszInfo );
 	}
 }
