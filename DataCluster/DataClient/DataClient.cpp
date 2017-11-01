@@ -2102,7 +2102,7 @@ void QuotationAdaptor::OnStatus( QUO_MARKET_ID eMarketID, QUO_MARKET_STATUS eMar
 			s_mapMkStatus[(short)eMarketID] = eStatus;
 		}
 
-		if( (cMkID == XDF_CNFOPT || cMkID == XDF_CNF) && QUO_STATUS_NORMAL == eMarketStatus )	///< 秘技,检查状态缓存，判断是否需要通知状态变化
+		if( cMkID == XDF_CNFOPT || cMkID == XDF_CNF )											///< 秘技,检查状态缓存，判断是否需要通知状态变化
 		{
 			bool							bNotifyCNF = true;
 			bool							bNotifyCNFOPT = true;
@@ -2154,6 +2154,10 @@ void QuotationAdaptor::OnLog( unsigned char nLogLevel, const char* pszLogBuf )
 	if( Global_pSpi )
 	{
 		Global_pSpi->XDF_OnRspOutLog( 0, nLogLevel, pszLogBuf );
+	}
+	else
+	{
+		::printf( "%s\n", pszLogBuf );
 	}
 }
 

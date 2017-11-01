@@ -5,24 +5,28 @@
 
 
 CollectorStatus::CollectorStatus()
-: m_eStatus( ET_SS_UNACTIVE ), m_eMkStatus( QUO_STATUS_NONE ), m_nMarketID( 0 )
+: m_eDataCollectorStatus( ET_SS_UNACTIVE ), m_eMarketStatus( QUO_STATUS_NONE ), m_nMarketID( 255 )
 {
 }
 
 CollectorStatus::CollectorStatus( const CollectorStatus& obj )
 {
-	m_eMkStatus = obj.m_eMkStatus;
-	m_eStatus = obj.m_eStatus;
+	m_eMarketStatus = obj.m_eMarketStatus;
+	m_eDataCollectorStatus = obj.m_eDataCollectorStatus;
 	m_nMarketID = obj.m_nMarketID;
 }
 
 void CollectorStatus::SetMkID( unsigned int nMkID )
 {
+	CriticalLock			lock( m_oCSLock );
+
 	m_nMarketID = nMkID;
 }
 
 unsigned int CollectorStatus::GetMkID()
 {
+	CriticalLock			lock( m_oCSLock );
+
 	return m_nMarketID;
 }
 
@@ -30,7 +34,7 @@ enum E_SS_Status CollectorStatus::Get() const
 {
 	CriticalLock			lock( m_oCSLock );
 
-	return m_eStatus;
+	return m_eDataCollectorStatus;
 }
 
 bool CollectorStatus::Set( enum E_SS_Status eNewStatus )
@@ -61,13 +65,14 @@ bool CollectorStatus::Set( enum E_SS_Status eNewStatus )
 		}
 	}
 
-	if( m_eMkStatus != eNewMkStatus && EngineWrapper4DataClient::GetObj().IsUsed() && QUO_MARKET_UNKNOW != m_nMarketID )
+	if( m_eMarketStatus != eNewMkStatus && EngineWrapper4DataClient::GetObj().IsUsed() && 255 != m_nMarketID )
 	{
+		DataIOEngine::GetEngineObj().WriteError( "CollectorStatus::Set() : MkID = %d, Status = %d", m_nMarketID, eNewMkStatus );
 		EngineWrapper4DataClient::GetObj().OnStatus( (enum QUO_MARKET_ID)m_nMarketID, eNewMkStatus );
-		m_eMkStatus = eNewMkStatus;
+		m_eMarketStatus = eNewMkStatus;
 	}
 
-	m_eStatus = eNewStatus;
+	m_eDataCollectorStatus = eNewStatus;
 
 	return true;
 }
@@ -148,9 +153,8 @@ int DataCollector::Initialize( I_DataHandle* pIDataCallBack, std::string sDllPat
 		return nErrorCode;
 	}
 
-	m_oCollectorStatus.SetMkID( m_pFuncGetMarketID() );
 	m_bIsProxyPlugin = m_pFuncIsProxy();
-	DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Initialize() : DataCollector [%s] is Initialized! ......", sDllPath.c_str() );
+	DataIOEngine::GetEngineObj().WriteInfo( "DataCollector::Initialize() : DataCollector(MkID=%u) [%s] is Initialized! ......", m_oCollectorStatus.GetMkID(), sDllPath.c_str() );
 
 	return 0;
 }
@@ -372,7 +376,6 @@ bool DataCollectorPool::PreserveAllConnection()
 	{
 		if( true == IsServiceWorking() )
 		{
-			EngineWrapper4DataClient::GetObj().OnStatus( QUO_MARKET_UNKNOW, QUO_STATUS_NORMAL );
 			DataIOEngine::GetEngineObj().WriteInfo( "DataCollectorPool::PreserveAllConnection() : All Connections had been established! Num=[%u] .......!!! ", GetCount() );
 			s_bWaitCondition = false;
 			return true;

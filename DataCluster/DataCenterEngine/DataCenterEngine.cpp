@@ -74,7 +74,7 @@ int DataIOEngine::Execute()
 	{
 		try
 		{
-			SimpleTask::Sleep( 1000*3 );	///< 一秒循环一次
+			SimpleTask::Sleep( 1000*2 );	///< 一秒循环一次
 
 			m_oDataCollectorPool.PreserveAllConnection();
 		}

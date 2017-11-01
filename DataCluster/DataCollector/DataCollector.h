@@ -37,9 +37,9 @@ public:
 
 private:
 	mutable CriticalObject	m_oCSLock;
-	enum QUO_MARKET_STATUS	m_eMkStatus;		///< 市场状态
-	enum E_SS_Status		m_eStatus;			///< 当前行情逻辑状态，用于判断当前该做什么操作了
-	unsigned int			m_nMarketID;		///< 数据采集器对应的市场ID
+	enum QUO_MARKET_STATUS	m_eMarketStatus;			///< 市场状态
+	enum E_SS_Status		m_eDataCollectorStatus;		///< 当前行情逻辑状态，用于判断当前该做什么操作了
+	unsigned int			m_nMarketID;				///< 数据采集器对应的市场ID
 };
 
 
