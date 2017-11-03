@@ -643,10 +643,12 @@ void STDCALL MDataClient::Release()
 {
 	if( Global_bInit )
 	{
+		DataIOEngine::GetEngineObj().WriteInfo( "MDataClient::Release() : Releasing ......" );
 		SimpleTask::StopAllThread();
 		Global_bInit = false;
 		RegisterSpi( NULL );
 		g_oDataIO.Release();
+		DataIOEngine::GetEngineObj().WriteInfo( "MDataClient::Release() : Released ......" );
 	}
 }
 

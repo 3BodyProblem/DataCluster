@@ -135,8 +135,10 @@ extern "C"
 
 	__declspec(dllexport) void __stdcall	EndWork()
 	{
+		DataIOEngine::GetEngineObj().WriteInfo( "EndWork() : Releasing ......" );
 		SimpleTask::StopAllThread();
 		EngineWrapper4DataClient::GetObj().Release();
+		DataIOEngine::GetEngineObj().WriteInfo( "EndWork() : Released ......" );
 	}
 
 	__declspec(dllexport) int  __stdcall	GetMarketIDTable( QUO_MARKET_ID* lpOut, unsigned int uiSize )
@@ -220,8 +222,10 @@ extern "C"
 
 	__declspec(dllexport) void __stdcall Release()
 	{
+		DataIOEngine::GetEngineObj().WriteInfo( "Release() : Releasing ......" );
 		SimpleTask::StopAllThread();
 		EngineWrapper4DataNode::GetObj().Release();
+		DataIOEngine::GetEngineObj().WriteInfo( "Release() : Releasing ......" );
 	}
 
 	__declspec(dllexport) int __stdcall	RecoverQuotation()

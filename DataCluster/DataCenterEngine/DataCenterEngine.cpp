@@ -61,9 +61,11 @@ int DataIOEngine::Initialize( I_DataHandle* pIDataHandle )
 
 void DataIOEngine::Release()
 {
+	DataIOEngine::GetEngineObj().WriteInfo( "DataIOEngine::Release() : Releasing ......" );
 	SimpleTask::StopThread();
 	SimpleTask::Join( 5000 );
 	m_oDataCollectorPool.Release();
+	DataIOEngine::GetEngineObj().WriteInfo( "DataIOEngine::Release() : Released ......" );
 }
 
 int DataIOEngine::Execute()

@@ -59,10 +59,14 @@ int EngineWrapper4DataClient::Initialize( I_QuotationCallBack* pIQuotation )
 
 void EngineWrapper4DataClient::Release()
 {
+	DataIOEngine::GetEngineObj().WriteInfo( "EngineWrapper4DataClient::Release() : Releasing ......" );
+
 	DataIOEngine::GetEngineObj().Release();
 	m_pQuotationCallBack = NULL;
 	m_oDB4ClientMode.Release();
 	m_oQuoNotify.Release();
+
+	DataIOEngine::GetEngineObj().WriteInfo( "EngineWrapper4DataClient::Release() : Released ......" );
 }
 
 int EngineWrapper4DataClient::OnQuery( unsigned int nDataID, char* pData, unsigned int nDataLen )
