@@ -114,8 +114,8 @@ extern "C"
 	__declspec(dllexport) int __stdcall		GetVersionNo()
 	{
 		unsigned int	nMajor = 1;
-		unsigned int	nRelease = 0;
-		unsigned int	nBuild = 2;
+		unsigned int	nRelease = 1;
+		unsigned int	nBuild = 3;
 
 		return 1000000 * nMajor + 100000 * nRelease + 1000 * nBuild;
 	}
