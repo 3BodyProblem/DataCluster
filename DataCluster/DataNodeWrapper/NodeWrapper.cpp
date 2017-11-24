@@ -128,7 +128,7 @@ enum E_SS_Status EngineWrapper4DataNode::GetCollectorStatus( char* pszStatusDesc
 	}
 }
 
-int EngineWrapper4DataNode::OnQuery( unsigned int nDataID, char* pData, unsigned int nDataLen )
+int EngineWrapper4DataNode::OnQuery( unsigned int nDataID, const char* pData, unsigned int nDataLen )
 {
 	if( NULL == m_pDataHandle )
 	{
@@ -138,7 +138,7 @@ int EngineWrapper4DataNode::OnQuery( unsigned int nDataID, char* pData, unsigned
 	return m_pDataHandle->OnQuery( nDataID, pData, nDataLen );
 }
 
-int EngineWrapper4DataNode::OnImage( unsigned int nDataID, char* pData, unsigned int nDataLen, bool bLastFlag )
+int EngineWrapper4DataNode::OnImage( unsigned int nDataID, const char* pData, unsigned int nDataLen, bool bLastFlag )
 {
 	if( NULL == m_pDataHandle )
 	{
@@ -148,7 +148,7 @@ int EngineWrapper4DataNode::OnImage( unsigned int nDataID, char* pData, unsigned
 	return m_pDataHandle->OnImage( nDataID, pData, nDataLen, false );
 }
 
-int EngineWrapper4DataNode::OnData( unsigned int nDataID, char* pData, unsigned int nDataLen, bool bPushFlag )
+int EngineWrapper4DataNode::OnData( unsigned int nDataID, const char* pData, unsigned int nDataLen, bool bLastFlag, bool bPushFlag )
 {
 	int						nAffectNum = 0;
 
@@ -157,7 +157,17 @@ int EngineWrapper4DataNode::OnData( unsigned int nDataID, char* pData, unsigned 
 		return -1;
 	}
 
-	return m_pDataHandle->OnData( nDataID, pData, nDataLen, false );
+	return m_pDataHandle->OnData( nDataID, pData, nDataLen, bLastFlag, bPushFlag );
+}
+
+int EngineWrapper4DataNode::OnStream( unsigned int nDataID, const char* pData, unsigned int nDataLen )
+{
+	if( NULL == m_pDataHandle )
+	{
+		return -1;
+	}
+
+	return m_pDataHandle->OnStream( nDataID, (char*)pData, nDataLen );
 }
 
 void EngineWrapper4DataNode::OnLog( unsigned char nLogLevel, const char* pszFormat, ... )

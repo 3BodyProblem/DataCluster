@@ -69,22 +69,22 @@ void EngineWrapper4DataClient::Release()
 	DataIOEngine::GetEngineObj().WriteInfo( "EngineWrapper4DataClient::Release() : Released ......" );
 }
 
-int EngineWrapper4DataClient::OnQuery( unsigned int nDataID, char* pData, unsigned int nDataLen )
+int EngineWrapper4DataClient::OnQuery( unsigned int nDataID, const char* pData, unsigned int nDataLen )
 {
 	unsigned __int64		nSerialNo = 0;
 	static	const char		s_pszZeroBuff[128] = { 0 };
 
 	if( 0 == strncmp( pData, s_pszZeroBuff, min(nDataLen, sizeof(s_pszZeroBuff)) ) )
 	{
-		return m_oDB4ClientMode.QueryBatchRecords( nDataID, pData, nDataLen, nSerialNo );
+		return m_oDB4ClientMode.QueryBatchRecords( nDataID, (char*)pData, nDataLen, nSerialNo );
 	}
 	else
 	{
-		return m_oDB4ClientMode.QueryRecord( nDataID, pData, nDataLen, nSerialNo );
+		return m_oDB4ClientMode.QueryRecord( nDataID, (char*)pData, nDataLen, nSerialNo );
 	}
 }
 
-int EngineWrapper4DataClient::OnImage( unsigned int nDataID, char* pData, unsigned int nDataLen, bool bLastFlag )
+int EngineWrapper4DataClient::OnImage( unsigned int nDataID, const char* pData, unsigned int nDataLen, bool bLastFlag )
 {
 	unsigned __int64		nSerialNo = 0;
 	int						nAffectNum = 0;
@@ -101,19 +101,24 @@ int EngineWrapper4DataClient::OnImage( unsigned int nDataID, char* pData, unsign
 
 	if( nAffectNum <= 0 )
 	{
-		pRecord->FillMessage2BigTableRecord( pData, true );
+		pRecord->FillMessage2BigTableRecord( (char*)pData, true );
 		nAffectNum = m_oDB4ClientMode.NewRecord( pRecord->GetBigTableID(), pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), bLastFlag, nSerialNo );
 	}
 	else
 	{
-		pRecord->FillMessage2BigTableRecord( pData );
+		pRecord->FillMessage2BigTableRecord( (char*)pData );
 		nAffectNum = m_oDB4ClientMode.UpdateRecord( pRecord->GetBigTableID(), pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), nSerialNo );
 	}
 
 	return nAffectNum;
 }
 
-int EngineWrapper4DataClient::OnData( unsigned int nDataID, char* pData, unsigned int nDataLen, bool bPushFlag )
+int EngineWrapper4DataClient::OnStream( unsigned int nDataID, const char* pData, unsigned int nDataLen )
+{
+	return 0;
+}
+
+int EngineWrapper4DataClient::OnData( unsigned int nDataID, const char* pData, unsigned int nDataLen, bool bLastFlag, bool bPushFlag )
 {
 	unsigned __int64		nSerialNo = 0;
 	int						nAffectNum = 0;
@@ -140,7 +145,7 @@ int EngineWrapper4DataClient::OnData( unsigned int nDataID, char* pData, unsigne
 	}
 	else
 	{
-		pRecord->FillMessage2BigTableRecord( pData );
+		pRecord->FillMessage2BigTableRecord( (char*)pData );
 		nAffectNum = m_oDB4ClientMode.UpdateRecord( nBigTableID, pRecord->GetBigTableRecordPtr(), pRecord->GetBigTableWidth(), nSerialNo );
 	}
 

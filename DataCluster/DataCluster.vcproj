@@ -62,7 +62,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="gtestd.lib"
-				OutputFile="D:\QYClient\QuoteModule\QuoteClientApi.dll"
+				OutputFile="D:\QYClient\QuoteModule\DataCluster.dll"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../libs/gtest/library_vc9/Debug/"
 				ModuleDefinitionFile="DataCluster.def"
@@ -141,7 +141,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="gtest.lib"
-				OutputFile="D:\QYClient\QuoteModule\QuoteClientApi.dll"
+				OutputFile="D:\QYClient\QuoteModule\DataCluster.dll"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../libs/gtest/library_vc9/Release/"
 				ModuleDefinitionFile="DataCluster.def"
